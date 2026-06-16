@@ -1,0 +1,414 @@
+# ============================================================
+# .cursorrules — PrivaCI Python Development Standards
+# ============================================================
+# These rules apply to all Python code in this repository.
+# The AI assistant must follow every rule below when writing,
+# editing, or reviewing code. No exceptions without explicit
+# inline justification from the developer.
+# ============================================================
+
+
+# ------------------------------------------------------------
+# SECTION 1: PYTHON BEST PRACTICES
+# ------------------------------------------------------------
+
+## Language & Runtime
+- Target Python 3.12+ exclusively. Use modern language features — no legacy compatibility shims.
+- Every function, method, and class attribute MUST have type hints (PEP 484/526).
+- Use `from __future__ import annotations` at the top of every module for forward references.
+- Prefer `pathlib.Path` over `os.path` for all filesystem operations.
+- Use f-strings for all string formatting. Never use `.format()` or `%` formatting.
+- Use `dataclasses` or `pydantic.BaseModel` for structured data. Never use raw dicts as
+  function return types when the shape is known.
+
+## Control Flow & Structure
+- Maximum function length: 40 lines. If a function exceeds this, decompose it.
+- Maximum file length: 400 lines. Split modules when approaching this limit.
+- Maximum cyclomatic complexity: 8 per function. Simplify nested conditionals with early returns.
+- Avoid deeply nested code. Prefer guard clauses (early returns) over nested if/else pyramids.
+- Never use mutable default arguments (e.g., `def foo(items: list = [])`).
+  Use `None` as default and initialize inside the function body.
+- Use list/dict/set comprehensions for simple transforms. Use explicit `for` loops
+  when logic is complex enough to need explanation.
+- Prefer `any()` and `all()` over manual loop accumulators for boolean checks.
+
+## Classes & Objects
+- Use `__slots__` on performance-critical or frequently-instantiated classes.
+- Prefer composition over inheritance. Limit class inheritance depth to 2.
+- Abstract base classes must use `abc.ABC` and `@abstractmethod`.
+- Use `@property` for computed attributes. Never expose internal state directly.
+- Override `__repr__` on all domain model classes. It must show enough to debug.
+
+## Error Handling
+- Never use bare `except:` or `except Exception:` without logging the exception first.
+- Define custom exception classes per module. Inherit from a base `PrivaCIError`.
+- Always use context managers (`with`) for file handles, DB connections, and network sockets.
+- Catch the narrowest possible exception type. Never silence errors silently.
+- On fatal errors, log then raise — never swallow and continue.
+
+## Async
+- Use `asyncio` for all I/O-bound operations (DB reads/writes, HTTP calls, file streaming).
+- Never call blocking I/O inside an async function. Use `asyncio.to_thread()` for
+  blocking libraries that lack async support.
+- Prefer `asyncio.gather()` for concurrent tasks over sequential `await` chains.
+
+## Logging
+- Use the `logging` module exclusively. Never use `print()` in production code paths.
+- Logger instances must be module-level: `logger = logging.getLogger(__name__)`.
+- Log levels: DEBUG for trace/iteration detail, INFO for lifecycle events,
+  WARNING for recoverable issues, ERROR for failures, CRITICAL for unrecoverable state.
+- Every log message at WARNING or above must include structured context
+  (e.g., `logger.error("Mask run failed", extra={"table": table_name, "row": row_id})`).
+- Never log raw PII values. Truncate or redact sensitive fields before logging.
+
+## Dependencies
+- All dependencies must be pinned to exact versions in `requirements.txt`.
+  Use `pip-compile` (pip-tools) to generate and lock the dependency tree.
+- Separate `requirements.txt` (production) from `requirements-dev.txt` (test/lint/format).
+- Before adding a new dependency, confirm it is actively maintained and has no
+  known critical CVEs. Document the justification in a comment above the import.
+
+
+# ------------------------------------------------------------
+# SECTION 2: TESTING
+# ------------------------------------------------------------
+
+## Framework & Structure
+- All tests use `pytest`. No `unittest.TestCase` classes unless wrapping legacy code.
+- Test files live in a `/tests` directory at the project root, mirroring the `src/` structure.
+  Example: `src/masking/engine.py` → `tests/masking/test_engine.py`.
+- Test file names are prefixed with `test_`. Test function names are prefixed with `test_`.
+- Test class names are prefixed with `Test` (e.g., `TestMaskingEngine`).
+
+## Coverage Requirements
+- Minimum test coverage: 85% overall, 100% for security-critical modules
+  (`src/masking/`, `src/config/`, `src/billing/`).
+- Run coverage with: `pytest --cov=src --cov-report=term-missing --cov-fail-under=85`.
+- Every new function or method MUST have at least one positive test and one negative/edge test.
+
+## Test Design Patterns
+- Follow strict Arrange-Act-Assert (AAA) structure in every test, separated by blank lines.
+  ```python
+  def test_email_is_masked():
+      # Arrange
+      row = {"email": "john@acme.com"}
+      masker = EmailMasker(salt="test-salt")
+
+      # Act
+      result = masker.mask(row)
+
+      # Assert
+      assert result["email"] != "john@acme.com"
+      assert "@" in result["email"]
+  ```
+- Use `@pytest.mark.parametrize` for any test covering multiple input variants.
+  Never copy-paste test functions with minor input changes.
+- Use `pytest.fixture` for all shared setup (DB connections, config objects, temp files).
+  Fixtures must be scoped appropriately: `function` (default), `module`, or `session`.
+- Use `pytest-mock` (`mocker` fixture) for all mocking. Never monkey-patch directly.
+- Integration tests that touch real DB connections must be marked `@pytest.mark.integration`
+  and excluded from default runs: `pytest -m "not integration"`.
+
+## What Must Be Tested
+- All masking logic: verify original value is not present in output.
+- Referential integrity: same input + same salt always produces same output.
+- Edge cases: null/None values, empty strings, Unicode, very long strings (>10k chars).
+- Schema discovery: invalid connection strings, missing tables, permission errors.
+- Config parser: malformed YAML, missing required fields, unknown action types.
+- Billing heartbeat: network failure simulation, retry behavior, graceful degradation.
+
+## Test Data
+- Never use real PII in test fixtures, even synthetic-looking real data.
+- Define all test constants in `tests/fixtures/constants.py`. No magic strings inline.
+- Use `faker` library to generate realistic test data in fixtures, seeded for repeatability:
+  `Faker().seed_instance(42)`.
+- Database fixtures use `pytest-postgresql` or a local Docker Compose service.
+  Never point tests at a shared or production database.
+
+
+# ------------------------------------------------------------
+# SECTION 3: SECURITY
+# ------------------------------------------------------------
+
+## Secrets & Credentials
+- Zero hardcoded secrets, tokens, passwords, salts, or connection strings anywhere in code.
+  This includes test files, fixtures, and scripts.
+- All secrets are read exclusively from environment variables via `os.environ` or `python-dotenv`.
+- Provide a `.env.example` file with dummy values and clear comments for every required variable.
+- Never commit `.env` files. Verify `.gitignore` excludes `.env`, `*.pem`, `*.key`, `*.p12`.
+- Salt values (`ANONYMIZATION_SALT`) must be minimum 32 characters. Validate length on boot.
+
+## Input Validation
+- Validate and sanitize all external inputs before processing: DB connection strings,
+  YAML config values, column names, table names, and any user-provided strings.
+- Use `pydantic.BaseModel` with strict field validators for all config parsing.
+  Reject unknown fields with `model_config = ConfigDict(extra="forbid")`.
+- Never construct SQL strings via string concatenation. Always use parameterized queries
+  or ORM query builders. This is non-negotiable.
+- Treat all data read from source databases as untrusted. Validate types before
+  passing values into masking functions.
+
+## Data Handling
+- PII values must never appear in logs, error messages, stack traces, or exception text.
+  Mask or truncate before any logging call.
+- Never write intermediate masked data to disk. All processing occurs in memory.
+- DB connection objects must be closed in `finally` blocks or via context managers.
+  No connection leaks.
+- Use `secrets` module (not `random`) for any cryptographic or security-sensitive
+  random value generation.
+
+## Dependency Security
+- Run `pip-audit` as part of CI on every push. Fail the build on any known critical CVE.
+- Pin all transitive dependencies. Never use unpinned ranges (e.g., `requests>=2.0`)
+  in production requirements.
+- Review the changelog of any dependency before version bumps in security-sensitive
+  areas of the codebase.
+
+## Container Security
+- The Docker image must run as a non-root user. Define `USER privaci` in the Dockerfile.
+- Use a minimal base image (`python:3.11-slim`). No full `python:3.11` base in production.
+- Never bake secrets into the Docker image. All secrets are environment variables at runtime.
+- Expose no network ports in the container unless explicitly required.
+
+
+# ------------------------------------------------------------
+# SECTION 4: FORMATTING & CODE STYLE
+# ------------------------------------------------------------
+
+## Formatter
+- All code is formatted with `black` using default settings (line length 88).
+- Run: `black src/ tests/`
+- Black is non-negotiable. Do not manually reformat code that black would reformat.
+
+## Import Ordering
+- Imports are sorted with `isort` configured to be black-compatible:
+  `isort --profile black src/ tests/`
+- Import order: standard library → third-party → local. Separated by blank lines.
+  ```python
+  from __future__ import annotations
+
+  import asyncio
+  import logging
+  from pathlib import Path
+
+  import pydantic
+  import yaml
+
+  from privaci.masking.engine import MaskingEngine
+  from privaci.config import MaskConfig
+  ```
+- Never use wildcard imports (`from module import *`).
+- Avoid importing entire modules when only one function is needed.
+
+## Linting
+- All code must pass `ruff` with the following rule sets enabled: `E, F, W, I, N, UP, S, B, A`.
+  Run: `ruff check src/ tests/`
+- No `# noqa` suppression comments without an inline explanation of why.
+- No unused imports, unused variables, or unreachable code.
+
+## Naming Conventions
+- Variables and functions: `snake_case`
+- Classes: `PascalCase`
+- Constants: `UPPER_SNAKE_CASE`, defined at module level
+- Private methods/attributes: single leading underscore `_method_name`
+- "Protected" from subclass access: double leading underscore `__method_name` (use sparingly)
+- Boolean variables and functions: prefix with `is_`, `has_`, `should_`, `can_`
+  (e.g., `is_masked`, `has_pii`, `should_skip_table`)
+
+## General Style Rules
+- Maximum line length: 88 characters (black default).
+- No trailing whitespace. No blank lines at end of file. Files end with a single newline.
+- Use explicit `True`/`False` comparisons only when the type is not obviously boolean.
+  Prefer `if value:` over `if value == True:`.
+- Prefer `is None` / `is not None` over `== None` / `!= None`.
+- Unpack tuples explicitly: `first, second = get_pair()` not `result = get_pair(); result[0]`.
+
+
+# ------------------------------------------------------------
+# SECTION 5: COMMENTS
+# ------------------------------------------------------------
+
+## When to Comment
+- Comments explain WHY, not WHAT. Code explains what. Comments explain intent,
+  constraints, trade-offs, and decisions that aren't obvious from reading the code.
+- Every non-trivial algorithm must have a prose comment before it explaining the approach.
+- Every `# type: ignore` must have an inline comment explaining why it was necessary.
+- Every `TODO` must include the author's initials and a GitHub issue number:
+  `# TODO(jd): replace with async version — see #42`
+- Every `FIXME` is a bug and must have a linked issue before the PR is merged.
+- Every `HACK` or `WORKAROUND` comment must describe the root cause and the conditions
+  under which it can be removed.
+
+## What NOT to Comment
+- Do not comment obvious code: `# increment counter` above `count += 1` is noise.
+- Do not leave commented-out code in the codebase. Use git history instead.
+- Do not write comments that restate the function signature. That's what docstrings are for.
+
+## Inline Comment Style
+- Inline comments use two spaces before `#` and one space after: `value = mask(x)  # deterministic`
+- Keep inline comments to one line. Multi-line explanations belong above the block.
+
+
+# ------------------------------------------------------------
+# SECTION 6: DOCUMENTATION
+# ------------------------------------------------------------
+
+## Docstring Standard: Google Style
+- Every public module, class, function, and method must have a Google-style docstring.
+- Private functions (`_prefixed`) should have docstrings when their behavior is non-obvious.
+- Docstrings use triple double-quotes `"""`. Never single-quote docstrings.
+
+### Module Docstring (top of every file)
+```python
+"""Schema discovery module for PrivaCI.
+
+Queries PostgreSQL system catalogs to extract table structure, column metadata,
+primary key constraints, and foreign key relationships. Results feed the
+streaming engine and masking pipeline.
+"""
+```
+
+### Function / Method Docstring
+```python
+def mask_email(value: str, salt: str) -> str:
+    """Generate a deterministic fake email from a real email address.
+
+    Hashes the original value with the provided salt to produce a stable
+    seed, then selects a fake name and domain from built-in libraries.
+    The same input always produces the same output for a given salt.
+
+    Args:
+        value: The original email address to mask. Must be a valid RFC 5321
+            email string. Empty strings return an empty string unchanged.
+        salt: The anonymization salt from ANONYMIZATION_SALT env variable.
+            Must be at least 32 characters.
+
+    Returns:
+        A realistic-looking fake email string (e.g., "alex.rivera@fakedom.net").
+        Preserves the general structure (local@domain) of the original.
+
+    Raises:
+        ValueError: If salt is fewer than 32 characters.
+        MaskingError: If the fake library fails to generate a value after
+            3 retry attempts.
+
+    Example:
+        >>> mask_email("john@acme.com", salt="super-secret-salt-12345678901234")
+        'alex.rivera@fakedom.net'
+    """
+```
+
+### Class Docstring
+```python
+class MaskingEngine:
+    """Orchestrates the three-tier masking pipeline for a single table.
+
+    Coordinates Regex rules (Level 1), SpaCy NER (Level 2), and optional
+    LLM refinement (Level 3) based on the provided MaskConfig. Stateless
+    between rows — all state is passed in via constructor arguments.
+
+    Attributes:
+        config: The validated masking configuration for this table.
+        salt: The global anonymization salt used for deterministic faking.
+        ner_model: The loaded SpaCy NLP model, or None if Level 2 is disabled.
+
+    Example:
+        >>> engine = MaskingEngine(config=table_config, salt="my-salt")
+        >>> masked_row = engine.process_row({"email": "john@acme.com"})
+    """
+```
+
+## README Standards
+- Every module directory must contain a `README.md` explaining:
+  - What the module does (one paragraph)
+  - Public API surface (key classes and functions)
+  - Configuration options
+  - Example usage
+- The project root `README.md` must contain:
+  - One-paragraph product description
+  - Prerequisites (Python version, Docker, env variables)
+  - Quickstart (copy-pasteable commands to run locally)
+  - Link to full docs
+
+## Changelog
+- Maintain a `CHANGELOG.md` in the project root following Keep a Changelog format.
+- Every PR that changes behavior (not just refactors or tests) must add an entry
+  under `[Unreleased]` in the appropriate category: Added, Changed, Deprecated,
+  Removed, Fixed, Security.
+
+## Architecture Decision Records (ADRs)
+- Significant architectural decisions (choice of library, schema design, licensing,
+  billing model) must be documented in `/docs/adr/` as numbered markdown files.
+  Format: `0001-use-bsl-license.md`, `0002-cursor-based-pagination.md`.
+- ADR template:
+  ```
+  # ADR-NNNN: Title
+
+  ## Status
+  Accepted | Proposed | Deprecated
+
+  ## Context
+  What situation forced this decision?
+
+  ## Decision
+  What was decided?
+
+  ## Consequences
+  What are the trade-offs and implications?
+  ```
+
+
+# ------------------------------------------------------------
+# SECTION 7: CI/CD & TOOLING INTEGRATION
+# ------------------------------------------------------------
+
+## Pre-commit Hooks (required in every contributor's environment)
+Run `pre-commit install` after cloning. The following hooks run on every commit:
+- `black` — formatting
+- `isort` — import ordering
+- `ruff` — linting
+- `pip-audit` — dependency vulnerability scan
+- Custom hook: reject any file containing `TODO` without an issue number
+
+## CI Pipeline Gates (all must pass before merge)
+- `black --check src/ tests/`
+- `isort --check-only --profile black src/ tests/`
+- `ruff check src/ tests/`
+- `pytest --cov=src --cov-fail-under=85 -m "not integration"`
+- `pip-audit --requirement requirements.txt`
+- `mypy src/ --strict`
+
+## Type Checking
+- Run `mypy src/ --strict` with zero errors as a CI gate.
+- Never suppress mypy errors with `# type: ignore` without an inline comment
+  explaining what the type system cannot express and why.
+- All third-party libraries must have stubs (`types-*` packages) or be listed
+  in `mypy.ini` under `[[mypy-library_name]]` with `ignore_missing_imports = True`.
+
+
+# ------------------------------------------------------------
+# SECTION 8: AI ASSISTANT BEHAVIOUR (CURSOR-SPECIFIC)
+# ------------------------------------------------------------
+
+## When Writing New Code
+- Always add type hints. Do not omit them for "brevity".
+- Always write the docstring before implementing the function body.
+- Always suggest a test file path alongside new production code.
+- If a function would exceed 40 lines, decompose it and explain the split.
+- If a security-sensitive operation is involved (DB query, file write, external call),
+  add a `# SECURITY:` comment explaining the threat model consideration.
+
+## When Editing Existing Code
+- Do not remove or alter existing docstrings unless the behavior actually changed.
+- Do not reformat code outside the directly edited lines (black handles formatting).
+- If a change introduces a new dependency, flag it explicitly and explain why an
+  existing dependency cannot serve the same purpose.
+
+## What the Assistant Must Never Do
+- Never generate code that logs raw PII values.
+- Never generate hardcoded credentials, salts, or tokens, even as placeholders.
+  Use environment variable references and a comment indicating what is expected.
+- Never use `eval()`, `exec()`, or `__import__()` dynamically.
+- Never generate SQL queries via string concatenation.
+- Never suppress test failures or mock away the system under test itself.
+- Never use `time.sleep()` in async code. Use `asyncio.sleep()`.

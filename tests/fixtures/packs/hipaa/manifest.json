@@ -1,0 +1,17 @@
+{
+  "name": "hipaa",
+  "version": "1.0.0",
+  "config_fragment": {
+    "strict_autodetect": true,
+    "tables": {
+      "clinical.patients": {
+        "columns": {
+          "mrn": {
+            "action": "hash"
+          }
+        }
+      }
+    }
+  },
+  "signature": "wrJbY26gYdFfzJ3CLnIkuliqE4YtBuxu+HDPDWVB6S8bjRZA1yHPJj3EToC4di0IjbxDXSbmjtQitBXLQjf8DA=="
+}

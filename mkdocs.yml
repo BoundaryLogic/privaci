@@ -1,0 +1,74 @@
+# PrivaCI documentation site (MkDocs Material).
+# Local preview: make docs-serve
+# Production build: make docs-build
+
+site_name: PrivaCI
+site_description: In-VPC PostgreSQL masking and anonymization engine
+site_url: https://boundarylogic.github.io/privaci/
+exclude_docs: |
+  /README.md
+repo_url: https://github.com/BoundaryLogic/privaci
+repo_name: BoundaryLogic/privaci
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+
+plugins:
+  - search
+
+validation:
+  nav:
+    omitted_files: ignore
+  links:
+    not_found: warn
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Operating:
+      - CLI guide: cli-reference.md
+      - CLI reference (generated): generated/cli-reference.md
+      - Configuration guide: configuration.md
+      - Configuration reference (generated): generated/configuration-reference.md
+      - Error codes: error-codes.md
+      - State & audit schema: state-schema.md
+      - Observability: observability.md
+      - Deployment: deployment.md
+      - "Runbook: pack signing": runbooks/pack-signing.md
+      - "Runbook: git history privacy": runbooks/git-history-privacy.md
+  - Architecture:
+      - Overview: architecture/overview.md
+      - Memory model: architecture/memory-model.md
+      - ADRs: adr/README.md
+  - Extending:
+      - Building a plugin: extending-privaci.md
+  - Developing:
+      - Local development: local-development.md
+      - Test fixtures: test-fixtures.md
+      - Spikes: spikes/README.md

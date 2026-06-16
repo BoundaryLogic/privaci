@@ -1,0 +1,12 @@
+# Mutation-testing config for the security-critical masking core.
+# Opt-in audit (not a CI gate): see docs/local-development.md §3.4.
+# Narrow `module-path` to a single file for a fast, focused run, e.g.
+#   module-path = "src/privaci/mask/regex_safe.py"
+[cosmic-ray]
+module-path = "src/privaci/mask"
+timeout = 60.0
+excluded-modules = []
+test-command = "python -m pytest -x -q -m 'not integration' tests/mask tests/config"
+
+[cosmic-ray.distributor]
+name = "local"

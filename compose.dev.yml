@@ -1,0 +1,46 @@
+# Long-running source + target Postgres for development and integration tests.
+# See docs/local-development.md and docs/test-fixtures.md.
+#
+# Source is auto-seeded from the committed Demo Corp mini-tier SQL on first
+# volume creation. Week-1 spike SQL lives under tests/fixtures/sql/spikes/
+# and can be loaded manually when needed.
+
+services:
+  source-pg:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: privaci_source
+    ports:
+      - "55432:5432"
+    volumes:
+      - source-pgdata:/var/lib/postgresql/data
+      # ':z' relabels the bind mount for SELinux (Fedora + rootless Podman).
+      # Harmless on Docker/Linux hosts without SELinux.
+      - ./tests/fixtures/sql/demo-corp:/docker-entrypoint-initdb.d:ro,z
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d privaci_source"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  target-pg:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: privaci_target
+    ports:
+      - "55433:5432"
+    volumes:
+      - target-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d privaci_target"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+volumes:
+  source-pgdata:
+  target-pgdata:

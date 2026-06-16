@@ -1,0 +1,9 @@
+version: "1.0"
+global_salt: env://PRIVACI_TEST_SALT
+on_existing_data: fail
+auto_detect: true
+strict_autodetect: true
+
+tables:
+  audit_internal.audit_log_events:
+    strategy: exclude

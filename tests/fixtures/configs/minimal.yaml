@@ -1,0 +1,7 @@
+version: "1.0"
+global_salt: env://PRIVACI_TEST_SALT
+on_existing_data: fail
+auto_detect: true
+strict_autodetect: false
+
+tables: {}

@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "privaci.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "privaci.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  suspend: {{ .Values.suspend }}
+  concurrencyPolicy: {{ .Values.concurrencyPolicy }}
+  successfulJobsHistoryLimit: {{ .Values.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: {{ include "privaci.name" . }}
+            app.kubernetes.io/instance: {{ .Release.Name }}
+        spec:
+          serviceAccountName: {{ include "privaci.serviceAccountName" . }}
+          restartPolicy: {{ .Values.restartPolicy }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          containers:
+            - name: privaci
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              args: ["run", "--config", "/config/mask-rules.yaml"]
+              env:
+                - name: SOURCE_DB_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.secrets.sourceDbUrlSecret }}
+                      key: {{ .Values.secrets.sourceDbUrlKey }}
+                - name: TARGET_DB_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.secrets.targetDbUrlSecret }}
+                      key: {{ .Values.secrets.targetDbUrlKey }}
+                - name: ANONYMIZATION_SALT
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.secrets.saltSecret }}
+                      key: {{ .Values.secrets.saltKey }}
+                {{- range .Values.extraEnv }}
+                - {{- toYaml . | nindent 18 }}
+                {{- end }}
+              securityContext:
+                {{- toYaml .Values.securityContext | nindent 16 }}
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+                  readOnly: true
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: config
+              configMap:
+                name: {{ include "privaci.fullname" . }}-config
+            - name: tmp
+              emptyDir: {}
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

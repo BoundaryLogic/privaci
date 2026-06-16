@@ -1,0 +1,76 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.venv/
+venv/
+ENV/
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+.privaci-salt
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Tooling
+site/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.hypothesis/
+# cosmic-ray mutation-testing session databases
+mutation.sqlite
+*.sqlite
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated fixtures (Tier 3 stress only)
+/tmp/
+tests/fixtures/sql/demo-corp-regen/
+
+# SpaCy model cache (downloaded at image build)
+.spacy/
+
+# Local review / agent artifacts (not shipped)
+.thermos/
+
+# Private commercial / web staging checkouts (separate repos; never publish here)
+.private-staging/
+
+# Internal-only developer notes (not for the public repo)
+DEVELOPER_NOTES.md
+
+# Mutation testing working copy (cosmic-ray)
+mutants/

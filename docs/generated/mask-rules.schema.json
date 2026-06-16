@@ -1,0 +1,358 @@
+{
+  "$defs": {
+    "AiRefineAction": {
+      "additionalProperties": false,
+      "description": "Level-3 LLM refinement; requires the commercial layer.\n\nAttributes:\n    provider: LLM backend identifier (e.g. ``aws_bedrock``).\n    model: Provider model identifier.\n    params: Optional provider-specific string parameters.",
+      "properties": {
+        "action": {
+          "const": "ai_refine",
+          "title": "Action",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Params",
+          "type": "object"
+        },
+        "provider": {
+          "title": "Provider",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "provider",
+        "model"
+      ],
+      "title": "AiRefineAction",
+      "type": "object"
+    },
+    "FakeAction": {
+      "additionalProperties": false,
+      "description": "Replace the value with a deterministic synthetic from ``provider``.\n\nAttributes:\n    provider: Name of the registered fake provider (e.g. ``first_name``).\n    seed_alias: Optional shared seed key so two columns (e.g. an FK and its\n        referenced column) fake to the same value across tables.\n    params: Optional provider-specific string parameters.",
+      "properties": {
+        "action": {
+          "const": "fake",
+          "title": "Action",
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Params",
+          "type": "object"
+        },
+        "provider": {
+          "title": "Provider",
+          "type": "string"
+        },
+        "seed_alias": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seed Alias"
+        }
+      },
+      "required": [
+        "action",
+        "provider"
+      ],
+      "title": "FakeAction",
+      "type": "object"
+    },
+    "HashAction": {
+      "additionalProperties": false,
+      "description": "Replace the value with a salted, deterministic hash.",
+      "properties": {
+        "action": {
+          "const": "hash",
+          "title": "Action",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "title": "HashAction",
+      "type": "object"
+    },
+    "NerMaskAction": {
+      "additionalProperties": false,
+      "description": "Mask named entities found by the Level-2 SpaCy NER model.\n\nAttributes:\n    entities: Entity labels to mask. Defaults to ``PERSON``, ``ORG``,\n        ``GPE``, ``LOC``.",
+      "properties": {
+        "action": {
+          "const": "ner_mask",
+          "title": "Action",
+          "type": "string"
+        },
+        "entities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Entities",
+          "type": "array"
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "title": "NerMaskAction",
+      "type": "object"
+    },
+    "NullAction": {
+      "additionalProperties": false,
+      "description": "Write SQL ``NULL``; rejected during pre-flight on ``NOT NULL`` columns.",
+      "properties": {
+        "action": {
+          "const": "null",
+          "title": "Action",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "title": "NullAction",
+      "type": "object"
+    },
+    "PassthroughAction": {
+      "additionalProperties": false,
+      "description": "Copy the value unchanged into the target.",
+      "properties": {
+        "action": {
+          "const": "passthrough",
+          "title": "Action",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "title": "PassthroughAction",
+      "type": "object"
+    },
+    "RegexMaskAction": {
+      "additionalProperties": false,
+      "description": "Substitute matches of ``pattern`` with ``replace``.\n\nAttributes:\n    pattern: A Python-compatible regular expression. Validated at parse\n        time; a non-compilable pattern fails config validation (exit 3).\n    replace: The replacement string.\n    flags: Optional list of regex flag names (e.g. ``IGNORECASE``).",
+      "properties": {
+        "action": {
+          "const": "regex_mask",
+          "title": "Action",
+          "type": "string"
+        },
+        "flags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Flags",
+          "type": "array"
+        },
+        "pattern": {
+          "title": "Pattern",
+          "type": "string"
+        },
+        "replace": {
+          "title": "Replace",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "pattern",
+        "replace"
+      ],
+      "title": "RegexMaskAction",
+      "type": "object"
+    },
+    "StaticAction": {
+      "additionalProperties": false,
+      "description": "Replace every value with a single constant ``value``.",
+      "properties": {
+        "action": {
+          "const": "static",
+          "title": "Action",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "value"
+      ],
+      "title": "StaticAction",
+      "type": "object"
+    },
+    "TableConfig": {
+      "additionalProperties": false,
+      "description": "Per-table masking configuration.\n\nAttributes:\n    strategy: How the table is handled in the target. ``transform``\n        (default) masks and copies rows; ``exclude`` drops the table;\n        ``empty`` recreates it with no rows; ``truncate`` empties an\n        existing target table before copy.\n    columns: Mapping of column name to its masking action.\n    batch_size: Optional per-table override of the global batch size.\n    null_orphan_fks: When true, FK columns that lose their referent are\n        set to NULL instead of failing the load.",
+      "properties": {
+        "batch_size": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Batch Size"
+        },
+        "columns": {
+          "additionalProperties": {
+            "discriminator": {
+              "mapping": {
+                "ai_refine": "#/$defs/AiRefineAction",
+                "fake": "#/$defs/FakeAction",
+                "hash": "#/$defs/HashAction",
+                "ner_mask": "#/$defs/NerMaskAction",
+                "null": "#/$defs/NullAction",
+                "passthrough": "#/$defs/PassthroughAction",
+                "regex_mask": "#/$defs/RegexMaskAction",
+                "static": "#/$defs/StaticAction"
+              },
+              "propertyName": "action"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/FakeAction"
+              },
+              {
+                "$ref": "#/$defs/RegexMaskAction"
+              },
+              {
+                "$ref": "#/$defs/HashAction"
+              },
+              {
+                "$ref": "#/$defs/PassthroughAction"
+              },
+              {
+                "$ref": "#/$defs/NullAction"
+              },
+              {
+                "$ref": "#/$defs/StaticAction"
+              },
+              {
+                "$ref": "#/$defs/NerMaskAction"
+              },
+              {
+                "$ref": "#/$defs/AiRefineAction"
+              }
+            ]
+          },
+          "title": "Columns",
+          "type": "object"
+        },
+        "null_orphan_fks": {
+          "default": false,
+          "title": "Null Orphan Fks",
+          "type": "boolean"
+        },
+        "strategy": {
+          "default": "transform",
+          "enum": [
+            "transform",
+            "exclude",
+            "empty",
+            "truncate"
+          ],
+          "title": "Strategy",
+          "type": "string"
+        }
+      },
+      "title": "TableConfig",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Root mask-rules.yaml document.\n\nAttributes:\n    version: Config schema version. The MVP engine accepts ``\"1.0\"`` only.\n    global_salt: Optional salt literal or secret URI; resolved at run time\n        by the secrets resolver. Never logged.\n    on_existing_data: Target-table collision policy. ``append`` is rejected\n        in the MVP.\n    strict_autodetect: Fail the run when auto-detect finds uncovered PII.\n    replicate_all_indexes: Replicate every source index, not just unique\n        and primary-key indexes.\n    batch_size: Default streaming batch size in rows.\n    audit_log: Write the per-run audit log to ``_privaci.audit_log``.\n    auto_detect: Run the zero-config PII column scanner.\n    implied_fk_ignore: Source column paths (``schema.table.column``) whose\n        implied (soft) foreign-key warnings should be silenced.\n    tables: Mapping of table identifier to its configuration.",
+  "properties": {
+    "audit_log": {
+      "default": true,
+      "title": "Audit Log",
+      "type": "boolean"
+    },
+    "auto_detect": {
+      "default": true,
+      "title": "Auto Detect",
+      "type": "boolean"
+    },
+    "batch_size": {
+      "default": 10000,
+      "title": "Batch Size",
+      "type": "integer"
+    },
+    "global_salt": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Global Salt"
+    },
+    "implied_fk_ignore": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Implied Fk Ignore",
+      "type": "array"
+    },
+    "on_existing_data": {
+      "default": "fail",
+      "enum": [
+        "fail",
+        "truncate",
+        "drop_create",
+        "append"
+      ],
+      "title": "On Existing Data",
+      "type": "string"
+    },
+    "replicate_all_indexes": {
+      "default": false,
+      "title": "Replicate All Indexes",
+      "type": "boolean"
+    },
+    "strict_autodetect": {
+      "default": false,
+      "title": "Strict Autodetect",
+      "type": "boolean"
+    },
+    "tables": {
+      "additionalProperties": {
+        "$ref": "#/$defs/TableConfig"
+      },
+      "title": "Tables",
+      "type": "object"
+    },
+    "version": {
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "version"
+  ],
+  "title": "Config",
+  "type": "object"
+}

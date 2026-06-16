@@ -1,0 +1,13 @@
+apiVersion: v2
+name: privaci
+description: PrivaCI batch masking engine (CronJob)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - postgresql
+  - masking
+  - privacy
+home: https://github.com/BoundaryLogic/privaci
+sources:
+  - https://github.com/BoundaryLogic/privaci

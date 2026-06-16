@@ -1,0 +1,10 @@
+# Production dependencies — compile with: pip-compile requirements.in
+asyncpg==0.30.0
+# Pinned to avoid the Click 8.4 / Typer break (make_metavar(ctx)).
+click>=8.1.7,<8.5
+cryptography==46.0.7
+pydantic==2.10.6
+pyyaml==6.0.2
+typer==0.16.0
+
+# NLP (install on Python 3.12 only): pip install spacy==3.8.4 && python -m spacy download en_core_web_sm

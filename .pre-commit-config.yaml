@@ -1,0 +1,42 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 26.3.1
+    hooks:
+      - id: black
+
+  - repo: https://github.com/pycqa/isort
+    rev: 6.0.1
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+        args: ["src/", "tests/"]
+        pass_filenames: false
+
+  - repo: local
+    hooks:
+      - id: pip-audit
+        name: pip-audit
+        entry: pip-audit --requirement requirements.txt
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: todo-requires-issue
+        name: reject TODO without issue number
+        entry: python scripts/check_todo_format.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: verify-fixtures
+        name: verify committed demo-corp SQL matches generator
+        entry: make fixtures-verify
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        files: ^tests/fixtures/demo_corp/

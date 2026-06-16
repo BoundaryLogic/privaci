@@ -1,0 +1,60 @@
+# Self-contained evaluation stack: source + target + PrivaCI engine.
+# See docs/deployment.md and docs/local-development.md §4.2.
+#
+#   export ANONYMIZATION_SALT="$(privaci gen-salt)"
+#   docker compose up --build
+
+services:
+  source-pg:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: privaci_source
+    volumes:
+      - source-pgdata:/var/lib/postgresql/data
+      - ./deploy/demo-seed:/docker-entrypoint-initdb.d:ro,z
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d privaci_source"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  target-pg:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: privaci_target
+    volumes:
+      - target-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d privaci_target"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  privaci:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/boundarylogic/privaci:local
+    depends_on:
+      source-pg:
+        condition: service_healthy
+      target-pg:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      SOURCE_DB_URL: postgresql://postgres:dev@source-pg:5432/privaci_source
+      TARGET_DB_URL: postgresql://postgres:dev@target-pg:5432/privaci_target
+      ANONYMIZATION_SALT: "${ANONYMIZATION_SALT:?Set ANONYMIZATION_SALT — run export ANONYMIZATION_SALT=$$(privaci gen-salt)}"
+    volumes:
+      - ./examples/mask-rules.demo.yaml:/config/mask-rules.yaml:ro,z
+    command: ["run", "--config", "/config/mask-rules.yaml"]
+
+volumes:
+  source-pgdata:
+  target-pgdata:

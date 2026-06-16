@@ -1,0 +1,152 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "privaci"
+version = "0.1.0-beta.2"
+description = "In-VPC PostgreSQL masking and anonymization engine"
+readme = "README.md"
+license = { text = "Elastic License 2.0" }
+requires-python = ">=3.12"
+authors = [{ name = "BoundaryLogic", email = "hello@boundarylogic.io" }]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: Other/Proprietary License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Database",
+    "Topic :: Security",
+]
+dependencies = [
+    "asyncpg==0.30.0",
+    # Pinned alongside typer: Click 8.4 broke Typer 0.15 (make_metavar(ctx)).
+    # Keep this range until a Typer release is validated against newer Click.
+    "click>=8.1.7,<8.5",
+    "cryptography==46.0.7",
+    "pydantic==2.10.6",
+    "pyyaml==6.0.2",
+    "typer==0.16.0",
+]
+
+[project.optional-dependencies]
+nlp = [
+    "spacy==3.8.7",
+]
+dev = [
+    "black==26.3.1",
+    "cosmic-ray==8.4.6",
+    "hypothesis==6.127.6",
+    "isort==6.0.1",
+    "mkdocs-material==9.6.11",
+    "mkdocs==1.6.1",
+    "mypy==1.15.0",
+    "pip-audit==2.7.3",
+    "pip-tools==7.4.1",
+    "pre-commit==4.1.0",
+    "pytest-asyncio==1.4.0",
+    "pytest-cov==6.0.0",
+    "pytest-mock==3.14.0",
+    "pytest==9.0.3",
+    "ruff==0.9.6",
+    "types-PyYAML==6.0.12.20241230",
+]
+
+[project.scripts]
+privaci = "privaci.cli.app:main"
+
+[project.entry-points."privaci.plugins"]
+# Commercial layer registers implementations here.
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+# Ship the PEP 561 marker so downstream packages (e.g. privaci-commercial) get
+# the engine's types when they build against privaci.contracts.
+privaci = ["py.typed"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+markers = [
+    "integration: tests that require a real PostgreSQL instance",
+    "slow: long-running tests",
+    "spike: Week-1 architecture validation (see docs/spikes/)",
+]
+addopts = "-m 'not integration'"
+
+[tool.coverage.run]
+source = ["src/privaci"]
+branch = true
+# Paths must match measured files under ``pytest --cov=src`` (``src/privaci/...``).
+omit = [
+    "*/__main__.py",
+    "*/mask/__init__.py",
+    "*/stream/__init__.py",
+    "*/schema/__init__.py",
+    "*/pipeline/__init__.py",
+    "*/autodetect/__init__.py",
+    "*/observability/__init__.py",
+    "*/preflight/__init__.py",
+    "*/verify/__init__.py",
+    "*/verify/runner.py",
+    "*/verify/structural.py",
+    "*/spikes/*",
+]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+src_paths = ["src", "tests"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+packages = ["privaci", "tests"]
+mypy_path = "src"
+
+[[tool.mypy.overrides]]
+# Optional/untyped third-party libs (cloud SDKs are lazy-imported per scheme).
+module = [
+    "spacy",
+    "spacy.*",
+    "asyncpg",
+    "asyncpg.*",
+    "boto3",
+    "botocore",
+    "botocore.*",
+    "azure.*",
+    "hvac",
+    "hvac.*",
+    "prometheus_client",
+    "prometheus_client.*",
+]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "S", "B", "A"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/conftest.py" = ["E402"]
+"tests/**" = ["S101", "S105", "S108"]
+"src/privaci/secrets/**" = ["A005"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["privaci", "tests"]

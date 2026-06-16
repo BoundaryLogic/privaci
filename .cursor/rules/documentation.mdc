@@ -1,0 +1,61 @@
+---
+description: Documentation standards — keep docs in lockstep with code, customer-first, AI-parseable, error-complete
+alwaysApply: true
+---
+
+# Documentation Standards
+
+## Update docs in the same change as the code
+
+When you change behavior, you MUST update docs in the **same** change:
+
+- New/changed CLI flag, config field, env var, or secret scheme → update the
+  relevant page under `docs/` and add a `CHANGELOG.md` entry.
+- New/changed error or exit code → update `docs/error-codes.md`.
+- New module → add/refresh its `docs/` page and link it from `docs/README.md`.
+- Architectural decision → add an ADR under `docs/adr/`.
+
+A behavior change without a matching doc change is incomplete. Call out the doc
+update in your summary.
+
+## Write for future customers, with examples
+
+- Lead with the operator's goal, not the internals. Name operations, not
+  functions ("Loading mask-rules.yaml", not "in `load_config`").
+- Every concept includes a copy-pasteable example (shell, YAML, or Python).
+- Prefer concrete commands over prose. Show the happy path and one failure.
+
+## Structure so AI tools can use it
+
+- One H1 per page; stable, descriptive H2/H3 headings (anchors are referenced
+  from code, e.g. `docs/error-codes.md#exit-code-4-missing-or-invalid-salt`).
+- Use tables for enumerations (exit codes, env vars, flags).
+- Keep `docs/README.md` as the index; link every new doc from it.
+- Cross-link related pages with relative paths.
+
+## Cover every error code
+
+`docs/error-codes.md` MUST document all exit codes (0, 1, 2, 3, 4, 5, 6, 130)
+with cause and remediation. Do not add a new exit code without a section there.
+
+## Error output format: Context + Cause + Remediation
+
+All errors raised via `PrivaCIError` (and subclasses) MUST be expressible as:
+
+```text
+Context: <what the engine was doing>
+Cause: <why it failed — never PII or secret values>
+Remediation: <the exact next step>
+See: docs/error-codes.md#<anchor>
+```
+
+```python
+raise ConfigError(
+    "Loading mask-rules.yaml",
+    cause="Unknown action type 'shuffle' on column users.email",
+    remediation="Use a supported action; see docs/configuration.md#actions.",
+)
+```
+
+Never leak PII/secrets in `cause`. Bare-context raises are allowed only for
+internal errors users never see.

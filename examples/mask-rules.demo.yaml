@@ -1,0 +1,20 @@
+# Evaluation compose config — masks public.users, copies organizations verbatim.
+# organizations is copied (not PII) so users.org_id NOT NULL FKs stay valid.
+# Used by docker compose up (see docs/deployment.md).
+
+version: "1.0"
+
+global_salt: env://ANONYMIZATION_SALT
+on_existing_data: fail
+auto_detect: false
+
+tables:
+  public.organizations:
+    strategy: transform
+  public.users:
+    strategy: transform
+    columns:
+      first_name: { action: fake, provider: first_name }
+      last_name: { action: fake, provider: last_name }
+      email: { action: fake, provider: email }
+      phone: { action: fake, provider: phone }

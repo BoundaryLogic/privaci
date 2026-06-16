@@ -1,0 +1,35 @@
+# Example PrivaCI configuration for the Demo Corp (lite) source database.
+# Validate with:
+#   privaci validate --config examples/mask-rules.example.yaml
+# Pre-flight (requires SOURCE_DB_URL + TARGET_DB_URL + ANONYMIZATION_SALT):
+#   privaci dry-run --config examples/mask-rules.example.yaml
+# See docs/configuration.md for the full reference.
+
+version: "1.0"
+
+# Salt resolves from the ANONYMIZATION_SALT env var at run time.
+# Generate one with: privaci gen-salt
+global_salt: "${ANONYMIZATION_SALT}"
+
+# Default target-collision policy: refuse to write into a non-empty target.
+on_existing_data: fail
+
+auto_detect: true
+strict_autodetect: false 
+
+tables:
+  public.users:
+    strategy: transform
+    columns:
+      first_name: { action: fake, provider: first_name }
+      last_name: { action: fake, provider: last_name }
+      email: { action: fake, provider: email }
+      ssn:
+        action: regex_mask
+        pattern: "^\\d{3}-\\d{2}-\\d{4}$"
+        replace: "000-00-0000"
+      password_hash: { action: hash }
+
+  # No primary key — recreated empty in target when strategy is exclude.
+  audit_internal.audit_log_events:
+    strategy: exclude

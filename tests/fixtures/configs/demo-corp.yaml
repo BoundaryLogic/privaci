@@ -1,0 +1,71 @@
+version: "1.0"
+global_salt: env://PRIVACI_TEST_SALT
+on_existing_data: fail
+strict_autodetect: false
+batch_size: 500
+
+tables:
+  public.organizations:
+    strategy: transform
+    columns:
+      name: { action: fake, provider: company }
+      ein: { action: regex_mask, pattern: '^\d{2}-\d{7}$', replace: "00-0000000" }
+      billing_email: { action: fake, provider: email }
+
+  public.users:
+    strategy: transform
+    columns:
+      email: { action: fake, provider: email }
+      phone: { action: fake, provider: phone }
+      first_name: { action: fake, provider: first_name }
+      last_name: { action: fake, provider: last_name }
+      dob: { action: fake, provider: dob }
+      ssn: { action: fake, provider: ssn }
+      password_hash: { action: static, value: "privaci-test-pw" }
+      last_login_ip: { action: fake, provider: ip_address }
+
+  public.user_payment_methods:
+    strategy: transform
+    columns:
+      card_number: { action: fake, provider: credit_card }
+      cvv: { action: hash }
+      cardholder_name: { action: fake, provider: full_name }
+
+  clinical.patients:
+    strategy: transform
+    columns:
+      mrn: { action: hash }
+      first_name: { action: fake, provider: first_name }
+      last_name: { action: fake, provider: last_name }
+      full_name: { action: fake, provider: full_name }
+      dob: { action: fake, provider: dob }
+      ssn: { action: fake, provider: ssn }
+      phone: { action: fake, provider: phone }
+      email: { action: fake, provider: email }
+      insurance_member_id: { action: hash }
+
+  clinical.patient_documents:
+    strategy: transform
+    columns:
+      referring_provider_email:
+        action: fake
+        provider: email
+        seed_alias: clinical.providers.email
+      uploaded_by_user_email:
+        action: fake
+        provider: email
+        seed_alias: public.users.email
+      document_blob: { action: passthrough }
+
+  public.ticket_messages:
+    strategy: transform
+    columns:
+      body: { action: ner_mask }
+
+  clinical.patient_visits:
+    strategy: transform
+    columns:
+      visit_notes: { action: ner_mask }
+
+  audit_internal.audit_log_events:
+    strategy: exclude

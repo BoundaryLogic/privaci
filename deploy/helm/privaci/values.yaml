@@ -1,0 +1,63 @@
+# Default values for the PrivaCI Helm chart.
+# See docs/deployment.md for install examples.
+
+image:
+  repository: ghcr.io/boundarylogic/privaci
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+schedule: "0 2 * * *"
+suspend: false
+concurrencyPolicy: Forbid
+successfulJobsHistoryLimit: 3
+failedJobsHistoryLimit: 3
+restartPolicy: OnFailure
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+affinity: {}
+tolerations: []
+nodeSelector: {}
+
+# Existing Kubernetes Secret names (no inline credentials).
+secrets:
+  sourceDbUrlSecret: privaci-source-db
+  sourceDbUrlKey: SOURCE_DB_URL
+  targetDbUrlSecret: privaci-target-db
+  targetDbUrlKey: TARGET_DB_URL
+  saltSecret: privaci-salt
+  saltKey: ANONYMIZATION_SALT
+
+config:
+  # Inline mask-rules.yaml rendered into a ConfigMap.
+  maskRules: |
+    version: "1.0"
+    global_salt: env://ANONYMIZATION_SALT
+    on_existing_data: fail
+    auto_detect: true
+    tables: {}
+
+extraEnv: []
+commercialLayer: false
+
+serviceAccount:
+  create: true
+  name: ""
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+
+podSecurityContext:
+  fsGroup: 10001

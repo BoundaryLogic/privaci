@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "privaci.fullname" . }}-config
+  labels:
+    app.kubernetes.io/name: {{ include "privaci.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  mask-rules.yaml: |
+{{ .Values.config.maskRules | indent 4 }}

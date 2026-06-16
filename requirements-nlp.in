@@ -1,0 +1,4 @@
+# NLP runtime dependencies for the container image (SpaCy + model download).
+# Compile with: pip-compile requirements-nlp.in
+-r requirements.in
+spacy==3.8.4
