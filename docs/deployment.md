@@ -193,6 +193,22 @@ Tag pushes (`v*`) trigger
 - Helm chart packaged to `oci://ghcr.io/boundarylogic/charts`
 - GitHub Release (pre-release for beta tags)
 
+### GHCR publish credentials
+
+The BoundaryLogic org rejects `GITHUB_TOKEN` package writes (`permission_denied:
+write_package`) even when the container package lists this repository under
+**Manage Actions access**. The release workflow therefore authenticates to GHCR
+with a classic personal access token stored as a repository secret.
+
+1. As a GitHub user with **write** access to org packages, create a **classic
+   PAT** with scopes `write:packages` and `read:packages`.
+2. In this repo: **Settings → Secrets and variables → Actions → New repository
+   secret** → name `GHCR_TOKEN`, paste the PAT.
+3. If the PAT owner is not the user who pushes release tags, also add
+   `GHCR_USERNAME` (the PAT owner's GitHub login).
+
+Re-run the failed **Release** workflow job after adding the secret.
+
 ### Cut a beta release
 
 ```bash
