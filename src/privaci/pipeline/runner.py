@@ -210,7 +210,7 @@ def _notify_meter_run_start(source_db_hash: str) -> None:
 
 
 def _notify_meter_run_end(source_db_hash: str, run_id: uuid.UUID) -> None:
-    """Finalize ``UsageMeter`` plugin contract after a terminal run status is recorded."""
+    """Finalize ``UsageMeter`` plugin contract after a terminal run status."""
     plugins = load_plugins()
     plugins.usage_meter.final_meter(source_db_hash=source_db_hash, run_id=run_id)
 
