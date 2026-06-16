@@ -40,3 +40,18 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
         files: ^tests/fixtures/demo_corp/
+
+      - id: public-repo-language
+        name: public repo language guard (ADR-0007)
+        entry: python scripts/check_public_repo_language.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: public-repo-language-commit-msg
+        name: public repo commit message language guard
+        entry: python scripts/check_public_repo_language.py
+        language: system
+        pass_filenames: false
+        stages: [commit-msg]
+        args: [--commit-msg-file]

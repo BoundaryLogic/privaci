@@ -46,6 +46,11 @@ jobs:
       - name: git history email guard
         run: python scripts/check_git_emails.py
 
+      - name: public repo language guard
+        run: |
+          python scripts/check_public_repo_language.py
+          python scripts/check_public_repo_language.py --git-log 30
+
       - name: pytest (unit)
         run: pytest --cov=src --cov-report=term-missing --cov-fail-under=85 -m "not integration"
 

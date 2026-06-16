@@ -405,6 +405,10 @@ Run `pre-commit install` after cloning. The following hooks run on every commit:
   existing dependency cannot serve the same purpose.
 
 ## What the Assistant Must Never Do
+- Never use "commercial hooks/entitlement/metering" in public-repo commit messages,
+  CHANGELOG entries, release notes, or engine implementation comments when describing
+  ``privaci.contracts`` lifecycle wiring — say **plugin contract** / **UsageMeter
+  lifecycle** instead (ADR-0007; see ``.cursor/rules/public-repo-language.mdc``).
 - Never generate code that logs raw PII values.
 - Never generate hardcoded credentials, salts, or tokens, even as placeholders.
   Use environment variable references and a comment indicating what is expected.
