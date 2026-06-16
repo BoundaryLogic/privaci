@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0-beta.5] - 2026-06-16
+
+### Changed
+
+- Pipeline invokes ``UsageMeter.register_run`` before recording a new run and
+  ``final_meter`` on successful completion (plugin contract lifecycle hooks).
+
 ## [0.1.0-beta.4] - 2026-06-16
 
 ### Added
