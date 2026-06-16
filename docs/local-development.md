@@ -74,6 +74,34 @@ After step 8 you should see all unit tests pass in seconds.
 
 ---
 
+## 2.1 Branch-first workflow
+
+Do **not** push feature or fix commits directly to `main`. Use a branch and a PR:
+
+```bash
+git checkout main
+git pull
+git checkout -b feat/my-change
+
+# … edit, commit …
+
+# Same gates as CI (run before push):
+black --check src/ tests/
+isort --check-only --profile black src/ tests/
+ruff check src/ tests/
+mypy src/ --strict
+pytest --cov=src --cov-fail-under=85 -m "not integration"
+python scripts/check_public_repo_language.py
+
+git push -u origin HEAD
+gh pr create
+```
+
+Release tags (`v*`) are cut on `main` after merge, when you intentionally ship a
+release — not from unreviewed feature branches.
+
+---
+
 ## 3. The Three Test Layers
 
 Tests are organized so the fast layer runs in seconds and the slow

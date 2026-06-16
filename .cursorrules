@@ -400,6 +400,17 @@ cloning. The following hooks run on every commit:
 - If a security-sensitive operation is involved (DB query, file write, external call),
   add a `# SECURITY:` comment explaining the threat model consideration.
 
+## Git workflow (branch-first)
+- **Never push feature, fix, docs, or CI changes directly to `main`.** Create a
+  branch (`feat/`, `fix/`, `chore/`, `docs/`), run CI gates locally, push the
+  branch, and open a PR — unless the user explicitly requests a direct `main` push
+  or a release tag cut.
+- Before every push, run the CI-equivalent checks listed in
+  ``.cursor/rules/branch-first.mdc`` (black, isort, ruff, mypy, pytest, language
+  guard).
+- Release tags (`v*`) are cut on `main` only after merge, when the user requests a
+  release.
+
 ## When Editing Existing Code
 - Do not remove or alter existing docstrings unless the behavior actually changed.
 - Do not reformat code outside the directly edited lines (black handles formatting).
