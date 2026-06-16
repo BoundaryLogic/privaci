@@ -128,10 +128,17 @@ jobs:
           if [[ "${{ steps.release.outputs.prerelease }}" == "true" ]]; then
             PRERELEASE_FLAG="--prerelease"
           fi
-          gh release create "${GITHUB_REF_NAME}" \
-            --title "${GITHUB_REF_NAME}" \
-            ${PRERELEASE_FLAG} \
-            --notes-file - <<'EOF'
+          NOTES_FILE=".github/release-notes/${GITHUB_REF_NAME}.md"
+          if [[ -f "${NOTES_FILE}" ]]; then
+            gh release create "${GITHUB_REF_NAME}" \
+              --title "${GITHUB_REF_NAME}" \
+              ${PRERELEASE_FLAG} \
+              --notes-file "${NOTES_FILE}"
+          else
+            gh release create "${GITHUB_REF_NAME}" \
+              --title "${GITHUB_REF_NAME}" \
+              ${PRERELEASE_FLAG} \
+              --notes-file - <<'EOF'
           See [CHANGELOG.md](https://github.com/BoundaryLogic/privaci/blob/main/CHANGELOG.md).
 
           - Commercial-tier contract version: `1.0` (`privaci --contract-version`)
@@ -139,3 +146,4 @@ jobs:
             `cd965cb6dadcecefd508ae84a000684f431490c3d3ddae006ad5f89bf2c25978`
             — see [pack-signing runbook](https://github.com/BoundaryLogic/privaci/blob/main/docs/runbooks/pack-signing.md)
           EOF
+          fi
