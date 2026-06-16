@@ -2,7 +2,7 @@
 asyncpg==0.30.0
 # Pinned to avoid the Click 8.4 / Typer break (make_metavar(ctx)).
 click>=8.1.7,<8.5
-cryptography==46.0.7
+cryptography==48.0.1
 pydantic==2.10.6
 pyyaml==6.0.2
 typer==0.16.0

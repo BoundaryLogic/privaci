@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "privaci"
-version = "0.1.0-beta.2"
+version = "0.1.0-beta.3"
 description = "In-VPC PostgreSQL masking and anonymization engine"
 readme = "README.md"
 license = { text = "Elastic License 2.0" }
@@ -24,7 +24,7 @@ dependencies = [
     # Pinned alongside typer: Click 8.4 broke Typer 0.15 (make_metavar(ctx)).
     # Keep this range until a Typer release is validated against newer Click.
     "click>=8.1.7,<8.5",
-    "cryptography==46.0.7",
+    "cryptography==48.0.1",
     "pydantic==2.10.6",
     "pyyaml==6.0.2",
     "typer==0.16.0",

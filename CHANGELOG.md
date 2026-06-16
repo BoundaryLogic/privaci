@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so the commercial layer can detect drift in `_privaci.runs` columns, exit codes
   5/6, and snapshot JSON shape before going public.
 
+## [0.1.0-beta.3] - 2026-06-16
+
+### Security
+
+- Bumped `cryptography` `46.0.7` → `48.0.1` to pick up OpenSSL security fixes
+  in the statically linked wheels (Dependabot #3).
+
 ## [0.1.0-beta.2] - 2026-06-11
 
 ### Added
