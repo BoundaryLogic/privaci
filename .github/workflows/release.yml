@@ -118,6 +118,7 @@ jobs:
         with:
           image: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
           artifact-name: privaci-sbom.spdx.json
+          output-file: privaci-sbom.spdx.json
 
       - name: Sign image with cosign
         uses: sigstore/cosign-installer@v3
@@ -134,7 +135,7 @@ jobs:
           helm push "privaci-${{ steps.release.outputs.version }}.tgz" "oci://ghcr.io/boundarylogic/charts"
         continue-on-error: true
 
-      - name: Create GitHub release
+      - name: Create or update GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -143,21 +144,49 @@ jobs:
             PRERELEASE_FLAG="--prerelease"
           fi
           NOTES_FILE=".github/release-notes/${GITHUB_REF_NAME}.md"
+          RELEASE_EXISTS=false
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            RELEASE_EXISTS=true
+          fi
           if [[ -f "${NOTES_FILE}" ]]; then
-            gh release create "${GITHUB_REF_NAME}" \
-              --title "${GITHUB_REF_NAME}" \
-              ${PRERELEASE_FLAG} \
-              --notes-file "${NOTES_FILE}"
+            if [[ "${RELEASE_EXISTS}" == "true" ]]; then
+              gh release edit "${GITHUB_REF_NAME}" \
+                --title "${GITHUB_REF_NAME}" \
+                ${PRERELEASE_FLAG} \
+                --notes-file "${NOTES_FILE}"
+            else
+              gh release create "${GITHUB_REF_NAME}" \
+                --title "${GITHUB_REF_NAME}" \
+                ${PRERELEASE_FLAG} \
+                --notes-file "${NOTES_FILE}"
+            fi
           else
-            gh release create "${GITHUB_REF_NAME}" \
-              --title "${GITHUB_REF_NAME}" \
-              ${PRERELEASE_FLAG} \
-              --notes-file - <<'EOF'
+            if [[ "${RELEASE_EXISTS}" == "true" ]]; then
+              gh release edit "${GITHUB_REF_NAME}" \
+                --title "${GITHUB_REF_NAME}" \
+                ${PRERELEASE_FLAG} \
+                --notes-file - <<'EOF'
           See [CHANGELOG.md](https://github.com/BoundaryLogic/privaci/blob/main/CHANGELOG.md).
 
-          - Commercial-tier contract version: `1.0` (`privaci --contract-version`)
+          - Plugin contract version: `1.0` (`privaci --contract-version`)
           - Config-pack trust anchor (`PRIVACI_PACK_PUBLIC_KEY`):
             `cd965cb6dadcecefd508ae84a000684f431490c3d3ddae006ad5f89bf2c25978`
             — see [pack-signing runbook](https://github.com/BoundaryLogic/privaci/blob/main/docs/runbooks/pack-signing.md)
           EOF
+            else
+              gh release create "${GITHUB_REF_NAME}" \
+                --title "${GITHUB_REF_NAME}" \
+                ${PRERELEASE_FLAG} \
+                --notes-file - <<'EOF'
+          See [CHANGELOG.md](https://github.com/BoundaryLogic/privaci/blob/main/CHANGELOG.md).
+
+          - Plugin contract version: `1.0` (`privaci --contract-version`)
+          - Config-pack trust anchor (`PRIVACI_PACK_PUBLIC_KEY`):
+            `cd965cb6dadcecefd508ae84a000684f431490c3d3ddae006ad5f89bf2c25978`
+            — see [pack-signing runbook](https://github.com/BoundaryLogic/privaci/blob/main/docs/runbooks/pack-signing.md)
+          EOF
+            fi
+          fi
+          if [[ -f privaci-sbom.spdx.json ]]; then
+            gh release upload "${GITHUB_REF_NAME}" privaci-sbom.spdx.json --clobber
           fi
