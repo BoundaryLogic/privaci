@@ -51,7 +51,10 @@ tag will **not** pick up the fix.
 Options:
 
 1. **Cut a new tag** (e.g. `v0.1.0-beta.4`) on `main` after secrets and workflow fixes land.
-2. **Move the tag** (force-push tag to current `main`) — only if no partial release artifacts exist.
+2. **Move the tag** (force-push tag to current `main`) — only if no partial release
+   artifacts exist. After `release.yml` idempotent release step lands, a tag
+   re-push updates GHCR/Helm and **edits** the existing GitHub Release instead of
+   failing with `Release.tag_name already exists`.
 3. Add `workflow_dispatch` to `release.yml` (future) to run against a chosen ref.
 
 ## After a successful Release workflow
@@ -77,6 +80,7 @@ Options:
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
+| `Release.tag_name already exists` on Create GitHub release | Tag was force-pushed after a successful release | Merge idempotent `release.yml` fix, then re-push the tag or re-run the workflow; GHCR images may already be published |
 | `403 Forbidden` / `permission_denied: write_package` on GHCR push | Org blocks `GITHUB_TOKEN` package writes | Add `GHCR_TOKEN` PAT; use a **new tag** (not a re-run of an old one) |
 | `Missing repository secret GHCR_TOKEN` | Secret not created | Settings → Secrets → `GHCR_TOKEN` |
 | Pages 404 | Pages not enabled | Settings → Pages → Source: **GitHub Actions**; or run `docs-pages.yml` once |
