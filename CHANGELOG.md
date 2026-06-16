@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `https://boundarylogic.github.io/privaci/`.
 - Release workflow documents `GHCR_TOKEN` PAT requirement for org GHCR publish
   (`docs/deployment.md#ghcr-publish-credentials`).
+- [Release infrastructure runbook](docs/runbooks/release-infrastructure.md) —
+  secrets, environments, Trusted Publishing, and tag re-run caveats.
 - Implicit commercial-contract guard (`scripts/check_implicit_contracts.py`) and
   canonical catalog snapshot fixture (`tests/fixtures/canonical_catalog_snapshot.json`)
   so the commercial layer can detect drift in `_privaci.runs` columns, exit codes

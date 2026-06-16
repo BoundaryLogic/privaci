@@ -50,6 +50,7 @@ Auto-generated reference pages (regenerate with `make docs-generate`):
 | [`deployment.md`](deployment.md) | Container image, evaluation `docker compose`, Helm chart, and release publishing |
 | [`error-codes.md`](error-codes.md) | Every exit code + the Context + Cause + Remediation message format |
 | [`runbooks/pack-signing.md`](runbooks/pack-signing.md) | Generating, provisioning (`PRIVACI_PACK_PUBLIC_KEY`), and rotating the config-pack signing key |
+| [`runbooks/release-infrastructure.md`](runbooks/release-infrastructure.md) | Secrets, environments, GHCR/PyPI/Pages setup after a fresh repo |
 | [`runbooks/git-history-privacy.md`](runbooks/git-history-privacy.md) | Keeping personal emails out of git history (CI guard remediation) |
 | [`architecture/overview.md`](architecture/overview.md) | MVP architecture summary (streaming, FKs, state, masking tiers) |
 | [`architecture/memory-model.md`](architecture/memory-model.md) | How RAM stays bounded on large databases (batch sizing, backpressure, sizing guidance) |

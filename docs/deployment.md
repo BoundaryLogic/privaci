@@ -209,6 +209,9 @@ with a classic personal access token stored as a repository secret.
 
 Re-run the failed **Release** workflow job after adding the secret.
 
+See [release-infrastructure runbook](runbooks/release-infrastructure.md) for the
+full checklist (environments, PyPI Trusted Publishing, tag re-run caveats).
+
 ### Cut a beta release
 
 ```bash
