@@ -256,6 +256,34 @@ A version the engine cannot satisfy exits `3` with the exact invocation needed.
 
 ---
 
+## `privaci detect-drift`
+
+Compare the live source catalog to the `source_schema_snapshot` stored on the
+most recent **successful** run for the same `source_db_hash`. Requires the
+commercial layer (plugin `drift_detector`); community installs exit `1`.
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--config` | `/config/mask-rules.yaml` | Mask rules (for `implied_fk_ignore`). |
+| `--source` | `$SOURCE_DB_URL` | Source PostgreSQL URL. |
+| `--target` | `$TARGET_DB_URL` | Target PostgreSQL URL (`_privaci` state). |
+| `--accept-drift` | off | Print findings but exit `0` when drift is present. |
+
+```bash
+privaci detect-drift --source "$SOURCE_DB_URL" --target "$TARGET_DB_URL"
+# No schema drift detected.
+
+privaci detect-drift --accept-drift
+# Schema drift: 2 finding(s):
+# {"kind":"column_added","table":"public.users","column":"phone"}
+# Drift accepted (--accept-drift); exiting successfully.
+```
+
+Exit `6` when drift is detected and `--accept-drift` is not set. See
+[error-codes.md](error-codes.md#exit-code-6-drift-detected).
+
+---
+
 ## `privaci report`
 
 Render a compliance report for a completed run. Community mode emits a JSON

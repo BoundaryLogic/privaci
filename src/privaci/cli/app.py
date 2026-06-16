@@ -10,6 +10,7 @@ from pathlib import Path
 import typer
 
 from privaci.cli._catalog import inspect_source
+from privaci.cli._drift import execute_detect_drift
 from privaci.cli._errors import run_cli
 from privaci.cli._resume import execute_resume
 from privaci.cli._run import execute_run, execute_verify
@@ -261,6 +262,26 @@ def resume(
         source=source,
         target=target,
         no_audit_table=no_audit_table,
+    )
+
+
+@app.command("detect-drift")
+def detect_drift_cmd(
+    config: ConfigPathOption = "/config/mask-rules.yaml",
+    source: SourceDbOption = None,
+    target: TargetDbOption = None,
+    accept_drift: bool = typer.Option(
+        False,
+        "--accept-drift",
+        help="Exit 0 when drift is present (findings still printed).",
+    ),
+) -> None:
+    """Compare the live source schema to the last successful run snapshot."""
+    execute_detect_drift(
+        config_path=config,
+        source=source,
+        target=target,
+        accept_drift=accept_drift,
     )
 
 

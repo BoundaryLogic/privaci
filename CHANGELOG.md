@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- ``privaci detect-drift`` subcommand: compares the live source catalog to the
+  last successful run snapshot via the plugin ``DriftDetector`` (commercial layer;
+  exit ``6`` on drift, ``--accept-drift`` to acknowledge).
+
 ## [0.1.0-beta.5] - 2026-06-16
 
 ### Changed

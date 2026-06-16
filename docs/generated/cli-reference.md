@@ -31,6 +31,17 @@ Introspect the source schema and print tables, load order, warnings.
 |--------|---------|---------|-------------|
 | `--source` | `SOURCE_DB_URL` | — | Source database URL or secret URI. |
 
+## `privaci detect-drift`
+
+Compare the live source schema to the last successful run snapshot.
+
+| Option | Env var | Default | Description |
+|--------|---------|---------|-------------|
+| `--config` | — | `/config/mask-rules.yaml` | Path to mask-rules.yaml. |
+| `--source` | `SOURCE_DB_URL` | — | Source database URL or secret URI. |
+| `--target` | `TARGET_DB_URL` | — | Target database URL or secret URI. |
+| `--accept-drift` | — | `False` | Exit 0 when drift is present (findings still printed). |
+
 ## `privaci dry-run`
 
 Pre-flight checks only; no writes.
