@@ -14,6 +14,7 @@ from privaci.autodetect import build_detection
 from privaci.catalog import introspect_catalog
 from privaci.catalog.models import CatalogResult
 from privaci.config.models import Config
+from privaci.contracts import load_plugins
 from privaci.errors import RunInterruptedError
 from privaci.pipeline.lifecycle import emit_run_end, initialize_fresh_run
 from privaci.pipeline.streaming import stream_all_tables
@@ -163,6 +164,7 @@ async def _run_connected_pipeline(
         run_id,
         audit,
         started_at,
+        source_dsn=source_dsn,
         checkpoints=checkpoints,
     )
 
@@ -184,6 +186,7 @@ async def _open_run(
         salt_fingerprint=salt_fingerprint(salt),
         source_db_hash=source_db_hash(source_dsn),
     )
+    _notify_meter_run_start(identity.source_db_hash)
     run_id = await start_run(target, identity)
     audit = await initialize_fresh_run(
         target,
@@ -197,6 +200,21 @@ async def _open_run(
     return run_id, audit
 
 
+def _notify_meter_run_start(source_db_hash: str) -> None:
+    """Invoke the ``UsageMeter`` plugin contract before persisting a new run row."""
+    plugins = load_plugins()
+    plugins.usage_meter.register_run(
+        source_db_hash=source_db_hash,
+        run_id=uuid.uuid4(),
+    )
+
+
+def _notify_meter_run_end(source_db_hash: str, run_id: uuid.UUID) -> None:
+    """Finalize ``UsageMeter`` plugin contract after a terminal run status is recorded."""
+    plugins = load_plugins()
+    plugins.usage_meter.final_meter(source_db_hash=source_db_hash, run_id=run_id)
+
+
 async def _stream_to_summary(
     source: asyncpg.Connection,
     target: asyncpg.Connection,
@@ -207,6 +225,7 @@ async def _stream_to_summary(
     audit: AuditWriter,
     started_at: float,
     *,
+    source_dsn: str,
     checkpoints: dict[str, TableCheckpoint] | None,
 ) -> PipelineSummary:
     detection = build_detection(config, catalog)
@@ -227,7 +246,13 @@ async def _stream_to_summary(
         rows_processed=total_rows,
         table_row_counts=counts,
     )
-    await _finish_successful_run(target, run_id, started_at, summary)
+    await _finish_successful_run(
+        target,
+        run_id,
+        started_at,
+        summary,
+        source_db_hash_value=source_db_hash(source_dsn),
+    )
     return summary
 
 
@@ -236,6 +261,8 @@ async def _finish_successful_run(
     run_id: uuid.UUID,
     started_at: float,
     summary: PipelineSummary,
+    *,
+    source_db_hash_value: str,
 ) -> None:
     await finish_run(
         target,
@@ -246,6 +273,7 @@ async def _finish_successful_run(
             "rows": summary.rows_processed,
         },
     )
+    _notify_meter_run_end(source_db_hash_value, run_id)
     emit_run_end(
         run_id,
         RunStatus.SUCCEEDED.value,
