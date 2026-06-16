@@ -50,6 +50,7 @@ pip install -e .                          # editable install of the engine
 # 4. Initialize git (required for pre-commit) and install hooks
 git init
 pre-commit install
+pre-commit install --hook-type commit-msg   # ADR-0007 commit-message language guard
 
 # 5. Create a local .env (never commit this file)
 cp .env.example .env

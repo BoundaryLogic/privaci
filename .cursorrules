@@ -363,12 +363,14 @@ class MaskingEngine:
 # ------------------------------------------------------------
 
 ## Pre-commit Hooks (required in every contributor's environment)
-Run `pre-commit install` after cloning. The following hooks run on every commit:
+Run `pre-commit install` and `pre-commit install --hook-type commit-msg` after
+cloning. The following hooks run on every commit:
 - `black` — formatting
 - `isort` — import ordering
 - `ruff` — linting
 - `pip-audit` — dependency vulnerability scan
 - Custom hook: reject any file containing `TODO` without an issue number
+- Custom hook: public-repo language guard (ADR-0007; commit-msg + staged paths)
 
 ## CI Pipeline Gates (all must pass before merge)
 - `black --check src/ tests/`
