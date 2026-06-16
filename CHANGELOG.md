@@ -7,18 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0-beta.4] - 2026-06-16
+
 ### Added
 
-- GitHub Pages workflow (`.github/workflows/docs-pages.yml`) publishes MkDocs to
-  `https://boundarylogic.github.io/privaci/`.
-- Release workflow documents `GHCR_TOKEN` PAT requirement for org GHCR publish
-  (`docs/deployment.md#ghcr-publish-credentials`).
-- [Release infrastructure runbook](docs/runbooks/release-infrastructure.md) —
-  secrets, environments, Trusted Publishing, and tag re-run caveats.
+- GitHub Pages workflow publishes MkDocs to `https://boundarylogic.github.io/privaci/`.
+- [Release infrastructure runbook](docs/runbooks/release-infrastructure.md) for
+  secrets, environments, and PyPI Trusted Publishing after a fresh repo.
 - Implicit commercial-contract guard (`scripts/check_implicit_contracts.py`) and
   canonical catalog snapshot fixture (`tests/fixtures/canonical_catalog_snapshot.json`)
   so the commercial layer can detect drift in `_privaci.runs` columns, exit codes
   5/6, and snapshot JSON shape before going public.
+
+### Changed
+
+- Release workflow authenticates to GHCR with `GHCR_TOKEN` (org blocks
+  `GITHUB_TOKEN` package writes).
 
 ## [0.1.0-beta.3] - 2026-06-16
 
