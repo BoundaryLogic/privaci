@@ -1,0 +1,41 @@
+---
+description: Work in branches — never push feature/fix commits directly to main
+alwaysApply: true
+---
+
+# Branch-first workflow
+
+## Always use a branch
+
+- **Never** commit feature, fix, docs, or CI changes directly to `main`.
+- Create a branch before editing: `git checkout -b feat/short-description` or
+  `fix/...`, `chore/...`, `docs/...`.
+- Open a PR (or ask the user to merge) after CI is green locally.
+- **Exception:** the user explicitly asks to commit/push to `main`, or you are
+  cutting a release tag they requested on `main`.
+
+## Before push
+
+Run the same gates as CI (public engine):
+
+```bash
+black --check src/ tests/
+isort --check-only --profile black src/ tests/
+ruff check src/ tests/
+mypy src/ --strict
+pytest --cov=src --cov-fail-under=85 -m "not integration"
+python scripts/check_public_repo_language.py
+python scripts/check_public_repo_language.py --git-log 5
+```
+
+## Push the branch, not main
+
+```bash
+git push -u origin HEAD
+gh pr create   # when the user asks for a PR
+```
+
+## Release tags
+
+Version bumps and `v*` tags stay on `main` after merge, not on long-lived feature
+branches. Tag only when the user requests a release.
