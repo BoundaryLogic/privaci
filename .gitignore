@@ -1,4 +1,7 @@
-# Python
+# Local capability-test reports (keep the directory, ignore generated files)
+reports/capability-tests/*
+!reports/capability-tests/.gitkeep
+
 __pycache__/
 *.py[cod]
 *$py.class
