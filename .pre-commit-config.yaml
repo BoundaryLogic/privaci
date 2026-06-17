@@ -55,3 +55,10 @@ repos:
         pass_filenames: false
         stages: [commit-msg]
         args: [--commit-msg-file]
+
+      - id: ci-local-pre-push
+        name: full CI parity (lint-and-test)
+        entry: scripts/ci-local.sh
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

@@ -2,6 +2,8 @@
 # Mandatory pytest entrypoint for Cursor agents. Refuses unsafe runs *before*
 # starting — the user cannot interrupt mid-crash.
 #
+# For full CI parity before push, run: ./scripts/ci-local.sh
+#
 # Usage:
 #   ./scripts/agent-safe-test.sh tests/cli/test_foo.py
 #   AGENT_ALLOW_INTEGRATION=1 ./scripts/agent-safe-test.sh tests/integration/test_foo.py -m integration
