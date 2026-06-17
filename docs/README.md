@@ -12,7 +12,7 @@ folder is the canonical documentation set. Start here, then follow the links.
 | Doc | What it covers |
 |-----|----------------|
 | [`quickstart.md`](quickstart.md) | Zero to first masked row (evaluation compose or your own DBs) |
-| [`local-development.md`](local-development.md) | Workstation setup (Python 3.12 venv, Docker/Podman), test layers, day-to-day loop |
+| [`local-development.md`](local-development.md) | Workstation setup (Python 3.12 venv, Docker/Podman), test layers, capability harness (§6.1), day-to-day loop |
 | [`test-fixtures.md`](test-fixtures.md) | The "MedicalHelpDesk Corp" source schema and dataset tiers |
 | [`spikes/README.md`](spikes/README.md) | Week-1 architecture spikes and how to run them |
 
