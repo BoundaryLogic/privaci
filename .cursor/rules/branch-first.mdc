@@ -15,7 +15,17 @@ alwaysApply: true
 
 ## Before push
 
-Run the same gates as CI (public engine):
+Run the full CI mirror (same gates as GitHub ``lint-and-test``):
+
+```bash
+./scripts/ci-local.sh
+```
+
+Optional: ``./scripts/ci-local.sh --integration --docs --helm`` for the full workflow matrix.
+
+``pre-commit install`` enables format/lint on commit and ``ci-local.sh`` on **pre-push**.
+
+Manual equivalent:
 
 ```bash
 black --check src/ tests/
@@ -24,7 +34,7 @@ ruff check src/ tests/
 mypy src/ --strict
 pytest --cov=src --cov-fail-under=85 -m "not integration"
 python scripts/check_public_repo_language.py
-python scripts/check_public_repo_language.py --git-log 5
+python scripts/check_public_repo_language.py --git-log 30
 ```
 
 ## Push the branch, not main
