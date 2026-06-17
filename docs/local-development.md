@@ -45,7 +45,8 @@ python --version            # verify: Python 3.12.x
 
 # 3. Install pinned dev dependencies (lockfile from pip-compile)
 pip install -r requirements-dev.txt
-pip install -e .                          # editable install of the engine
+pip install -e ".[nlp]"
+python -m spacy download en_core_web_sm
 
 # 4. Initialize git (required for pre-commit) and install hooks
 git init
@@ -367,6 +368,50 @@ pip-audit --requirement requirements.txt
 ```
 
 Pre-commit hooks run a subset of these on `git commit` automatically.
+
+---
+
+## 6.1 Capability test harness
+
+**Resource-safe by default.** Postgres compose and integration tests require
+`--allow-heavy` plus healthy RAM/swap. Use `--plan` to preview without running.
+
+**SpaCy required for masking audit.** Capabilities that exercise demo-corp L2
+(`ner_mask` on `ticket_messages.body`, `patient_visits.visit_notes`) declare
+`requires_nlp`. The suite refuses to start if `spacy` or `en_core_web_sm` is
+missing — install per §1 step 3 before `standard` / `full` suites.
+
+Reports are **version 2**: each capability includes scope (infrastructure vs
+masking audit), a **Masking confidence** summary (leak probes, verify, subsetting
+verdict), and per-capability metrics (retention tables, FK checks, pytest summary).
+
+```bash
+# List capabilities, groups, and suites
+./scripts/capability-test.sh --list
+
+# Safe — unit tests only (no Postgres)
+./scripts/capability-test.sh --cap public-detect-drift,commercial-jsonb-transform
+
+# Quick suite — all public + commercial unit tests
+./scripts/capability-test-suite.sh quick
+
+# Full validation — unit, then public integration, then commercial integration
+./scripts/capability-test-suite.sh standard --allow-heavy --reset-volumes
+
+# Single integration capability
+./scripts/capability-test.sh --plan --allow-heavy --cap commercial-subsetting
+./scripts/capability-test.sh --allow-heavy --cap commercial-subsetting --no-compose
+```
+
+**Suites:** `quick` (unit only) · `public` · `commercial` · `standard` / `full`
+(phased: unit → public integration → commercial integration, one Postgres session).
+
+Reports: `reports/capability-tests/` in the repo you invoke (absolute paths at
+the end). From `privaci-commercial`, use `./scripts/capability-test.sh` or
+`./scripts/capability-test-suite.sh` — reports default to
+`privaci-commercial/reports/capability-tests/`.
+
+If the script prints `REFUSED`, free memory first — do not bypass.
 
 ---
 

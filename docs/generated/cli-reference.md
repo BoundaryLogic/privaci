@@ -31,6 +31,16 @@ Introspect the source schema and print tables, load order, warnings.
 |--------|---------|---------|-------------|
 | `--source` | `SOURCE_DB_URL` | — | Source database URL or secret URI. |
 
+## `privaci detect-drift`
+
+Compare live source schema to the last snapshot on target (commercial).
+
+| Option | Env var | Default | Description |
+|--------|---------|---------|-------------|
+| `--source` | `SOURCE_DB_URL` | — | Source database URL or secret URI. |
+| `--target` | `TARGET_DB_URL` | — | Target database URL or secret URI. |
+| `--accept-drift` | — | `False` | Emit findings JSON but do not exit 6 when drift is detected. |
+
 ## `privaci dry-run`
 
 Pre-flight checks only; no writes.
@@ -74,6 +84,20 @@ Upgrade a config between schema versions (no-op when versions match).
 |--------|---------|---------|-------------|
 | `--from` | — | — | Current schema version. |
 | `--to` | — | — | Target schema version. |
+
+## `privaci preview`
+
+Safe sample preview, policy diff JSON, and SARIF output (commercial).
+
+| Option | Env var | Default | Description |
+|--------|---------|---------|-------------|
+| `--config` | — | `/config/mask-rules.yaml` | Path to mask-rules.yaml. |
+| `--source` | `SOURCE_DB_URL` | — | Source database URL or secret URI. |
+| `--target` | `TARGET_DB_URL` | — | Target database URL or secret URI. |
+| `--commercial-extensions` | — | — | Path to commercial-extensions.yaml (subset, json_mask). |
+| `--sample` | — | `0` |  |
+| `--policy-diff` | — | — |  |
+| `--sarif` | — | — |  |
 
 ## `privaci report`
 

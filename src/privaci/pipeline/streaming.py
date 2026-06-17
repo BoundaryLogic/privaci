@@ -12,6 +12,8 @@ from privaci.autodetect import DetectionResult, resolve_effective_table_config
 from privaci.catalog.models import CatalogResult, TableInfo
 from privaci.catalog.partitions import config_table_id
 from privaci.config.models import Config
+from privaci.contracts import load_plugins
+from privaci.contracts.base import RunEnhancements
 from privaci.mask.engine import MaskingEngine
 from privaci.pipeline.table_plan import TableAction, plan_table, table_strategy
 from privaci.schema.strategies import finalize_empty_strategy_table
@@ -41,6 +43,7 @@ class PipelineStreamContext:
     audit: AuditWriter
     detection: DetectionResult
     checkpoints: dict[str, TableCheckpoint]
+    enhancements: RunEnhancements
 
 
 async def stream_all_tables(
@@ -53,8 +56,14 @@ async def stream_all_tables(
     audit: AuditWriter,
     detection: DetectionResult,
     checkpoints: dict[str, TableCheckpoint],
-) -> tuple[int, int, dict[str, int]]:
+) -> tuple[int, int, dict[str, int], int]:
     """Stream every table in load order and return aggregate counts."""
+    enhancer = load_plugins().run_enhancer
+    build_async = getattr(enhancer, "build_enhancements_async", None)
+    if build_async is not None:
+        enhancements = await build_async(catalog, source=source)
+    else:
+        enhancements = enhancer.build_enhancements(catalog)
     ctx = PipelineStreamContext(
         source=source,
         target=target,
@@ -65,40 +74,52 @@ async def stream_all_tables(
         audit=audit,
         detection=detection,
         checkpoints=checkpoints,
+        enhancements=enhancements,
     )
     counts: dict[str, int] = {}
     total_rows = 0
+    total_bytes = 0
     tables_done = 0
     for layer in catalog.load_plan.layers:
         async with target.transaction():
             await target.execute("SET CONSTRAINTS ALL DEFERRED")
             for layer_table_id in layer.table_ids:
-                done, rows = await _process_layer_table(ctx, layer_table_id)
+                done, rows, batch_bytes = await _process_layer_table(
+                    ctx, layer_table_id
+                )
                 if done:
                     tables_done += 1
                     counts[layer_table_id] = rows
                     total_rows += rows
-    return tables_done, total_rows, counts
+                    total_bytes += batch_bytes
+    return tables_done, total_rows, counts, total_bytes
 
 
 async def _process_layer_table(
     ctx: PipelineStreamContext,
     layer_table_id: str,
-) -> tuple[bool, int]:
+) -> tuple[bool, int, int]:
     table = ctx.catalog.tables[layer_table_id]
+    if (
+        ctx.enhancements.subset_active
+        and layer_table_id not in ctx.enhancements.row_filters
+    ):
+        _log_skip(table, reason="subset_outside_closure")
+        return False, 0, 0
     checkpoint = ctx.checkpoints.get(layer_table_id)
     action = plan_table(table, ctx.config, checkpoint)
     if action is TableAction.SKIP_DONE:
         _log_skip(table, reason="checkpoint_done")
-        return False, 0
+        return False, 0, 0
     if action is TableAction.SKIP_STRATEGY:
         _log_skip(table, strategy=table_strategy(table, ctx.config))
-        return False, 0
+        return False, 0, 0
     if action is TableAction.FINALIZE_EMPTY:
-        return await _finalize_empty_table(ctx, table)
-    rows = await stream_one_table(ctx, table, checkpoint=checkpoint)
+        done, rows = await _finalize_empty_table(ctx, table)
+        return done, rows, 0
+    rows, batch_bytes = await stream_one_table(ctx, table, checkpoint=checkpoint)
     await _audit_table_streamed(ctx, table, rows)
-    return True, rows
+    return True, rows, batch_bytes
 
 
 async def _finalize_empty_table(
@@ -171,20 +192,27 @@ async def stream_one_table(
     *,
     checkpoint: TableCheckpoint | None = None,
     outer_transaction: bool = False,
-) -> int:
-    """Mask and stream one table, honoring an optional resume checkpoint."""
+) -> tuple[int, int]:
+    """Mask and stream one table; return ``(rows, estimated_bytes)``."""
     raise_if_interrupted()
     config_table = ctx.catalog.tables.get(config_table_id(table), table)
     table_cfg = resolve_effective_table_config(config_table, ctx.config, ctx.detection)
     await _write_detection_audit(ctx.target, config_table, ctx.detection, ctx.audit)
-    engine = MaskingEngine(ctx.salt, table.identifier, table, table_cfg)
+    engine = MaskingEngine(
+        ctx.salt,
+        table.identifier,
+        table,
+        table_cfg,
+        cell_post_processor=ctx.enhancements.cell_post_processor,
+    )
     batch_size = resolve_batch_size(
         table,
         global_batch_size=ctx.config.batch_size,
         per_table_batch_size=table_cfg.batch_size,
     )
     last_pk = _resume_cursor(table, checkpoint)
-    return await stream_table(
+    row_filter = ctx.enhancements.row_filters.get(table.identifier)
+    rows = await stream_table(
         ctx.source,
         ctx.target,
         table,
@@ -195,7 +223,9 @@ async def stream_one_table(
         outer_transaction=outer_transaction,
         table_config=table_cfg,
         audit=ctx.audit,
+        row_filter=row_filter,
     )
+    return rows, _estimate_row_bytes(table, rows)
 
 
 def _resume_cursor(
@@ -210,6 +240,14 @@ def _resume_cursor(
         "text",
     )
     return parse_checkpoint_cursor(checkpoint.last_pk_value, data_type=pk_type)
+
+
+def _estimate_row_bytes(table: TableInfo, rows: int) -> int:
+    """Rough byte estimate from catalog avg_width metadata."""
+    if rows <= 0:
+        return 0
+    width = sum(column.avg_width or 0 for column in table.columns)
+    return int(width * rows)
 
 
 async def _write_detection_audit(

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 import yaml
 from pytest_mock import MockerFixture
 from typer.testing import CliRunner
@@ -126,7 +127,10 @@ def test_schema_config_emits_json_schema() -> None:
     assert "properties" in result.output
 
 
-def test_catalog_inspect_missing_source_raises_catalog_error() -> None:
+def test_catalog_inspect_missing_source_raises_catalog_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("SOURCE_DB_URL", raising=False)
     # Act
     result = runner.invoke(app, ["catalog", "inspect"])
 

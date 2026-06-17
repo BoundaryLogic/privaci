@@ -25,6 +25,14 @@ def raise_if_interrupted() -> None:
     )
 
 
+def compose_where(*clauses: str | None) -> str:
+    """Join trusted SQL fragments into a ``WHERE`` clause."""
+    parts = [f"({clause})" for clause in clauses if clause]
+    if not parts:
+        return ""
+    return " WHERE " + " AND ".join(parts)
+
+
 async def next_stream_batch(
     source: asyncpg.Connection,
     pending_fetch: asyncio.Task[list[asyncpg.Record]] | None,
@@ -38,7 +46,13 @@ async def next_stream_batch(
     if pending_fetch is None:
         pending_fetch = asyncio.create_task(
             fetch_batch_with_retry(
-                source, ctx.qual, ctx.pk_column, cursor, batch_size, offset=offset
+                source,
+                ctx.qual,
+                ctx.pk_column,
+                cursor,
+                batch_size,
+                offset=offset,
+                row_filter=ctx.row_filter,
             )
         )
     rows = await pending_fetch
@@ -52,6 +66,7 @@ async def next_stream_batch(
             next_cursor(rows, ctx.pk_column, cursor),
             batch_size,
             offset=offset + len(rows) if ctx.pk_column is None else offset,
+            row_filter=ctx.row_filter,
         )
     )
     return rows, next_fetch
@@ -65,6 +80,7 @@ async def fetch_batch_with_retry(
     batch_size: int,
     *,
     offset: int = 0,
+    row_filter: str | None = None,
 ) -> list[asyncpg.Record]:
     return await with_source_retry(
         lambda: fetch_batch(
@@ -74,6 +90,7 @@ async def fetch_batch_with_retry(
             cursor,
             batch_size,
             offset=offset,
+            row_filter=row_filter,
         )
     )
 
@@ -86,19 +103,23 @@ async def fetch_batch(
     batch_size: int,
     *,
     offset: int = 0,
+    row_filter: str | None = None,
 ) -> list[asyncpg.Record]:
     # SECURITY: qual and pk_column are rendered via quote_pg_identifier (escapes
     # quotes, rejects control chars), so untrusted catalog identifiers are safe.
+    # row_filter is trusted operator SQL from commercial subset config only.
     if pk_column is None:
-        query = f"SELECT * FROM {qual} ORDER BY ctid LIMIT $1 OFFSET $2"  # noqa: S608
+        where = compose_where(row_filter)
+        query = f"SELECT * FROM {qual}{where} ORDER BY ctid LIMIT $1 OFFSET $2"  # noqa: S608
         return list(await source.fetch(query, batch_size, offset))
     col = quote_pg_identifier(pk_column)
     if cursor is None:
-        query = f"SELECT * FROM {qual} ORDER BY {col} LIMIT $1"  # noqa: S608
+        where = compose_where(row_filter)
+        query = f"SELECT * FROM {qual}{where} ORDER BY {col} LIMIT $1"  # noqa: S608
         return list(await source.fetch(query, batch_size))
-    query = (
-        f"SELECT * FROM {qual} WHERE {col} > $1 ORDER BY {col} LIMIT $2"  # noqa: S608
-    )
+    pk_clause = f"{col} > $1"
+    where = compose_where(row_filter, pk_clause)
+    query = f"SELECT * FROM {qual}{where} ORDER BY {col} LIMIT $2"  # noqa: S608
     return list(await source.fetch(query, cursor, batch_size))
 
 

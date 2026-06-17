@@ -34,9 +34,13 @@ class _FakeDoc:
         return self._ents
 
 
-def test_ner_passthrough_when_model_unavailable() -> None:
+def test_ner_passthrough_when_model_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+    _reset_model: object,
+) -> None:
     # Arrange
     text = "Alice met Bob in Paris."
+    monkeypatch.setattr(ner_module, "_load_model", lambda: None)
 
     # Act
     result = ner_module.mask_entities_in_text(
@@ -45,7 +49,7 @@ def test_ner_passthrough_when_model_unavailable() -> None:
         column_path="public.notes.body",
     )
 
-    # Assert — without SpaCy installed, text is unchanged.
+    # Assert — when the model is unavailable, text is unchanged.
     assert result == text
 
 

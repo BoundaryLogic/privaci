@@ -51,6 +51,77 @@ def test_can_binary_copy_passthrough_rejects_resume_cursor() -> None:
     assert not can_binary_copy_passthrough(table, TableConfig(), last_pk_value=5)
 
 
+def test_can_binary_copy_passthrough_rejects_row_filter() -> None:
+    # Arrange
+    table = _users_table()
+
+    # Assert
+    assert not can_binary_copy_passthrough(
+        table,
+        TableConfig(),
+        last_pk_value=None,
+        row_filter='"id" IN (1, 2)',
+    )
+
+
+@pytest.mark.asyncio
+async def test_stream_table_skips_binary_copy_when_cell_post_processor_set(
+    mocker: pytest.MockFixture,
+) -> None:
+    """Commercial JSON hooks must not use whole-table COPY passthrough."""
+    from privaci.config.models import TableConfig
+    from privaci.mask.engine import MaskingEngine
+    from privaci.stream import table as stream_table_mod
+
+    table = _users_table()
+    engine = mocker.Mock(spec=MaskingEngine)
+    engine.uses_cell_post_processing = True
+    mocker.patch.object(
+        stream_table_mod,
+        "can_binary_copy_passthrough",
+        return_value=True,
+    )
+    mocker.patch.object(
+        stream_table_mod,
+        "binary_copy_passthrough_table",
+        new_callable=AsyncMock,
+    )
+    mocker.patch.object(
+        stream_table_mod,
+        "_prepare_stream_context",
+        new_callable=AsyncMock,
+        return_value=mocker.Mock(),
+    )
+    mocker.patch.object(
+        stream_table_mod,
+        "_seed_stream_checkpoint",
+        new_callable=AsyncMock,
+    )
+    mocker.patch.object(
+        stream_table_mod,
+        "_stream_masked_batches",
+        new_callable=AsyncMock,
+        return_value=1,
+    )
+    mocker.patch.object(
+        stream_table_mod,
+        "_finalize_table_stream",
+        new_callable=AsyncMock,
+    )
+
+    await stream_table_mod.stream_table(
+        AsyncMock(),
+        AsyncMock(),
+        table,
+        engine,
+        run_id=__import__("uuid").uuid4(),
+        batch_size=10,
+        table_config=TableConfig(),
+    )
+
+    stream_table_mod.binary_copy_passthrough_table.assert_not_called()
+
+
 def test_can_binary_copy_passthrough_rejects_masked_columns() -> None:
     # Arrange
     table = _users_table()

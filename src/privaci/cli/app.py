@@ -10,7 +10,9 @@ from pathlib import Path
 import typer
 
 from privaci.cli._catalog import inspect_source
+from privaci.cli._detect_drift import execute_detect_drift
 from privaci.cli._errors import run_cli
+from privaci.cli._preview import execute_preview
 from privaci.cli._resume import execute_resume
 from privaci.cli._run import execute_run, execute_verify
 from privaci.cli.generate_ci import generate_ci_files
@@ -117,6 +119,46 @@ def run(
         dry_run=dry_run,
         no_audit_table=no_audit_table,
         prometheus_port=prometheus_port,
+    )
+
+
+@app.command("detect-drift")
+def detect_drift_cmd(
+    source: SourceDbOption = None,
+    target: TargetDbOption = None,
+    accept_drift: bool = typer.Option(
+        False,
+        "--accept-drift",
+        help="Emit findings JSON but do not exit 6 when drift is detected.",
+    ),
+) -> None:
+    """Compare live source schema to the last snapshot on target (commercial)."""
+    execute_detect_drift(source=source, target=target, accept_drift=accept_drift)
+
+
+@app.command()
+def preview(
+    config: ConfigPathOption = "/config/mask-rules.yaml",
+    source: SourceDbOption = None,
+    target: TargetDbOption = None,
+    commercial_extensions: str | None = typer.Option(
+        None,
+        "--commercial-extensions",
+        help="Path to commercial-extensions.yaml (subset, json_mask).",
+    ),
+    sample: int = typer.Option(0, "--sample", min=0, max=100),
+    policy_diff: str | None = typer.Option(None, "--policy-diff"),
+    sarif: str | None = typer.Option(None, "--sarif"),
+) -> None:
+    """Safe sample preview, policy diff JSON, and SARIF output (commercial)."""
+    execute_preview(
+        config=config,
+        source=source,
+        target=target,
+        commercial_extensions=commercial_extensions,
+        sample=sample,
+        policy_diff=policy_diff,
+        sarif=sarif,
     )
 
 

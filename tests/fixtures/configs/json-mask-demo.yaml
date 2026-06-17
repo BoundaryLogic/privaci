@@ -1,0 +1,11 @@
+version: "1.0"
+global_salt: env://PRIVACI_TEST_SALT
+on_existing_data: fail
+strict_autodetect: false
+batch_size: 100
+
+tables:
+  public.event_log:
+    strategy: transform
+    columns:
+      payload: { action: passthrough }

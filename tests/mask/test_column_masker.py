@@ -163,11 +163,15 @@ def test_regex_mask_honours_flags() -> None:
     assert result == "[redacted] data"
 
 
-def test_ner_mask_passthrough_without_spacy() -> None:
+def test_ner_mask_passthrough_without_spacy(monkeypatch: pytest.MonkeyPatch) -> None:
     # Arrange
     action = NerMaskAction(action="ner_mask")
+    monkeypatch.setattr(
+        "privaci.mask.column_masker.mask_entities_in_text",
+        lambda text, **kwargs: text,
+    )
 
-    # Act — SpaCy not installed in unit env, so text is returned unchanged.
+    # Act — when NER is unavailable, text is returned unchanged.
     result = mask_column_value(
         "Alice met Bob.",
         action,

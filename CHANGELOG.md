@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Capability test harness (`scripts/capability_test/`, `scripts/capability-test.sh`,
+  `scripts/capability-test-suite.sh`): selectable engine and extension capabilities,
+  resource guards, version-2 reports with **Masking confidence** (leak probes,
+  value-free verify, subsetting slice metrics) and infrastructure vs audit scopes.
+- Integration masking audit: leak probes, action-shape checks, value-free verify,
+  auto-detect Postgres test, and `public-spacy-ner` capability (hard-requires
+  `spacy` + `en_core_web_sm` for demo-corp L2 columns).
+- `RunEnhancer` contract hook for licensed plugin extensions; `detect-drift` and
+  `preview` CLI entry points.
+- Test fixtures: `subsetting-demo`, `autodetect-demo`, `json-mask-demo` SQL and
+  configs for integration capabilities.
+
+### Fixed
+
+- Binary COPY passthrough now honors streaming row filters (FK subsetting).
+- Binary COPY is skipped when a table uses cell post-processing (e.g. JSONB
+  path masking) so transforms are not bypassed.
+- Integration DB reset restores bootstrap `public` schema after full schema
+  wipes (fixes spike SQL after autodetect fixture loads).
+
+### Changed
+
+- Local dev quickstart documents `pip install -e ".[nlp]"` and
+  `python -m spacy download en_core_web_sm` as required for integration and
+  capability suites that audit demo-corp masking.
+
 ## [0.1.0-beta.5] - 2026-06-16
 
 ### Changed

@@ -51,6 +51,7 @@ async def test_same_salt_produces_identical_output(
     target_dsn: str,
     demo_corp_source_loaded: None,
     clean_target: None,
+    spacy_ner_ready: None,
 ) -> None:
     # Arrange / Act — mask the same source twice with the same salt.
     await _run(source_dsn, target_dsn, TEST_SALT)
@@ -70,6 +71,7 @@ async def test_salt_rotation_changes_fake_output(
     target_dsn: str,
     demo_corp_source_loaded: None,
     clean_target: None,
+    spacy_ner_ready: None,
 ) -> None:
     # Arrange / Act — mask with two different salts.
     await _run(source_dsn, target_dsn, TEST_SALT)

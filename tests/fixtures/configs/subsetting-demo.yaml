@@ -1,0 +1,21 @@
+version: "1.0"
+global_salt: env://PRIVACI_TEST_SALT
+on_existing_data: fail
+strict_autodetect: false
+batch_size: 500
+
+tables:
+  public.organizations:
+    strategy: transform
+    columns:
+      name: { action: fake, provider: company }
+
+  public.users:
+    strategy: transform
+    columns:
+      email: { action: fake, provider: email }
+
+  public.orders:
+    strategy: transform
+    columns:
+      amount_cents: { action: passthrough }

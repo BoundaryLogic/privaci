@@ -23,6 +23,7 @@ class StreamContext:
     max_values: dict[str, int | None]
     progress: ProgressThrottle
     table_started_at: float
+    row_filter: str | None = None
 
 
 def single_pk_column(table: TableInfo) -> str | None:
