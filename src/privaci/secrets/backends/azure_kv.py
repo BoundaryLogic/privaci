@@ -12,6 +12,11 @@ from privaci.secrets.parser import ParsedSecretUri
 logger = logging.getLogger(__name__)
 
 
+def _safe_kv_uri(parsed: ParsedSecretUri) -> str:
+    """Return an azure-kv URI safe for logs (vault only, no secret name)."""
+    return f"azure-kv://{parsed.vault_name}/<redacted>"
+
+
 def resolve_azure_kv_uri(parsed: ParsedSecretUri) -> str:
     """Fetch a secret from Azure Key Vault.
 
@@ -60,21 +65,17 @@ def _fetch_kv_secret(client: Any, parsed: ParsedSecretUri) -> Any:
             return client.get_secret(parsed.secret_name, version=version)
         return client.get_secret(parsed.secret_name)
     except AzureError as exc:
+        safe_uri = _safe_kv_uri(parsed)
         logger.error(
             "Azure Key Vault resolution failed",
-            extra={
-                "vault_name": parsed.vault_name,
-                "secret_name": parsed.secret_name,
-            },
+            extra={"secret_uri": safe_uri},
         )
-        msg = f"Failed to resolve azure-kv://{parsed.vault_name}/{parsed.secret_name}"
+        msg = f"Failed to resolve {safe_uri}"
         raise SecretError(msg) from exc
 
 
 def _validate_kv_value(parsed: ParsedSecretUri, bundle: Any) -> str:
     if not bundle.value or not bundle.value.strip():
-        msg = (
-            f"azure-kv://{parsed.vault_name}/{parsed.secret_name} returned empty value"
-        )
+        msg = f"{_safe_kv_uri(parsed)} returned empty value"
         raise SecretError(msg)
     return str(bundle.value).strip()

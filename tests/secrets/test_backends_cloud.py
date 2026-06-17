@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import sys
 from types import ModuleType
 from unittest.mock import MagicMock
@@ -99,7 +100,10 @@ def test_aws_sm_missing_boto3_raises(mocker: pytest.MockFixture) -> None:
         resolve_aws_sm_uri(parsed)
 
 
-def test_aws_sm_api_error_raises(mocker: pytest.MockFixture) -> None:
+def test_aws_sm_api_error_raises(
+    mocker: pytest.MockFixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     # Arrange
     boto3 = _install_boto3_mock(mocker)
     client = MagicMock()
@@ -113,8 +117,13 @@ def test_aws_sm_api_error_raises(mocker: pytest.MockFixture) -> None:
     parsed = parse_secret_uri("aws-sm://missing")
 
     # Act & Assert
-    with pytest.raises(SecretError, match="Failed to resolve"):
-        resolve_aws_sm_uri(parsed)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(SecretError, match=r"aws-sm://<redacted>"):
+            resolve_aws_sm_uri(parsed)
+
+    assert "missing" not in caplog.text
+    assert len(caplog.records) == 1
+    assert caplog.records[0].secret_uri == "aws-sm://<redacted>"
 
 
 def test_aws_sm_invalid_json_raises(mocker: pytest.MockFixture) -> None:
@@ -233,7 +242,10 @@ def test_aws_sm_missing_json_key_raises(mocker: pytest.MockFixture) -> None:
         resolve_aws_sm_uri(parsed)
 
 
-def test_azure_kv_api_error_raises(mocker: pytest.MockFixture) -> None:
+def test_azure_kv_api_error_raises(
+    mocker: pytest.MockFixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     # Arrange
     azure_identity = ModuleType("azure.identity")
     azure_identity.DefaultAzureCredential = MagicMock()
@@ -257,8 +269,13 @@ def test_azure_kv_api_error_raises(mocker: pytest.MockFixture) -> None:
     parsed = parse_secret_uri("azure-kv://vault/name")
 
     # Act & Assert
-    with pytest.raises(SecretError, match="Failed to resolve"):
-        resolve_azure_kv_uri(parsed)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(SecretError, match=r"azure-kv://vault/<redacted>"):
+            resolve_azure_kv_uri(parsed)
+
+    assert "name" not in caplog.text
+    assert len(caplog.records) == 1
+    assert caplog.records[0].secret_uri == "azure-kv://vault/<redacted>"
 
 
 def test_vault_missing_hvac_raises(mocker: pytest.MockFixture) -> None:
@@ -286,7 +303,10 @@ def test_vault_bad_mount_path_raises(mocker: pytest.MockFixture) -> None:
         resolve_vault_uri(parsed)
 
 
-def test_vault_read_error_raises(mocker: pytest.MockFixture) -> None:
+def test_vault_read_error_raises(
+    mocker: pytest.MockFixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     # Arrange
     hvac = ModuleType("hvac")
     hvac_exceptions = ModuleType("hvac.exceptions")
@@ -304,8 +324,13 @@ def test_vault_read_error_raises(mocker: pytest.MockFixture) -> None:
     parsed = parse_secret_uri("vault://kv/data/app#salt")
 
     # Act & Assert
-    with pytest.raises(SecretError, match="Failed to resolve"):
-        resolve_vault_uri(parsed)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(SecretError, match=r"vault://<redacted>"):
+            resolve_vault_uri(parsed)
+
+    assert "salt" not in caplog.text
+    assert len(caplog.records) == 1
+    assert caplog.records[0].secret_uri == "vault://<redacted>"
 
 
 def test_vault_empty_field_raises(mocker: pytest.MockFixture) -> None:

@@ -13,6 +13,11 @@ from privaci.secrets.parser import ParsedSecretUri
 logger = logging.getLogger(__name__)
 
 
+def _safe_sm_uri(_parsed: ParsedSecretUri) -> str:
+    """Return an aws-sm URI safe for logs (no secret id)."""
+    return "aws-sm://<redacted>"
+
+
 def resolve_aws_sm_uri(parsed: ParsedSecretUri) -> str:
     """Fetch a secret from AWS Secrets Manager.
 
@@ -73,15 +78,16 @@ def _fetch_secret_string(
     try:
         response = client.get_secret_value(**request)
     except (BotoCoreError, ClientError) as exc:
+        safe_uri = _safe_sm_uri(parsed)
         logger.error(
             "AWS Secrets Manager resolution failed",
-            extra={"secret_id": parsed.secret_id, "region": region},
+            extra={"secret_uri": safe_uri, "region": region},
         )
-        msg = f"Failed to resolve aws-sm://{parsed.secret_id}"
+        msg = f"Failed to resolve {safe_uri}"
         raise SecretError(msg) from exc
     payload = response.get("SecretString")
     if payload is None:
-        msg = f"aws-sm://{parsed.secret_id} has no SecretString payload"
+        msg = f"{_safe_sm_uri(parsed)} has no SecretString payload"
         raise SecretError(msg)
     return str(payload).strip()
 
@@ -93,13 +99,13 @@ def _extract_sm_payload(parsed: ParsedSecretUri, payload: str) -> str:
     try:
         data = json.loads(payload)
     except json.JSONDecodeError as exc:
-        msg = f"aws-sm://{parsed.secret_id} SecretString is not valid JSON"
+        msg = f"{_safe_sm_uri(parsed)} SecretString is not valid JSON"
         raise SecretError(msg) from exc
     if json_key not in data:
-        msg = f"aws-sm://{parsed.secret_id} JSON key {json_key!r} not found"
+        msg = f"{_safe_sm_uri(parsed)} JSON key {json_key!r} not found"
         raise SecretError(msg)
     field = data[json_key]
     if not isinstance(field, str):
-        msg = f"aws-sm://{parsed.secret_id} key {json_key!r} is not a string"
+        msg = f"{_safe_sm_uri(parsed)} key {json_key!r} is not a string"
         raise SecretError(msg)
     return field.strip()
