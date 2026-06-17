@@ -23,8 +23,11 @@ def can_binary_copy_passthrough(
     table_cfg: TableConfig,
     *,
     last_pk_value: Any | None,
+    row_filter: str | None = None,
 ) -> bool:
     """Return whether a whole-table COPY-binary path is safe for this table."""
+    if row_filter is not None:
+        return False
     if last_pk_value is not None:
         return False
     column_types = {column.name: column.data_type for column in table.columns}

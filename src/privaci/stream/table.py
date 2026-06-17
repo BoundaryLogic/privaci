@@ -49,9 +49,18 @@ async def stream_table(
     outer_transaction: bool = False,
     table_config: TableConfig | None = None,
     audit: AuditWriter | None = None,
+    row_filter: str | None = None,
 ) -> int:
     effective_cfg = table_config or TableConfig()
-    if can_binary_copy_passthrough(table, effective_cfg, last_pk_value=last_pk_value):
+    if (
+        can_binary_copy_passthrough(
+            table,
+            effective_cfg,
+            last_pk_value=last_pk_value,
+            row_filter=row_filter,
+        )
+        and not engine.uses_cell_post_processing
+    ):
         return await binary_copy_passthrough_table(
             source,
             target,
@@ -60,7 +69,7 @@ async def stream_table(
             outer_transaction=outer_transaction,
         )
 
-    ctx = await _prepare_stream_context(target, table, audit)
+    ctx = await _prepare_stream_context(target, table, audit, row_filter=row_filter)
     await _seed_stream_checkpoint(target, table, run_id, last_pk_value)
     total = await _stream_masked_batches(
         source,
@@ -100,6 +109,8 @@ async def _prepare_stream_context(
     target: asyncpg.Connection,
     table: TableInfo,
     audit: AuditWriter | None,
+    *,
+    row_filter: str | None = None,
 ) -> StreamContext:
     column_types = {column.name: column.data_type for column in table.columns}
     use_text_fallback = table_needs_text_fallback(column_types)
@@ -131,6 +142,7 @@ async def _prepare_stream_context(
             estimated_rows=estimate,
         ),
         table_started_at=time.monotonic(),
+        row_filter=row_filter,
     )
 
 

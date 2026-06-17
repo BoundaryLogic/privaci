@@ -39,6 +39,7 @@ class PipelineSummary:
     run_id: uuid.UUID
     tables_processed: int = 0
     rows_processed: int = 0
+    bytes_processed: int = 0
     table_row_counts: dict[str, int] = field(default_factory=dict)
 
 
@@ -229,7 +230,7 @@ async def _stream_to_summary(
     checkpoints: dict[str, TableCheckpoint] | None,
 ) -> PipelineSummary:
     detection = build_detection(config, catalog)
-    tables_done, total_rows, counts = await stream_all_tables(
+    tables_done, total_rows, counts, total_bytes = await stream_all_tables(
         source,
         target,
         catalog,
@@ -244,6 +245,7 @@ async def _stream_to_summary(
         run_id=run_id,
         tables_processed=tables_done,
         rows_processed=total_rows,
+        bytes_processed=total_bytes,
         table_row_counts=counts,
     )
     await _finish_successful_run(
@@ -271,6 +273,7 @@ async def _finish_successful_run(
         summary={
             "tables": summary.tables_processed,
             "rows": summary.rows_processed,
+            "bytes": summary.bytes_processed,
         },
     )
     _notify_meter_run_end(source_db_hash_value, run_id)

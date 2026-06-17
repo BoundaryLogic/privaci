@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from privaci.catalog.models import TableInfo
 from privaci.config.models import TableConfig
 from privaci.mask.column_masker import mask_column_value, unique_column_names
 from privaci.mask.safe_log import safe_value_preview
+
+if TYPE_CHECKING:
+    from privaci.contracts.base import CellPostProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +34,7 @@ class MaskingEngine:
     """
 
     __slots__ = (
+        "_cell_post_processor",
         "_salt",
         "_table_config",
         "_table_id",
@@ -44,11 +48,14 @@ class MaskingEngine:
         table_id: str,
         table_info: TableInfo,
         table_config: TableConfig,
+        *,
+        cell_post_processor: CellPostProcessor | None = None,
     ) -> None:
         self._salt = salt
         self._table_id = table_id
         self._table_info = table_info
         self._table_config = table_config
+        self._cell_post_processor = cell_post_processor
         # Uniqueness is fixed per table, so resolve it once here for O(1) lookup
         # in the per-cell hot path instead of re-scanning tuples for every row.
         unique_idx = tuple(idx.columns for idx in table_info.indexes if idx.is_unique)
@@ -60,6 +67,11 @@ class MaskingEngine:
 
     def __repr__(self) -> str:
         return f"MaskingEngine(table_id={self._table_id!r})"
+
+    @property
+    def uses_cell_post_processing(self) -> bool:
+        """Return whether a commercial cell hook may mutate values after masking."""
+        return self._cell_post_processor is not None
 
     def mask_row(self, row: dict[str, Any]) -> dict[str, Any]:
         """Return a masked copy of ``row``.
@@ -73,23 +85,26 @@ class MaskingEngine:
 
     def _mask_cell(self, column_name: str, value: Any) -> Any:
         action = self._table_config.columns.get(column_name)
-        if action is None:
-            return value
         column_path = f"{self._table_id}.{column_name}"
         is_unique = column_name in self._unique_columns
-        try:
-            result = mask_column_value(
-                value,
-                action,
-                salt=self._salt,
-                column_path=column_path,
-                is_unique=is_unique,
-            )
-        except Exception:
-            logger.debug(
-                "Mask failed for %s (preview=%s)",
-                column_path,
-                safe_value_preview(value),
-            )
-            raise
+        if action is None:
+            result = value
+        else:
+            try:
+                result = mask_column_value(
+                    value,
+                    action,
+                    salt=self._salt,
+                    column_path=column_path,
+                    is_unique=is_unique,
+                )
+            except Exception:
+                logger.debug(
+                    "Mask failed for %s (preview=%s)",
+                    column_path,
+                    safe_value_preview(value),
+                )
+                raise
+        if self._cell_post_processor is not None:
+            result = self._cell_post_processor(self._table_id, column_name, result)
         return result
