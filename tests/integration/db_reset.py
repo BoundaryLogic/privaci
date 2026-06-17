@@ -18,12 +18,16 @@ async def ensure_public_schema(conn: asyncpg.Connection) -> None:
 
 async def drop_user_schemas(conn: asyncpg.Connection) -> None:
     """Drop every non-system schema on a database."""
-    rows = await conn.fetch("""
+    excluded = sorted(_SYSTEM_SCHEMAS)
+    rows = await conn.fetch(
+        """
         SELECT schema_name
         FROM information_schema.schemata
-        WHERE schema_name NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+        WHERE schema_name NOT IN ($1, $2, $3)
           AND schema_name NOT LIKE 'pg_%'
-        """)
+        """,
+        *excluded,
+    )
     for row in rows:
         quoted_schema = quote_pg_identifier(row["schema_name"])
         await conn.execute(f"DROP SCHEMA IF EXISTS {quoted_schema} CASCADE")
