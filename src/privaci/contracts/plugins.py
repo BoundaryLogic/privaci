@@ -13,10 +13,12 @@ from privaci.contracts.base import (
     LLMConnector,
     Notifier,
     ReportRenderer,
+    RunEnhancer,
     UsageMeter,
 )
 from privaci.contracts.fallbacks import (
     CommunityLicenseValidator,
+    CommunityRunEnhancer,
     JsonReportRenderer,
     NoOpLLMConnector,
     NoOpNotifier,
@@ -38,6 +40,7 @@ class PluginBundle:
     report_renderer: ReportRenderer
     notifier: Notifier
     drift_detector: DriftDetector | None
+    run_enhancer: RunEnhancer
 
 
 def _load_entry(name: str) -> Any | None:
@@ -56,6 +59,7 @@ def load_plugins() -> PluginBundle:
     report_cls = _load_entry("report_renderer.json")
     notifier_cls = _load_entry("notifier.slack") or _load_entry("notifier.webhook")
     drift_cls = _load_entry("drift_detector")
+    enhancer_cls = _load_entry("run_enhancer")
 
     license_validator: LicenseValidator = (
         license_cls() if license_cls else CommunityLicenseValidator()
@@ -66,6 +70,9 @@ def load_plugins() -> PluginBundle:
     )
     notifier: Notifier = notifier_cls() if notifier_cls else NoOpNotifier()
     drift_detector: DriftDetector | None = drift_cls() if drift_cls else None
+    run_enhancer: RunEnhancer = (
+        enhancer_cls() if enhancer_cls else CommunityRunEnhancer()
+    )
 
     llm_connectors: dict[str, LLMConnector] = {}
     for ep in importlib.metadata.entry_points(group=PLUGIN_GROUP):
@@ -83,4 +90,5 @@ def load_plugins() -> PluginBundle:
         report_renderer=report_renderer,
         notifier=notifier,
         drift_detector=drift_detector,
+        run_enhancer=run_enhancer,
     )

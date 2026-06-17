@@ -237,7 +237,11 @@ def test_check_null_actions_passes_for_nullable_column(
     check_null_actions(config, {"users": set()})
 
 
-def test_is_commercial_installed_false_in_community() -> None:
+def test_is_commercial_installed_false_in_community(mocker: pytest.Mock) -> None:
+    mocker.patch(
+        "privaci.config.loader.importlib.metadata.entry_points",
+        return_value=[],
+    )
     # Act & Assert — no commercial entry points registered in tests.
     assert is_commercial_installed() is False
 

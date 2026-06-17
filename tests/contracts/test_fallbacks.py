@@ -115,8 +115,14 @@ def test_plugins_load_entry_point_when_registered(
     assert bundle.license_validator.validate().tier == "enterprise"
 
 
-def test_load_plugins_community_defaults() -> None:
-    # Arrange & Act
+def test_load_plugins_community_defaults(mocker: pytest.Mock) -> None:
+    # Arrange — simulate a community install with no entry points registered.
+    mocker.patch(
+        "privaci.contracts.plugins.importlib.metadata.entry_points",
+        return_value=[],
+    )
+
+    # Act
     bundle = load_plugins()
 
     # Assert

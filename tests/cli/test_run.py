@@ -104,8 +104,11 @@ def test_dry_run_delegates_with_dry_run_flag(
     )
 
 
-def test_run_missing_source_raises_catalog_error(tmp_path: Path) -> None:
+def test_run_missing_source_raises_catalog_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     # Arrange
+    monkeypatch.delenv("SOURCE_DB_URL", raising=False)
     config = _config_file(tmp_path)
 
     # Act

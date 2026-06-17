@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import abc
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 from uuid import UUID
 
 CONTRACT_VERSION = "1.0"
+
+CellPostProcessor = Callable[[str, str, Any], Any]
+"""Optional ``(table_id, column_name, value) -> final_value`` hook."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,6 +57,18 @@ class DriftReport:
 
     has_drift: bool
     findings: list[dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class RunEnhancements:
+    """Commercial run-time filters and transforms (subsetting, JSONB paths)."""
+
+    row_filters: dict[str, str] = field(default_factory=dict)
+    """Schema-qualified table id → SQL ``WHERE`` fragment (trusted operator SQL)."""
+    cell_post_processor: CellPostProcessor | None = None
+    """Optional per-cell transform after column masking (e.g. JSONB path rules)."""
+    subset_active: bool = False
+    """When true, tables without a row filter are skipped (not streamed)."""
 
 
 class LicenseValidator(abc.ABC):
@@ -123,3 +139,18 @@ class DriftDetector(abc.ABC):
         current_snapshot: dict[str, Any],
     ) -> DriftReport:
         """Return drift findings between two snapshots."""
+
+
+class RunEnhancer(abc.ABC):
+    """Build commercial run enhancements (subsetting filters, JSONB transforms)."""
+
+    @abc.abstractmethod
+    def build_enhancements(
+        self,
+        catalog: Any,
+    ) -> RunEnhancements:
+        """Return row filters and cell hooks for one masking run.
+
+        Args:
+            catalog: :class:`~privaci.catalog.models.CatalogResult` for the source.
+        """
