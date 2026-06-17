@@ -6,6 +6,7 @@ import uuid
 from pathlib import Path
 from unittest.mock import AsyncMock
 
+import pytest
 import yaml
 from pytest_mock import MockerFixture
 from typer.testing import CliRunner
