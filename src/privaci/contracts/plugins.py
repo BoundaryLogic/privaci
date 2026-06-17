@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib.metadata
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from privaci.contracts.base import (
     DriftDetector,
@@ -71,7 +71,7 @@ def load_plugins() -> PluginBundle:
     notifier: Notifier = notifier_cls() if notifier_cls else NoOpNotifier()
     drift_detector: DriftDetector | None = drift_cls() if drift_cls else None
     run_enhancer: RunEnhancer = (
-        enhancer_cls() if enhancer_cls else CommunityRunEnhancer()
+        cast(RunEnhancer, enhancer_cls()) if enhancer_cls else CommunityRunEnhancer()
     )
 
     llm_connectors: dict[str, LLMConnector] = {}

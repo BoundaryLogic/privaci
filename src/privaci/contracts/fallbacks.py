@@ -17,6 +17,7 @@ from privaci.contracts.base import (
     ReportRenderer,
     RunCompletionEvent,
     RunEnhancements,
+    RunEnhancer,
     UsageMeter,
 )
 from privaci.errors import L3NotInstalledError
@@ -95,7 +96,7 @@ class NoOpDriftDetector:
         return DriftReport(has_drift=False)
 
 
-class CommunityRunEnhancer:
+class CommunityRunEnhancer(RunEnhancer):
     """No-op run enhancements in community mode."""
 
     def build_enhancements(self, catalog: Any) -> RunEnhancements:

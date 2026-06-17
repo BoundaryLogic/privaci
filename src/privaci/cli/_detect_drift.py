@@ -11,6 +11,7 @@ from privaci.catalog import introspect_catalog
 from privaci.catalog.snapshot import load_latest_schema_snapshot
 from privaci.cli.context import resolve_db_url
 from privaci.contracts import load_plugins
+from privaci.contracts.base import DriftReport
 from privaci.errors import DriftError, PreflightError
 from privaci.state.fingerprints import source_db_hash
 
@@ -40,7 +41,7 @@ def execute_detect_drift(
         )
 
 
-async def _detect_async(source_dsn: str, target_dsn: str) -> object:
+async def _detect_async(source_dsn: str, target_dsn: str) -> DriftReport:
     plugins = load_plugins()
     if plugins.drift_detector is None:
         raise PreflightError(
