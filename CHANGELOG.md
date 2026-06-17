@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0-beta.7] - 2026-06-17
+
+### Security
+
+- Cloud secret backend error logs no longer include secret identifiers
+  (`aws-sm://`, `azure-kv://`, `vault://` paths redacted before logging).
+
+### Changed
+
+- CI workflow: explicit least-privilege `permissions: contents: read`.
+
 ## [0.1.0-beta.6] - 2026-06-17
 
 ### Added

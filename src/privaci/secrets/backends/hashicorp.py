@@ -12,6 +12,11 @@ from privaci.secrets.parser import ParsedSecretUri
 logger = logging.getLogger(__name__)
 
 
+def _safe_vault_uri(_parsed: ParsedSecretUri) -> str:
+    """Return a vault URI safe for logs (no mount path or field key)."""
+    return "vault://<redacted>"
+
+
 def resolve_vault_uri(parsed: ParsedSecretUri) -> str:
     """Fetch a field from a HashiCorp Vault KV v2 secret.
 
@@ -62,14 +67,12 @@ def _read_vault_secret(client: Any, parsed: ParsedSecretUri) -> dict[str, Any]:
             mount_point=mount,
         )
     except hvac.exceptions.VaultError as exc:
+        safe_uri = _safe_vault_uri(parsed)
         logger.error(
             "HashiCorp Vault resolution failed",
-            extra={
-                "mount_path": parsed.mount_path,
-                "field_key": parsed.field_key,
-            },
+            extra={"secret_uri": safe_uri},
         )
-        msg = f"Failed to resolve vault://{parsed.mount_path}#{parsed.field_key}"
+        msg = f"Failed to resolve {safe_uri}"
         raise SecretError(msg) from exc
     data: dict[str, Any] = response.get("data", {}).get("data", {})
     return data
@@ -83,13 +86,10 @@ def _close_vault_client(client: Any) -> None:
 
 def _extract_vault_field(parsed: ParsedSecretUri, data: dict[str, Any]) -> str:
     if parsed.field_key not in data:
-        msg = f"vault://{parsed.mount_path}#{parsed.field_key} field not found"
+        msg = f"{_safe_vault_uri(parsed)} field not found"
         raise SecretError(msg)
     value = data[parsed.field_key]
     if not isinstance(value, str) or not value.strip():
-        msg = (
-            f"vault://{parsed.mount_path}#{parsed.field_key} "
-            "is not a non-empty string"
-        )
+        msg = f"{_safe_vault_uri(parsed)} is not a non-empty string"
         raise SecretError(msg)
     return value.strip()
