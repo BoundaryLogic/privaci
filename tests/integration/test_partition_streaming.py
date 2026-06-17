@@ -27,6 +27,7 @@ async def test_partitioned_tables_stream_with_full_row_parity(
     target_dsn: str,
     demo_corp_source_loaded: None,
     clean_target: None,
+    spacy_ner_ready: None,
 ) -> None:
     # Arrange
     config = load_config(DEMO_CORP_CONFIG_PATH)
@@ -73,6 +74,7 @@ async def test_resume_restreams_only_affected_partition_child(
     target_dsn: str,
     demo_corp_source_loaded: None,
     clean_target: None,
+    spacy_ner_ready: None,
 ) -> None:
     # Arrange
     config = load_config(DEMO_CORP_CONFIG_PATH)
