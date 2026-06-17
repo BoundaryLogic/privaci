@@ -10,14 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Capability test harness (`scripts/capability_test/`, `scripts/capability-test.sh`,
-  `scripts/capability-test-suite.sh`): selectable public/commercial capabilities,
+  `scripts/capability-test-suite.sh`): selectable engine and extension capabilities,
   resource guards, version-2 reports with **Masking confidence** (leak probes,
   value-free verify, subsetting slice metrics) and infrastructure vs audit scopes.
 - Integration masking audit: leak probes, action-shape checks, value-free verify,
   auto-detect Postgres test, and `public-spacy-ner` capability (hard-requires
   `spacy` + `en_core_web_sm` for demo-corp L2 columns).
-- `RunEnhancer` contract hook for commercial batch extensions; `detect-drift` and
-  `preview` CLI entry points (commercial plugin wiring).
+- `RunEnhancer` contract hook for licensed plugin extensions; `detect-drift` and
+  `preview` CLI entry points.
 - Test fixtures: `subsetting-demo`, `autodetect-demo`, `json-mask-demo` SQL and
   configs for integration capabilities.
 
