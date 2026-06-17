@@ -1,0 +1,28 @@
+---
+description: Maintainers merge PRs and cut releases; automation opens PRs only
+alwaysApply: true
+---
+
+# Maintainer-only merges
+
+Only repository maintainers merge pull requests and push release tags.
+
+## Automation must not
+
+- Run `gh pr merge` (any mode) or `gh pr review --approve`
+- Merge via GitHub API or other tooling
+- Push release tags (`git push origin v*`) unless a maintainer explicitly
+  requests that exact tag in the same message
+- Force-push or rewrite shared branch history without maintainer approval
+
+## Required workflow
+
+1. Branch → commit → push branch
+2. Open a PR when requested
+3. Stop — return the PR URL; maintainer reviews and merges
+4. Continue follow-up work only after the maintainer confirms merge or next step
+
+## Releases
+
+Do not tag or publish as a follow-up to opening a PR. Tag and publish only when
+a maintainer explicitly requests it in that message.
