@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-06-18
+
+### Changed
+
+- First stable release. Promotes the `v0.1.0-beta.7` codebase to GA;
+  `CONTRACT_VERSION` remains `1.0`.
+
 ## [0.1.0-beta.7] - 2026-06-17
 
 ### Security
