@@ -56,7 +56,9 @@ nav:
       - CLI reference (generated): generated/cli-reference.md
       - Configuration guide: configuration.md
       - Configuration reference (generated): generated/configuration-reference.md
+      - Configuration types (generated): generated/configuration/index.md
       - Error codes: error-codes.md
+      - Error code pages (generated): generated/errors/index.md
       - State & audit schema: state-schema.md
       - Observability: observability.md
       - Deployment: deployment.md

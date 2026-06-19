@@ -53,6 +53,32 @@ def test_mask_rules_schema_json_is_valid() -> None:
     assert "properties" in schema
 
 
+def test_generated_error_pages_match_catalogue() -> None:
+    # Arrange
+    module = _load_generate_docs_module()
+    outputs = module._outputs()
+    error_pages = [
+        p for p in outputs if p.parent.name == "errors" and p.name != "index.md"
+    ]
+
+    # Assert
+    assert len(error_pages) == 8
+    anchors = {p.stem for p in error_pages}
+    assert "exit-code-4-missing-or-invalid-salt" in anchors
+    assert "exit-code-5-license-entitlement-failure" in anchors
+
+
+def test_generated_configuration_type_pages_exist() -> None:
+    # Arrange
+    outputs = _load_generate_docs_module()._outputs()
+    config_pages = [
+        p for p in outputs if p.parent.name == "configuration" and p.name != "index.md"
+    ]
+
+    # Assert
+    assert any(p.name == "fakeaction.md" for p in config_pages)
+
+
 def test_generate_docs_check_passes_when_committed() -> None:
     # Arrange
     outputs = _load_generate_docs_module()._outputs()
