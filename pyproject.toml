@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "privaci"
-version = "1.0.0"
+version = "1.0.1"
 description = "In-VPC PostgreSQL masking and anonymization engine"
 readme = "README.md"
 license = { text = "Elastic License 2.0" }
