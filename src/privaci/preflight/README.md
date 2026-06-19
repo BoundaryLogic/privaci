@@ -8,6 +8,7 @@ policy, FK strategy validation, and connectivity probes.
 | Symbol | Role |
 |--------|------|
 | `runner.run_preflight` | Execute all checks and return structured results |
+| `runner.run_preflight(..., defer_strict=True)` | Skip strict auto-detect for artifact-first review commands |
 | `salt.resolve_salt` | Load and fingerprint the anonymization salt |
 | `checks.validate_exclude_strategy` | Ensure excluded tables do not orphan FKs |
 

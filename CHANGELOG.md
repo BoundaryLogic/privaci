@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `run_preflight(..., defer_strict=True)` skips strict auto-detect validation so
+  review commands can emit artifacts first; `privaci dry-run --report` writes the
+  markdown report, then exits `3` when `strict_autodetect: true` and columns are
+  uncovered.
+
 ## [1.0.0] - 2026-06-18
 
 ### Changed

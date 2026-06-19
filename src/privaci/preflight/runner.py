@@ -41,8 +41,14 @@ async def run_preflight(
     target_dsn: str,
     dry_run: bool = False,
     for_resume: bool = False,
+    defer_strict: bool = False,
 ) -> PreflightReport:
     """Execute all pre-flight checks without writing masked data.
+
+    Args:
+        defer_strict: When ``True``, skip the strict auto-detect exit so callers
+            can emit review artifacts (``privaci preview``, ``dry-run --report``)
+            before enforcing ``strict_autodetect``.
 
     Raises:
         CatalogError: When the source cannot be introspected.
@@ -58,6 +64,7 @@ async def run_preflight(
             config,
             dry_run=dry_run,
             for_resume=for_resume,
+            defer_strict=defer_strict,
         )
     finally:
         await source.close()
@@ -71,6 +78,7 @@ async def _run_preflight_checks(
     *,
     dry_run: bool,
     for_resume: bool,
+    defer_strict: bool,
 ) -> PreflightReport:
     await verify_source_readable(source)
     catalog = await introspect_catalog(
@@ -81,7 +89,8 @@ async def _run_preflight_checks(
     verify_null_actions(config, catalog)
     verify_exclude_strategy(config, catalog)
     detection = build_detection(config, catalog)
-    verify_strict_autodetect(config, detection)
+    if not defer_strict:
+        verify_strict_autodetect(config, detection)
     warnings = await run_target_checks(
         target, config, catalog, dry_run=dry_run, for_resume=for_resume
     )
