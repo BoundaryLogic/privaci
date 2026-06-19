@@ -68,6 +68,10 @@ raise ConfigError(
 
 ## 2. Exit code catalogue
 
+> **Indexable pages:** each exit code also has a dedicated page under
+> [Exit code pages (generated)](generated/errors/index.md) for search and deep
+> linking.
+
 | Code | Name | Meaning | Writes occurred? |
 |------|------|---------|------------------|
 | `0` | Success | Run (or `--dry-run`) completed successfully | Maybe (run) / No (dry-run) |
