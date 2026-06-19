@@ -87,6 +87,11 @@ privaci dry-run --config mask-rules.yaml --report review.md
 With `strict_autodetect: true`, any `high` or `medium` finding not explicitly
 listed under `tables.<id>.columns` fails validation (exit `3`).
 
+`privaci preview` and `privaci dry-run --report` write their review artifacts
+**before** applying the strict check, so CI can upload a policy diff or markdown
+report even when the job exits `3`. Production `privaci run` still fails at
+preflight with no writes.
+
 > **Version policy.** A config whose `version` is not `"1.0"` is rejected by the
 > v1.x engine. A future engine reading an older config will direct you to
 > `privaci migrate-config --from <old> --to <new> <path>`. When `--from` equals

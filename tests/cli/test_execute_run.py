@@ -15,6 +15,7 @@ from privaci.autodetect.models import DetectionFinding, DetectionResult
 from privaci.catalog.models import (
     CatalogResult,
     CatalogWarning,
+    ColumnInfo,
     LoadPlan,
     TableInfo,
     table_id,
@@ -23,6 +24,7 @@ from privaci.cli._run import execute_run, execute_verify
 from privaci.config.actions import FakeAction, HashAction
 from privaci.config.models import Config
 from privaci.contracts.base import LicenseStatus
+from privaci.errors import ConfigError
 from privaci.pipeline.runner import PipelineSummary
 from privaci.preflight.runner import PreflightReport
 from privaci.verify.models import CheckResult, Verdict, VerifyReport
@@ -227,6 +229,58 @@ def test_execute_run_dry_run_writes_report_and_renders_findings(
     assert "mask: ssn -> hash" in captured.out
     assert "review: note" in captured.out
     assert "POLY_FK" in captured.err
+
+
+def test_dry_run_report_writes_before_strict_failure(
+    tmp_path: Path,
+    mocker: MockerFixture,
+) -> None:
+    # Arrange
+    config = Config(version=SUPPORTED_CONFIG_VERSION, strict_autodetect=True)
+    users = TableInfo("public", "users", (ColumnInfo("email", "text", True),))
+    findings = (
+        DetectionFinding(
+            table_id="public.users",
+            column_name="email",
+            confidence="high",
+            reasons=("pattern:email",),
+            action=FakeAction(action="fake", provider="email"),
+            matched_pattern="email",
+        ),
+    )
+    report = PreflightReport(
+        catalog=CatalogResult(
+            tables={table_id("public", "users"): users},
+            load_plan=LoadPlan(layers=()),
+        ),
+        detection=DetectionResult(findings=findings),
+    )
+    mocker.patch("privaci.cli.context.load_config", return_value=config)
+    mocker.patch("privaci.cli.context.resolve_run_salt", return_value=TEST_SALT)
+    plugins = mocker.MagicMock()
+    plugins.license_validator.validate.return_value = LicenseStatus(
+        tier="commercial",
+        is_valid=True,
+        message="ok",
+    )
+    mocker.patch("privaci.cli.context.load_plugins", return_value=plugins)
+    mocker.patch(
+        "privaci.cli._run.run_preflight", new_callable=AsyncMock, return_value=report
+    )
+    report_path = tmp_path / "detection.md"
+
+    # Act / Assert
+    with pytest.raises(ConfigError) as exc_info:
+        execute_run(
+            config_path=str(_config_path(tmp_path)),
+            source="postgresql://x/y",
+            target="postgresql://x/z",
+            dry_run=True,
+            report_path=str(report_path),
+        )
+    assert exc_info.value.exit_code == 3
+    assert report_path.is_file()
+    assert "Strict mode: on" in report_path.read_text(encoding="utf-8")
 
 
 def test_execute_verify_passes(

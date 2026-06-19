@@ -18,6 +18,7 @@ from privaci.config.models import Config
 from privaci.pipeline import run_masking_pipeline
 from privaci.pipeline.runner import PipelineSummary
 from privaci.preflight import PreflightReport, run_preflight
+from privaci.preflight.checks import verify_strict_autodetect
 from privaci.verify import VerifyReport, run_verification
 from privaci.verify.models import Verdict
 
@@ -67,10 +68,13 @@ async def _execute_async(
         source_dsn=source_dsn,
         target_dsn=target_dsn,
         dry_run=dry_run,
+        defer_strict=dry_run and report_path is not None,
     )
     _echo_preflight_warnings(report)
     if dry_run:
         _finish_dry_run(report, config, report_path)
+        if report_path is not None:
+            verify_strict_autodetect(config, report.detection)
         return None
     return await run_masking_pipeline(
         source_dsn,
