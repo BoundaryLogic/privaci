@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- COPY-binary passthrough tables now pipe source `COPY OUT` directly into
+  target `COPY IN` via a bounded chunk queue instead of buffering the whole
+  table in memory.
+
 ## [1.0.1] - 2026-06-19
 
 ### Changed

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import io
 import uuid
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -17,10 +17,12 @@ from privaci.stream.copy_binary import (
 )
 
 
-async def _store_binary_payload(
-    *_args: object, output: io.BytesIO, **_kwargs: object
+async def _stream_binary_payload(
+    *_args: object,
+    output: Callable[[bytes], Awaitable[None]],
+    **_kwargs: object,
 ) -> None:
-    output.write(b"\x00binary")
+    await output(b"\x00binary")
 
 
 def _users_table() -> TableInfo:
@@ -160,7 +162,7 @@ async def test_binary_copy_passthrough_table_streams_whole_table(
     table = _users_table()
     source = AsyncMock()
     source.fetchval = AsyncMock(return_value=2)
-    source.copy_from_table = AsyncMock(side_effect=_store_binary_payload)
+    source.copy_from_table = AsyncMock(side_effect=_stream_binary_payload)
     target = AsyncMock()
     target.transaction = MagicMock(return_value=_FakeTransaction())
     target.copy_to_table = AsyncMock()
