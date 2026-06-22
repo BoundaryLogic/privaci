@@ -58,4 +58,4 @@ async def test_copy_chunk_pipe_blocks_writer_when_queue_is_full() -> None:
     assert await anext(iterator) == b"second"
     with pytest.raises(StopAsyncIteration):
         await anext(iterator)
-    await writer_task
+    assert writer_task.exception() is None
