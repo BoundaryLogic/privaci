@@ -64,7 +64,9 @@ def test_validate_new_tests_registered_rejects_unregistered_file(
     mocker: pytest.Mock,
 ) -> None:
     # Arrange
-    mocker.patch.object(_mod, "_staged_paths", return_value={"tests/storage/test_new.py"})
+    mocker.patch.object(
+        _mod, "_staged_paths", return_value={"tests/storage/test_new.py"}
+    )
     mocker.patch.object(
         _mod,
         "_staged_added_test_files",

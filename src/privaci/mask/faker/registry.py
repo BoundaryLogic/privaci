@@ -73,7 +73,7 @@ def validate_fake_providers(config: Config) -> None:
     missing: list[str] = []
     for table_id, table in config.tables.items():
         for column, action in table.columns.items():
-            if not isinstance(action, (FakeAction, PseudonymAction)):
+            if not isinstance(action, FakeAction | PseudonymAction):
                 continue
             if action.provider not in known:
                 missing.append(f"{table_id}.{column} -> {action.provider}")
