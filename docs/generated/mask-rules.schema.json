@@ -89,6 +89,31 @@
       "title": "HashAction",
       "type": "object"
     },
+    "HmacHashAction": {
+      "additionalProperties": false,
+      "description": "Replace the value with an HMAC-SHA256 digest using ``pseudonym_key``.\n\nAttributes:\n    encoding: ``hex`` (default) or ``base64url`` output form.",
+      "properties": {
+        "action": {
+          "const": "hmac_hash",
+          "title": "Action",
+          "type": "string"
+        },
+        "encoding": {
+          "default": "hex",
+          "enum": [
+            "hex",
+            "base64url"
+          ],
+          "title": "Encoding",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "title": "HmacHashAction",
+      "type": "object"
+    },
     "NerMaskAction": {
       "additionalProperties": false,
       "description": "Mask named entities found by the Level-2 SpaCy NER model.\n\nAttributes:\n    entities: Entity labels to mask. Defaults to ``PERSON``, ``ORG``,\n        ``GPE``, ``LOC``.",
@@ -142,6 +167,46 @@
         "action"
       ],
       "title": "PassthroughAction",
+      "type": "object"
+    },
+    "PseudonymAction": {
+      "additionalProperties": false,
+      "description": "Keyed deterministic fake using the same providers as ``fake``.\n\nAttributes:\n    provider: Registered fake provider name (e.g. ``email``).\n    seed_alias: Optional shared seed path for FK consistency.\n    params: Optional provider-specific string parameters.",
+      "properties": {
+        "action": {
+          "const": "pseudonym",
+          "title": "Action",
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Params",
+          "type": "object"
+        },
+        "provider": {
+          "title": "Provider",
+          "type": "string"
+        },
+        "seed_alias": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seed Alias"
+        }
+      },
+      "required": [
+        "action",
+        "provider"
+      ],
+      "title": "PseudonymAction",
       "type": "object"
     },
     "RegexMaskAction": {
@@ -221,9 +286,11 @@
                 "ai_refine": "#/$defs/AiRefineAction",
                 "fake": "#/$defs/FakeAction",
                 "hash": "#/$defs/HashAction",
+                "hmac_hash": "#/$defs/HmacHashAction",
                 "ner_mask": "#/$defs/NerMaskAction",
                 "null": "#/$defs/NullAction",
                 "passthrough": "#/$defs/PassthroughAction",
+                "pseudonym": "#/$defs/PseudonymAction",
                 "regex_mask": "#/$defs/RegexMaskAction",
                 "static": "#/$defs/StaticAction"
               },
@@ -238,6 +305,12 @@
               },
               {
                 "$ref": "#/$defs/HashAction"
+              },
+              {
+                "$ref": "#/$defs/HmacHashAction"
+              },
+              {
+                "$ref": "#/$defs/PseudonymAction"
               },
               {
                 "$ref": "#/$defs/PassthroughAction"
@@ -281,7 +354,7 @@
     }
   },
   "additionalProperties": false,
-  "description": "Root mask-rules.yaml document.\n\nAttributes:\n    version: Config schema version. The MVP engine accepts ``\"1.0\"`` only.\n    global_salt: Optional salt literal or secret URI; resolved at run time\n        by the secrets resolver. Never logged.\n    on_existing_data: Target-table collision policy. ``append`` is rejected\n        in the MVP.\n    strict_autodetect: Fail the run when auto-detect finds uncovered PII.\n    replicate_all_indexes: Replicate every source index, not just unique\n        and primary-key indexes.\n    batch_size: Default streaming batch size in rows.\n    audit_log: Write the per-run audit log to ``_privaci.audit_log``.\n    auto_detect: Run the zero-config PII column scanner.\n    implied_fk_ignore: Source column paths (``schema.table.column``) whose\n        implied (soft) foreign-key warnings should be silenced.\n    tables: Mapping of table identifier to its configuration.",
+  "description": "Root mask-rules.yaml document.\n\nAttributes:\n    version: Config schema version. The MVP engine accepts ``\"1.0\"`` only.\n    global_salt: Optional salt literal or secret URI; resolved at run time\n        by the secrets resolver. Never logged.\n    pseudonym_key: Optional HMAC key for ``hmac_hash`` and ``pseudonym``\n        actions (Growth+ tier). Distinct from ``global_salt``.\n    on_existing_data: Target-table collision policy. ``append`` is rejected\n        in the MVP.\n    strict_autodetect: Fail the run when auto-detect finds uncovered PII.\n    replicate_all_indexes: Replicate every source index, not just unique\n        and primary-key indexes.\n    batch_size: Default streaming batch size in rows.\n    audit_log: Write the per-run audit log to ``_privaci.audit_log``.\n    auto_detect: Run the zero-config PII column scanner.\n    implied_fk_ignore: Source column paths (``schema.table.column``) whose\n        implied (soft) foreign-key warnings should be silenced.\n    tables: Mapping of table identifier to its configuration.",
   "properties": {
     "audit_log": {
       "default": true,
@@ -327,6 +400,18 @@
       ],
       "title": "On Existing Data",
       "type": "string"
+    },
+    "pseudonym_key": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pseudonym Key"
     },
     "replicate_all_indexes": {
       "default": false,

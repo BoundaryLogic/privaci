@@ -37,6 +37,16 @@ GlobalSalt = Annotated[
     ),
 ]
 
+PseudonymKey = Annotated[
+    SecretStr | None,
+    WithJsonSchema(
+        {
+            "anyOf": [{"type": "string"}, {"type": "null"}],
+            "title": "Pseudonym Key",
+        }
+    ),
+]
+
 
 class TableConfig(BaseModel):
     """Per-table masking configuration.
@@ -75,6 +85,8 @@ class Config(BaseModel):
         version: Config schema version. The MVP engine accepts ``"1.0"`` only.
         global_salt: Optional salt literal or secret URI; resolved at run time
             by the secrets resolver. Never logged.
+        pseudonym_key: Optional HMAC key for ``hmac_hash`` and ``pseudonym``
+            actions (Growth+ tier). Distinct from ``global_salt``.
         on_existing_data: Target-table collision policy. ``append`` is rejected
             in the MVP.
         strict_autodetect: Fail the run when auto-detect finds uncovered PII.
@@ -92,6 +104,7 @@ class Config(BaseModel):
 
     version: str
     global_salt: GlobalSalt = None
+    pseudonym_key: PseudonymKey = None
     on_existing_data: OnExistingData = "fail"
     strict_autodetect: bool = False
     replicate_all_indexes: bool = False
@@ -105,14 +118,13 @@ class Config(BaseModel):
     @classmethod
     def _wrap_global_salt(cls, value: str | SecretStr | None) -> SecretStr | None:
         """Wrap plaintext salt literals from YAML in :class:`SecretStr`."""
-        if value is None:
-            return None
-        if isinstance(value, SecretStr):
-            return value
-        text = str(value).strip()
-        if not text:
-            return None
-        return SecretStr(text)
+        return _wrap_secret_literal(value)
+
+    @field_validator("pseudonym_key", mode="before")
+    @classmethod
+    def _wrap_pseudonym_key(cls, value: str | SecretStr | None) -> SecretStr | None:
+        """Wrap plaintext pseudonym key literals from YAML in :class:`SecretStr`."""
+        return _wrap_secret_literal(value)
 
     @field_validator("batch_size")
     @classmethod
@@ -131,3 +143,15 @@ class Config(BaseModel):
                 "Use truncate or drop_create."
             )
         return self
+
+
+def _wrap_secret_literal(value: str | SecretStr | None) -> SecretStr | None:
+    """Wrap a YAML secret literal in :class:`SecretStr` when non-empty."""
+    if value is None:
+        return None
+    if isinstance(value, SecretStr):
+        return value
+    text = str(value).strip()
+    if not text:
+        return None
+    return SecretStr(text)

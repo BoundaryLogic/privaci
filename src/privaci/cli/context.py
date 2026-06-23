@@ -14,6 +14,7 @@ from privaci.config.models import Config
 from privaci.contracts import load_plugins
 from privaci.errors import CatalogError, LicenseError
 from privaci.preflight import resolve_run_salt
+from privaci.preflight.pseudonym_key import resolve_run_pseudonym_key
 from privaci.runtime.signals import clear_interrupt, install_handlers, restore_handlers
 from privaci.secrets import SecretKind, resolve_secret
 from privaci.state.fingerprints import salt_fingerprint
@@ -32,6 +33,7 @@ class RunContext:
     target_dsn: str
     salt: str
     salt_fingerprint: str
+    pseudonym_key: str | None = None
 
 
 def prepare_cli_run(
@@ -46,6 +48,7 @@ def prepare_cli_run(
     source_dsn = resolve_db_url(source, env_name="SOURCE_DB_URL", role="source")
     target_dsn = resolve_db_url(target, env_name="TARGET_DB_URL", role="target")
     salt = resolve_run_salt(config)
+    pseudonym_key = resolve_run_pseudonym_key(config)
     fingerprint = salt_fingerprint(salt)
     logger.info("Resolved salt fingerprint", extra={"salt_fingerprint": fingerprint})
     return RunContext(
@@ -54,6 +57,7 @@ def prepare_cli_run(
         target_dsn=target_dsn,
         salt=salt,
         salt_fingerprint=fingerprint,
+        pseudonym_key=pseudonym_key,
     )
 
 

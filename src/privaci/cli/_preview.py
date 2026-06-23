@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import importlib.metadata
 from collections.abc import Callable
-from pathlib import Path
 from typing import Any
 
 from privaci.cli.context import resolve_db_url
@@ -45,15 +44,15 @@ def execute_preview(
     source_dsn = resolve_db_url(source, env_name="SOURCE_DB_URL", role="source")
     target_dsn = resolve_db_url(target, env_name="TARGET_DB_URL", role="target")
     kwargs: dict[str, Any] = {
-        "config": Path(config),
+        "config": config,
         "source": source_dsn,
         "target": target_dsn,
         "sample": sample,
     }
     if commercial_extensions is not None:
-        kwargs["commercial"] = Path(commercial_extensions)
+        kwargs["commercial"] = commercial_extensions
     if policy_diff is not None:
-        kwargs["policy_diff"] = Path(policy_diff)
+        kwargs["policy_diff"] = policy_diff
     if sarif is not None:
-        kwargs["sarif"] = Path(sarif)
+        kwargs["sarif"] = sarif
     preview_fn(**kwargs)

@@ -30,6 +30,7 @@ from privaci.config import export_json_schema, load_config, migrate_config
 from privaci.contracts import CONTRACT_VERSION, load_plugins
 from privaci.observability import start_metrics_server
 from privaci.packs import install_pack
+from privaci.storage import write_object
 
 app = typer.Typer(
     name="privaci",
@@ -170,7 +171,10 @@ def dry_run_cmd(
     report: str | None = typer.Option(
         None,
         "--report",
-        help="Write a markdown auto-detect report to this path.",
+        help=(
+            "Write auto-detect markdown to a local path or object URI "
+            "(s3:// with commercial plugin; see docs/object-output.md)."
+        ),
     ),
 ) -> None:
     """Pre-flight checks only; no writes."""
@@ -317,7 +321,11 @@ def report(
     output: str | None = typer.Option(
         None,
         "--output",
-        help="Write report bytes to this path (default: stdout).",
+        help=(
+            "Write report bytes to a local path or object URI "
+            "(s3:// with commercial plugin; default: stdout). "
+            "See docs/object-output.md."
+        ),
     ),
 ) -> None:
     """Render a compliance report for a completed run."""
@@ -328,10 +336,8 @@ def report(
     if output is None:
         typer.echo(payload.decode())
         return
-    out_path = Path(output)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_bytes(payload)
-    typer.echo(f"Wrote report to {out_path}")
+    write_object(output, payload)
+    typer.echo(f"Wrote report to {output}")
 
 
 def main() -> int:

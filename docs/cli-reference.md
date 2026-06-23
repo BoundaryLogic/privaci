@@ -265,12 +265,15 @@ stub; signed PDF reports require the commercial layer.
 |--------|---------|-------------|
 | `--run` | *(required)* | Run UUID to report on. |
 | `--format` | `json` | Output format (`json`; `pdf` is commercial). |
-| `--output` | *(stdout)* | Write report bytes to this path. |
+| `--output` | *(stdout)* | Write report bytes to a local path or object URI (`s3://` with commercial). |
 
 ```bash
 privaci report --run 019eaca5-32d9-7957-9b00-43d088b7ec6e --format json
 privaci report --run 019eaca5-… --format json --output report.json
+privaci report --run 019eaca5-… --output "s3://evidence/privaci/run/report.json"
 ```
+
+See [`object-output.md`](object-output.md) for URI forms.
 
 ---
 

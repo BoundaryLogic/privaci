@@ -103,6 +103,13 @@ class SecretError(PrivaCIError):
     default_doc_anchor = "exit-code-4-missing-or-invalid-salt"
 
 
+class StorageError(PrivaCIError):
+    """Raised when an object URI cannot be parsed or written."""
+
+    exit_code = 1
+    default_doc_anchor = "exit-code-1-generic-error"
+
+
 class L3NotInstalledError(PrivaCIError):
     """Raised when Level 3 LLM masking is requested without the commercial layer."""
 

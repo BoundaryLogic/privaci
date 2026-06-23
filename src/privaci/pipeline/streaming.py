@@ -44,6 +44,7 @@ class PipelineStreamContext:
     detection: DetectionResult
     checkpoints: dict[str, TableCheckpoint]
     enhancements: RunEnhancements
+    pseudonym_key: str | None = None
 
 
 async def stream_all_tables(
@@ -56,6 +57,8 @@ async def stream_all_tables(
     audit: AuditWriter,
     detection: DetectionResult,
     checkpoints: dict[str, TableCheckpoint],
+    *,
+    pseudonym_key: str | None = None,
 ) -> tuple[int, int, dict[str, int], int]:
     """Stream every table in load order and return aggregate counts."""
     enhancer = load_plugins().run_enhancer
@@ -70,6 +73,7 @@ async def stream_all_tables(
         catalog=catalog,
         config=config,
         salt=salt,
+        pseudonym_key=pseudonym_key,
         run_id=run_id,
         audit=audit,
         detection=detection,
@@ -204,6 +208,7 @@ async def stream_one_table(
         table,
         table_cfg,
         cell_post_processor=ctx.enhancements.cell_post_processor,
+        pseudonym_key=ctx.pseudonym_key,
     )
     batch_size = resolve_batch_size(
         table,

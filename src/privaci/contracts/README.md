@@ -14,6 +14,8 @@ community fallbacks are used when no plugin is installed.
 | `ReportRenderer` | Signed compliance reports |
 | `Notifier` | Run-completion webhooks |
 | `DriftDetector` | Schema drift detection |
+| `RunEnhancer` | Subsetting and JSONB transforms |
+| `ObjectWriter` | Compliance artifact destinations |
 | `load_plugins` | Resolve all registered plugins |
 | `CONTRACT_VERSION` | Semver string for ABI compatibility |
 

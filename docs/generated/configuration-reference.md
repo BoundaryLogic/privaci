@@ -17,6 +17,7 @@ Regenerate with ``make docs-generate``.
 | `global_salt` | string \| null | no |  |
 | `implied_fk_ignore` | array[string] | no |  |
 | `on_existing_data` | enum: `fail`, `truncate`, `drop_create`, `append` | no |  Default: `fail`. |
+| `pseudonym_key` | string \| null | no |  |
 | `replicate_all_indexes` | boolean | no |  Default: `False`. |
 | `strict_autodetect` | boolean | no |  Default: `False`. |
 | `tables` | object | no |  |
@@ -46,6 +47,13 @@ Regenerate with ``make docs-generate``.
 |-------|------|----------|-------------|
 | `action` | string | yes |  |
 
+## `HmacHashAction`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `action` | string | yes |  |
+| `encoding` | enum: `hex`, `base64url` | no |  Default: `hex`. |
+
 ## `NerMaskAction`
 
 | Field | Type | Required | Description |
@@ -64,6 +72,15 @@ Regenerate with ``make docs-generate``.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `action` | string | yes |  |
+
+## `PseudonymAction`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `action` | string | yes |  |
+| `params` | object | no |  |
+| `provider` | string | yes |  |
+| `seed_alias` | string \| null | no |  |
 
 ## `RegexMaskAction`
 

@@ -43,6 +43,7 @@ def execute_run(
             dry_run=dry_run,
             audit_enabled=audit_enabled,
             report_path=report_path,
+            pseudonym_key=ctx.pseudonym_key,
         )
     )
     if summary is None:
@@ -62,6 +63,7 @@ async def _execute_async(
     dry_run: bool,
     audit_enabled: bool | None,
     report_path: str | None,
+    pseudonym_key: str | None = None,
 ) -> PipelineSummary | None:
     report = await run_preflight(
         config=config,
@@ -83,6 +85,7 @@ async def _execute_async(
         salt,
         audit_enabled=audit_enabled,
         catalog=report.catalog,
+        pseudonym_key=pseudonym_key,
     )
 
 

@@ -411,6 +411,13 @@ the end). From `privaci-commercial`, use `./scripts/capability-test.sh` or
 `./scripts/capability-test-suite.sh` — reports default to
 `privaci-commercial/reports/capability-tests/`.
 
+**Pre-commit (required):** when `src/`, `tests/`, or `scripts/capability_test/`
+change, hooks run `scripts/check_capability_registry.py` and
+`./scripts/capability-test-suite.sh quick` (public-unit only if
+`../privaci-commercial` is absent). Register every new user-facing capability in
+`scripts/capability_test/registry.py` before commit — see
+`.cursor/rules/capability-test-registry.mdc`.
+
 If the script prints `REFUSED`, free memory first — do not bypass.
 
 ---

@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Run predefined capability suites (quick, standard, full, …).
 #
+# Capabilities are defined in scripts/capability_test/registry.py. New unit
+# capabilities (e.g. public-object-output, public-keyed-pseudonymisation,
+# commercial-object-writer) are included automatically in quick/standard via
+# the public-unit and commercial-unit groups.
+#
 # Examples:
 #   ./scripts/capability-test-suite.sh quick
 #   ./scripts/capability-test-suite.sh standard --allow-heavy --reset-volumes
@@ -36,6 +41,8 @@ Suites:
   commercial Commercial unit + integration
   standard   Unit both repos, then public integration, then commercial
   full       Alias for standard
+
+Capabilities: scripts/capability_test/registry.py (--list via capability-test.sh).
 
 Options are forwarded to capability-test.sh (--allow-heavy, --reset-volumes, …).
 The suite id may appear before or after flags (e.g. full --allow-heavy).

@@ -60,6 +60,7 @@ async def run_masking_pipeline(
     catalog: CatalogResult | None = None,
     resume_run_id: uuid.UUID | None = None,
     checkpoints: dict[str, TableCheckpoint] | None = None,
+    pseudonym_key: str | None = None,
 ) -> PipelineSummary:
     """Introspect, replicate schema, and stream masked rows to the target."""
     return await _execute_masking_pipeline(
@@ -71,6 +72,7 @@ async def run_masking_pipeline(
         catalog=catalog,
         resume_run_id=resume_run_id,
         checkpoints=checkpoints,
+        pseudonym_key=pseudonym_key,
     )
 
 
@@ -84,6 +86,7 @@ async def _execute_masking_pipeline(
     catalog: CatalogResult | None,
     resume_run_id: uuid.UUID | None,
     checkpoints: dict[str, TableCheckpoint] | None,
+    pseudonym_key: str | None = None,
 ) -> PipelineSummary:
     started_at = time.monotonic()
     session = PipelineSession(run_id=resume_run_id)
@@ -101,6 +104,7 @@ async def _execute_masking_pipeline(
                 catalog=catalog,
                 checkpoints=checkpoints,
                 session=session,
+                pseudonym_key=pseudonym_key,
             )
         except RunInterruptedError:
             await _finish_aborted_run(
@@ -140,6 +144,7 @@ async def _run_connected_pipeline(
     catalog: CatalogResult | None,
     checkpoints: dict[str, TableCheckpoint] | None,
     session: PipelineSession,
+    pseudonym_key: str | None = None,
 ) -> PipelineSummary:
     if catalog is None:
         catalog = await introspect_catalog(
@@ -167,6 +172,7 @@ async def _run_connected_pipeline(
         started_at,
         source_dsn=source_dsn,
         checkpoints=checkpoints,
+        pseudonym_key=pseudonym_key,
     )
 
 
@@ -228,6 +234,7 @@ async def _stream_to_summary(
     *,
     source_dsn: str,
     checkpoints: dict[str, TableCheckpoint] | None,
+    pseudonym_key: str | None = None,
 ) -> PipelineSummary:
     detection = build_detection(config, catalog)
     tables_done, total_rows, counts, total_bytes = await stream_all_tables(
@@ -240,6 +247,7 @@ async def _stream_to_summary(
         audit,
         detection,
         checkpoints=checkpoints or {},
+        pseudonym_key=pseudonym_key,
     )
     summary = PipelineSummary(
         run_id=run_id,

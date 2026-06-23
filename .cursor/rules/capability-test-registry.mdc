@@ -1,0 +1,56 @@
+---
+description: Register new capabilities in the test harness and run quick suite before commit
+globs: "{src/**,tests/**,scripts/capability_test/**}"
+alwaysApply: false
+---
+
+# Capability test registry
+
+Every **new user-facing capability** (CLI command, plugin hook, masking action,
+storage backend, commercial extension) must be registered in
+`scripts/capability_test/registry.py` and exercised before commit.
+
+## When to add a registry entry
+
+Add or extend a `Capability` when you:
+
+- Introduce a new feature customers or integrators can invoke
+- Add a new `tests/<area>/test_*.py` file for that feature
+- Add commercial plugin surface in `privaci-commercial`
+
+Do **not** add one entry per test file — group related tests under one capability
+id (e.g. `public-object-output` covers parser + writer tests).
+
+## Registry checklist
+
+1. Pick id: `public-<feature>` or `commercial-<feature>` (kebab-case).
+2. Set `test_paths` to the pytest files that prove the capability.
+3. Set `requires_postgres` / `requires_commercial_env` / `requires_nlp` honestly.
+4. Unit capabilities are picked up automatically by `public-unit` /
+   `commercial-unit` and `./scripts/capability-test-suite.sh quick`.
+
+## Before every commit (enforced by pre-commit)
+
+```bash
+./scripts/capability-test-suite.sh quick
+```
+
+From `privaci-commercial` (sibling `PrivaCI` repo required):
+
+```bash
+./scripts/capability-test-precommit.sh
+```
+
+Pre-commit runs `scripts/check_capability_registry.py` (integrity + new test
+files must be registered) and the quick suite when `src/`, `tests/`, or
+`scripts/capability_test/` change.
+
+## Targeted development (agents)
+
+While iterating, run only the capability you touched:
+
+```bash
+./scripts/capability-test.sh --cap public-object-output
+```
+
+Run the full quick suite once before handing off or committing.

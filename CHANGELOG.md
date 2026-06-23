@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ObjectWriter` plugin contract and `write_object()` dispatch for compliance
+  artifact destinations (`report --output`, `dry-run --report`). Community mode
+  supports local paths; cloud URIs (`s3://`) require the commercial plugin or a
+  custom `object_writer` entry point. See `docs/object-output.md`.
+- Growth+ keyed masking actions `hmac_hash` and `pseudonym` with dedicated
+  `pseudonym_key` / `PSEUDONYM_KEY` resolution (distinct from anonymization salt).
+
 ### Fixed
 
 - COPY-binary passthrough tables now pipe source `COPY OUT` directly into
