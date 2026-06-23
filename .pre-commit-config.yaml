@@ -19,6 +19,13 @@ repos:
 
   - repo: local
     hooks:
+      - id: public-repo-language-staged
+        name: public repo language guard — staged lines (ADR-0007, blocks commit)
+        entry: python scripts/check_public_repo_language.py --staged
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
       - id: pip-audit
         name: pip-audit
         entry: pip-audit --requirement requirements.txt
@@ -64,13 +71,6 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
         files: ^(src/|tests/|scripts/)
-
-      - id: public-repo-language
-        name: public repo language guard (ADR-0007)
-        entry: python scripts/check_public_repo_language.py
-        language: system
-        pass_filenames: false
-        stages: [pre-commit]
 
       - id: public-repo-language-commit-msg
         name: public repo commit message language guard

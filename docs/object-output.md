@@ -1,19 +1,20 @@
 # Object output URIs
 
-Compliance artifacts (`privaci report --output`, `dry-run --report`, commercial
-`preview --policy-diff`, `preview --sarif`) accept local paths and object URIs.
+Compliance artifacts (`privaci report --output`, `dry-run --report`, and
+`preview` artifact flags when a preview plugin is registered) accept local paths
+and object URIs.
 
 ## Supported destinations
 
-| Form | Community | Commercial |
-|------|-----------|------------|
+| Form | Community fallback | With `object_writer` plugin |
+|------|-------------------|----------------------------|
 | `./report.json`, `/tmp/out.md` | Yes | Yes |
 | `file:///tmp/out.json` | Yes | Yes |
-| `s3://bucket/prefix/report.json` | No (install plugin) | Yes (all tiers) |
+| `s3://bucket/prefix/report.json` | No (register plugin) | Yes |
 | `azure-blob://account/container/blob` | No | Not yet |
 
-Cloud uploads use the `object_writer` plugin (`privaci.plugins`). The
-Marketplace image registers the commercial S3 writer automatically.
+Cloud uploads use the `object_writer` plugin (`privaci.plugins`). Register an
+S3-capable writer via your plugin package entry point (see below).
 
 ## Examples
 

@@ -1,4 +1,4 @@
-"""Community-mode no-op implementations of commercial contracts."""
+"""Community-mode fallbacks for plugin contracts."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ class CommunityLicenseValidator(LicenseValidator):
 
 
 class NoOpUsageMeter(UsageMeter):
-    """Silent metering — no Marketplace calls."""
+    """Silent metering — no external UsageMeter calls."""
 
     def register_run(self, *, source_db_hash: str, run_id: UUID) -> None:
         return None
@@ -48,7 +48,7 @@ class NoOpUsageMeter(UsageMeter):
 
 
 class NoOpLLMConnector(LLMConnector):
-    """Placeholder when the commercial LLM layer is not installed."""
+    """Placeholder when no LLM connector plugin is installed."""
 
     def name(self) -> str:
         return "noop"
@@ -89,7 +89,7 @@ class NoOpNotifier(Notifier):
 
 
 class NoOpDriftDetector:
-    """Drift detection is commercial-only; exposed for plugin loading."""
+    """Drift detection requires a DriftDetector plugin; exposed for plugin loading."""
 
     def detect(
         self,

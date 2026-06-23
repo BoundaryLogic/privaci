@@ -52,7 +52,7 @@ privaci validate --config mask-rules.yaml
 |-----|------|---------|-------------|
 | `version` | string | _required_ | Config schema version. The v1.x engine accepts `"1.0"` only. |
 | `global_salt` | string \| secret URI | _none_ | Salt literal or secret URI; resolved at run time. Never logged. |
-| `pseudonym_key` | string \| secret URI | _none_ | HMAC key for `hmac_hash` / `pseudonym` (Growth+). Distinct from `global_salt`. |
+| `pseudonym_key` | string \| secret URI | _none_ | HMAC key for `hmac_hash` / `pseudonym` when licensed. Distinct from `global_salt`. |
 | `on_existing_data` | enum | `fail` | Target collision policy: `fail`, `truncate`, `drop_create`. `append` is rejected in the MVP. |
 | `strict_autodetect` | bool | `false` | Fail the run when auto-detect finds uncovered PII columns. |
 | `replicate_all_indexes` | bool | `false` | Replicate every source index, not just unique/PK indexes. |
@@ -130,13 +130,13 @@ names and extra keys are rejected with the offending YAML path.
 | `fake` | `provider` | `seed_alias`, `params` | Deterministic synthetic value from a registered provider. Unknown provider names fail validation (exit 3). |
 | `regex_mask` | `pattern`, `replace` | `flags` | `pattern` must compile; unknown `flags` are rejected. |
 | `hash` | — | — | Salted, deterministic hash. |
-| `hmac_hash` | — | `encoding` | Growth+ keyed HMAC-SHA256 using `pseudonym_key`. |
-| `pseudonym` | `provider` | `seed_alias`, `params` | Growth+ keyed deterministic fake (same providers as `fake`). |
+| `hmac_hash` | — | `encoding` | Keyed HMAC-SHA256 using `pseudonym_key` (license-gated). |
+| `pseudonym` | `provider` | `seed_alias`, `params` | Keyed deterministic fake (same providers as `fake`; license-gated). |
 | `passthrough` | — | — | Copy the value unchanged. |
 | `null` | — | — | Write `NULL`. Rejected at pre-flight on `NOT NULL` columns. |
 | `static` | `value` | — | Replace every value with a constant. |
 | `ner_mask` | — | `entities` | Level-2 SpaCy NER. `entities` defaults to `PERSON, ORG, GPE, LOC`. |
-| `ai_refine` | `provider`, `model` | `params` | **Level-3, commercial only.** Rejected when `privaci-commercial` is not installed. |
+| `ai_refine` | `provider`, `model` | `params` | **Level-3.** Requires an LLM connector plugin; rejected in community mode. |
 
 ### Built-in `fake` providers
 
@@ -353,8 +353,8 @@ privaci report --run <run-uuid> --format json
 privaci report --run <run-uuid> --format json --output report.json
 ```
 
-Community mode emits a JSON stub; signed PDF reports require the commercial
-layer.
+Community mode emits a JSON stub; signed PDF reports require a
+``report_renderer`` plugin.
 
 ## Validation rules at a glance
 
@@ -366,7 +366,7 @@ All violations below exit `3` and name the YAML path:
 - `regex_mask` with a non-compilable `pattern` or an unknown flag.
 - `on_existing_data: append` (unsupported in the MVP).
 - `batch_size < 1` (global or per-table).
-- `action: ai_refine` without the commercial layer installed.
+- `action: ai_refine` without an LLM connector plugin installed.
 - `action: null` on a `NOT NULL` column (checked during pre-flight against the
   live catalog).
 - Configured table names absent from the source catalog (pre-flight exit `3`).
@@ -375,5 +375,5 @@ All violations below exit `3` and name the YAML path:
 
 - [CLI reference](cli-reference.md) — every `privaci` subcommand and its options.
 - [Error codes](error-codes.md) — exit codes and message format.
-- [Extending PrivaCI](extending-privaci.md) — the commercial plugin model that
-  unlocks `ai_refine`.
+- [Extending PrivaCI](extending-privaci.md) — the `privaci.plugins` entry-point
+  model that unlocks `ai_refine`.

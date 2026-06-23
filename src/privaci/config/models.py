@@ -86,7 +86,8 @@ class Config(BaseModel):
         global_salt: Optional salt literal or secret URI; resolved at run time
             by the secrets resolver. Never logged.
         pseudonym_key: Optional HMAC key for ``hmac_hash`` and ``pseudonym``
-            actions (Growth+ tier). Distinct from ``global_salt``.
+            actions when the license validator permits keyed masking. Distinct
+            from ``global_salt``.
         on_existing_data: Target-table collision policy. ``append`` is rejected
             in the MVP.
         strict_autodetect: Fail the run when auto-detect finds uncovered PII.

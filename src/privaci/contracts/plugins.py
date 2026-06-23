@@ -1,4 +1,4 @@
-"""Discover commercial plugins via entry points."""
+"""Discover ``privaci.plugins`` entry points."""
 
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ def _load_entry(name: str) -> Any | None:
 
 
 def load_plugins() -> PluginBundle:
-    """Load commercial plugins or fall back to community implementations."""
+    """Load registered plugins or fall back to community implementations."""
     license_cls = _load_entry("license_validator")
     meter_cls = _load_entry("usage_meter")
     report_cls = _load_entry("report_renderer.json")

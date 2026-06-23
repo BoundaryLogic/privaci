@@ -1,4 +1,4 @@
-"""Stable ABC contracts for the commercial plugin layer."""
+"""Stable ABC contracts for the ``privaci.plugins`` plugin layer."""
 
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ class DriftReport:
 
 @dataclass(frozen=True, slots=True)
 class RunEnhancements:
-    """Commercial run-time filters and transforms (subsetting, JSONB paths)."""
+    """RunEnhancer plugin filters/transforms (subsetting, JSONB paths)."""
 
     row_filters: dict[str, str] = field(default_factory=dict)
     """Schema-qualified table id → SQL ``WHERE`` fragment (trusted operator SQL)."""
@@ -72,7 +72,7 @@ class RunEnhancements:
 
 
 class LicenseValidator(abc.ABC):
-    """Validate Marketplace entitlement or license key."""
+    """Validate license entitlement via the installed plugin."""
 
     @abc.abstractmethod
     def validate(self) -> LicenseStatus:
@@ -80,7 +80,7 @@ class LicenseValidator(abc.ABC):
 
 
 class UsageMeter(abc.ABC):
-    """Report usage to AWS/Azure Marketplace metering."""
+    """Report usage via the UsageMeter plugin contract."""
 
     @abc.abstractmethod
     def register_run(self, *, source_db_hash: str, run_id: UUID) -> None:

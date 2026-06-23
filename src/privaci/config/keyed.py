@@ -1,4 +1,4 @@
-"""Validation helpers for Growth+ keyed masking actions."""
+"""Validation helpers for keyed masking actions (license-gated)."""
 
 from __future__ import annotations
 
@@ -11,7 +11,8 @@ from privaci.errors import LicenseError
 from privaci.secrets.resolver import SecretResolutionError
 
 KEYED_ACTIONS = frozenset({"hmac_hash", "pseudonym"})
-_GROWTH_PLUS_TIERS = frozenset({"growth", "business", "enterprise"})
+# LicenseValidator.tier values that enable keyed actions (plugin-defined).
+_KEYED_ACTION_LICENSES = frozenset({"growth", "business", "enterprise"})
 
 
 def iter_keyed_columns(config: Config) -> Iterator[tuple[str, str]]:
@@ -37,10 +38,11 @@ def pseudonym_key_configured(config: Config) -> bool:
 
 
 def validate_keyed_actions(config: Config) -> None:
-    """Reject keyed actions when tier or key configuration is insufficient.
+    """Reject keyed actions when license or key configuration is insufficient.
 
     Raises:
-        LicenseError: When the license tier is below Growth (exit 5).
+        LicenseError: When the installed license validator rejects keyed actions
+            (exit 5).
         SecretResolutionError: When keyed actions lack a key reference (exit 4).
     """
     keyed = [
@@ -50,17 +52,20 @@ def validate_keyed_actions(config: Config) -> None:
     if not keyed:
         return
 
-    tier = _normalize_tier(load_plugins().license_validator.validate().tier)
-    if tier not in _GROWTH_PLUS_TIERS:
+    license_tier = _normalize_license_tier(
+        load_plugins().license_validator.validate().tier
+    )
+    if license_tier not in _KEYED_ACTION_LICENSES:
         raise LicenseError(
             "Validating keyed masking actions",
             cause=(
-                f"Actions hmac_hash and pseudonym require Growth tier or higher; "
-                f"current tier is {tier!r} on: " + ", ".join(sorted(keyed))
+                "Actions hmac_hash and pseudonym are not enabled for the current "
+                "license on: " + ", ".join(sorted(keyed))
             ),
             remediation=(
-                "Upgrade your Marketplace subscription or remove keyed actions; "
-                "see docs/licensing-and-entitlement.md."
+                "Install a plugin package whose LicenseValidator enables keyed "
+                "pseudonymisation, or remove these actions from mask-rules.yaml. "
+                "See docs/configuration.md."
             ),
         )
 
@@ -79,7 +84,7 @@ def validate_keyed_actions(config: Config) -> None:
         )
 
 
-def _normalize_tier(tier: str) -> str:
+def _normalize_license_tier(tier: str) -> str:
     lowered = tier.lower()
     if lowered == "team":
         return "growth"

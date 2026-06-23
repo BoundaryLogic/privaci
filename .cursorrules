@@ -370,7 +370,8 @@ cloning. The following hooks run on every commit:
 - `ruff` — linting
 - `pip-audit` — dependency vulnerability scan
 - Custom hook: reject any file containing `TODO` without an issue number
-- Custom hook: public-repo language guard (ADR-0007; commit-msg + staged paths)
+- Custom hook: **public repo language guard on staged lines** (ADR-0007; blocks
+  commit before GitHub) + commit-message guard
 - Custom hook: capability registry integrity when `src/`, `tests/`, or
   `scripts/capability_test/` change — new unit test files must be registered in
   `scripts/capability_test/registry.py`

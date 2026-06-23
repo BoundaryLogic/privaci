@@ -42,7 +42,7 @@ run_lint_and_test() {
   python scripts/check_contract_version.py
   python scripts/check_implicit_contracts.py
   python scripts/check_git_emails.py
-  python scripts/check_public_repo_language.py
+  python scripts/check_public_repo_language.py --full
   python scripts/check_public_repo_language.py --git-log 30
   pytest --cov=src --cov-report=term-missing --cov-fail-under=85 -m "not integration"
 

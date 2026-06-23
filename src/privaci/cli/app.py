@@ -173,7 +173,7 @@ def dry_run_cmd(
         "--report",
         help=(
             "Write auto-detect markdown to a local path or object URI "
-            "(s3:// with commercial plugin; see docs/object-output.md)."
+            "(s3:// requires object_writer plugin; see docs/object-output.md)."
         ),
     ),
 ) -> None:
@@ -323,7 +323,7 @@ def report(
         "--output",
         help=(
             "Write report bytes to a local path or object URI "
-            "(s3:// with commercial plugin; default: stdout). "
+            "(s3:// requires object_writer plugin; default: stdout). "
             "See docs/object-output.md."
         ),
     ),

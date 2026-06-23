@@ -136,7 +136,7 @@ def test_key_rotation_changes_hmac_output() -> None:
     assert first != second
 
 
-def test_starter_tier_rejects_keyed_actions(mocker: pytest.Mock) -> None:
+def test_unlicensed_keyed_actions_rejected(mocker: pytest.Mock) -> None:
     config = Config(
         version=SUPPORTED_CONFIG_VERSION,
         pseudonym_key=_TEST_KEY,
@@ -153,5 +153,5 @@ def test_starter_tier_rejects_keyed_actions(mocker: pytest.Mock) -> None:
         is_valid=True,
     )
 
-    with pytest.raises(LicenseError, match="Growth tier"):
+    with pytest.raises(LicenseError, match="not enabled for the current license"):
         validate_keyed_actions(config)
