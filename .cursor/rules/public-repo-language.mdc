@@ -1,40 +1,48 @@
 ---
-description: Public engine language — plugin contracts, not commercial features (ADR-0007)
+description: Scrub commercial/tier language before commit — enforced by pre-commit and CI
 alwaysApply: true
 ---
 
-# Public repo language (ADR-0007)
+# Public repo language (ADR-0007) — enforced, not advisory
 
-This repository is the **public ELv2 engine**. The private `privaci-commercial`
-repo owns billing, entitlement, Marketplace, and tier limits.
+This is the **public ELv2 engine**. Product tiers, Marketplace pricing, and
+commercial *feature* framing live in `privaci-commercial`.
 
-## In this repo, always say
+## Hard gate (runs before GitHub)
 
-- **Plugin contract** / **UsageMeter lifecycle** / **`privaci.contracts` hook**
-- **Community mode** / **plugin package installed** (when contrasting behavior)
+Pre-commit **blocks the commit** when staged lines match banned patterns:
 
-## Never say (in commits, CHANGELOG, release notes, or engine code comments)
+```bash
+python scripts/check_public_repo_language.py --staged
+```
 
-- "commercial hooks", "commercial UsageMeter", "commercial entitlement"
-- "commercial metering" when describing **engine** pipeline wiring
-- Framing a public-engine change as a commercial feature
-- Product **tier names** (`Growth`, `Growth+`, `Starter`, `Business`, `Enterprise`)
-  or **Marketplace** pricing in release notes, CHANGELOG `[x.y.z]` sections,
-  operator docs (`docs/object-output.md`, `docs/configuration.md`), or engine
-  implementation comments — use **plugin contract** / **license-gated** wording
-- "commercial plugin" when you mean a **`privaci.plugins` entry point** (say
-  ``object_writer`` plugin or "plugin package installed")
+CI runs a full scan of `src/privaci/`, key operator docs, and release notes plus
+`--git-log 30` on commit messages. **`./scripts/ci-local.sh` includes both.**
 
-## Allowed "commercial" mentions
+If the guard fails, **fix the wording before committing** — do not push and fix later.
 
-- ADR-0007 and docs that explain the **public/private split**
-- Operator-facing messages: exit `5`/`6`, "requires the commercial layer" (CLI UX)
-- Spec/capability names: `commercial-tier-contract`, `commercial_layer_present`
-- `docs/extending-privaci.md` (plugin authors)
+## Say this
 
-## Before committing here
+- **Plugin contract** / **`privaci.plugins` hook** / **plugin package installed**
+- **Community mode** vs **plugin-installed** behaviour
+- **License-gated** (not `Growth+`, `Starter`, `Business`)
 
-Run `python scripts/check_public_repo_language.py` and
-`python scripts/check_public_repo_language.py --git-log 5` if you rewrote history.
+## Never add (in src, operator docs, release notes, commit messages)
 
-Pre-commit runs the commit-message guard automatically.
+- Product tier names (`Growth`, `Growth+`, `Starter`, `Business`, `Enterprise`)
+- `AWS Marketplace`, `Marketplace subscription`, `all tiers`
+- `commercial plugin`, `commercial hooks`, `commercial entitlement`
+- `commercial layer` / `privaci-commercial` outside CLI install hints and exit-code docs
+
+## Allowed exceptions (do not “fix” these)
+
+- `docs/adr/*`, `docs/spikes/*` — explain the public/private split
+- `docs/extending-privaci.md` — plugin authors
+- CLI/errors/fallbacks install hints: “requires the commercial layer” (exit UX)
+- `docs/error-codes.md` — exit `5`/`6` remediation
+- Spec ids: `commercial-tier-contract`, `commercial_layer_present`
+
+## Agent rule
+
+Before **every** public-repo commit: run `--staged` (or full `ci-local.sh`). Scrub
+violations in the same turn. Never defer to the user.

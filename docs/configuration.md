@@ -136,7 +136,7 @@ names and extra keys are rejected with the offending YAML path.
 | `null` | — | — | Write `NULL`. Rejected at pre-flight on `NOT NULL` columns. |
 | `static` | `value` | — | Replace every value with a constant. |
 | `ner_mask` | — | `entities` | Level-2 SpaCy NER. `entities` defaults to `PERSON, ORG, GPE, LOC`. |
-| `ai_refine` | `provider`, `model` | `params` | **Level-3, commercial only.** Rejected when `privaci-commercial` is not installed. |
+| `ai_refine` | `provider`, `model` | `params` | **Level-3.** Requires an LLM connector plugin; rejected in community mode. |
 
 ### Built-in `fake` providers
 
@@ -353,8 +353,8 @@ privaci report --run <run-uuid> --format json
 privaci report --run <run-uuid> --format json --output report.json
 ```
 
-Community mode emits a JSON stub; signed PDF reports require the commercial
-layer.
+Community mode emits a JSON stub; signed PDF reports require a
+``report_renderer`` plugin.
 
 ## Validation rules at a glance
 
@@ -366,7 +366,7 @@ All violations below exit `3` and name the YAML path:
 - `regex_mask` with a non-compilable `pattern` or an unknown flag.
 - `on_existing_data: append` (unsupported in the MVP).
 - `batch_size < 1` (global or per-table).
-- `action: ai_refine` without the commercial layer installed.
+- `action: ai_refine` without an LLM connector plugin installed.
 - `action: null` on a `NOT NULL` column (checked during pre-flight against the
   live catalog).
 - Configured table names absent from the source catalog (pre-flight exit `3`).

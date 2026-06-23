@@ -13,7 +13,8 @@ pytest + coverage). Pre-push is too late — CI must pass **before** commit.
 ## Agent workflow (every time)
 
 1. Finish code/docs changes.
-2. Run `./scripts/ci-local.sh` from the repo root (public or commercial).
+2. Run `./scripts/ci-local.sh` (includes `check_public_repo_language.py --full`
+   and `--staged` via pre-commit). **Scrub any commercial/tier language first.**
 3. If it fails, fix and re-run until green.
 4. Only then stage and `git commit`.
 5. If the user asks to commit, **run ci-local in the same turn first** — do not

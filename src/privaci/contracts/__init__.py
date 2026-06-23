@@ -1,4 +1,4 @@
-"""Commercial plugin contracts and community-mode fallbacks."""
+"""Plugin contracts and community-mode fallbacks."""
 
 from __future__ import annotations
 
