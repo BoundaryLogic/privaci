@@ -38,6 +38,8 @@ ACTION_TAGS: frozenset[str] = frozenset(
         "fake",
         "regex_mask",
         "hash",
+        "hmac_hash",
+        "pseudonym",
         "passthrough",
         "null",
         "static",
@@ -111,6 +113,32 @@ class HashAction(_ActionBase):
     action: Literal["hash"]
 
 
+class HmacHashAction(_ActionBase):
+    """Replace the value with an HMAC-SHA256 digest using ``pseudonym_key``.
+
+    Attributes:
+        encoding: ``hex`` (default) or ``base64url`` output form.
+    """
+
+    action: Literal["hmac_hash"]
+    encoding: Literal["hex", "base64url"] = "hex"
+
+
+class PseudonymAction(_ActionBase):
+    """Keyed deterministic fake using the same providers as ``fake``.
+
+    Attributes:
+        provider: Registered fake provider name (e.g. ``email``).
+        seed_alias: Optional shared seed path for FK consistency.
+        params: Optional provider-specific string parameters.
+    """
+
+    action: Literal["pseudonym"]
+    provider: str
+    seed_alias: str | None = None
+    params: dict[str, str] = Field(default_factory=dict)
+
+
 class PassthroughAction(_ActionBase):
     """Copy the value unchanged into the target."""
 
@@ -161,6 +189,8 @@ ColumnAction = Annotated[
     FakeAction
     | RegexMaskAction
     | HashAction
+    | HmacHashAction
+    | PseudonymAction
     | PassthroughAction
     | NullAction
     | StaticAction

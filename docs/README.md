@@ -61,6 +61,7 @@ Auto-generated reference pages (regenerate with `make docs-generate`):
 | Doc | What it covers |
 |-----|----------------|
 | [`extending-privaci.md`](extending-privaci.md) | Plugin/contract model for the commercial layer |
+| [`object-output.md`](object-output.md) | Artifact destinations (`s3://`, local paths) for report and preview outputs |
 
 ## Architecture decisions
 

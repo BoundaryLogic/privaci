@@ -371,6 +371,18 @@ cloning. The following hooks run on every commit:
 - `pip-audit` — dependency vulnerability scan
 - Custom hook: reject any file containing `TODO` without an issue number
 - Custom hook: public-repo language guard (ADR-0007; commit-msg + staged paths)
+- Custom hook: capability registry integrity when `src/`, `tests/`, or
+  `scripts/capability_test/` change — new unit test files must be registered in
+  `scripts/capability_test/registry.py`
+- Custom hook: `./scripts/capability-test-suite.sh quick` on the same paths
+  (public-unit only when `../privaci-commercial` is absent)
+- Custom hook: `./scripts/ci-local.sh` on `src/`, `tests/`, or `scripts/`
+  (full CI parity — **required before commit**; also runs on pre-push)
+
+When adding a user-facing capability, register it in
+`scripts/capability_test/registry.py` before commit. See
+`.cursor/rules/capability-test-registry.mdc` and
+`.cursor/rules/ci-before-commit.mdc`.
 
 ## CI Pipeline Gates (all must pass before merge)
 - `black --check src/ tests/`
@@ -405,9 +417,10 @@ cloning. The following hooks run on every commit:
   branch (`feat/`, `fix/`, `chore/`, `docs/`), run CI gates locally, push the
   branch, and open a PR — unless the user explicitly requests a direct `main` push
   or a release tag cut.
-- Before every push, run the CI-equivalent checks listed in
-  ``.cursor/rules/branch-first.mdc`` (black, isort, ruff, mypy, pytest, language
-  guard).
+- **Before every commit**, run `./scripts/ci-local.sh` and do not commit until
+  it exits 0. See `.cursor/rules/ci-before-commit.mdc`. If the user asks to
+  commit, run ci-local in the same turn first — never skip or defer to the user.
+- Before every push, ci-local must already have passed on the commits being pushed.
 - Release tags (`v*`) are cut on `main` only after merge, when the user requests a
   release.
 

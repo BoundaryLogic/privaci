@@ -57,6 +57,7 @@ nav:
       - Configuration guide: configuration.md
       - Configuration reference (generated): generated/configuration-reference.md
       - Configuration types (generated): generated/configuration/index.md
+      - Object output URIs: object-output.md
       - Error codes: error-codes.md
       - Error code pages (generated): generated/errors/index.md
       - State & audit schema: state-schema.md

@@ -13,6 +13,7 @@ from privaci.contracts.base import (
     LicenseValidator,
     LLMConnector,
     Notifier,
+    ObjectWriter,
     RedactionResult,
     ReportRenderer,
     RunCompletionEvent,
@@ -20,7 +21,9 @@ from privaci.contracts.base import (
     RunEnhancer,
     UsageMeter,
 )
-from privaci.errors import L3NotInstalledError
+from privaci.errors import ConfigError, L3NotInstalledError
+from privaci.storage.backends.file import write_local_object
+from privaci.storage.parser import ObjectUriKind, parse_object_uri
 
 
 class CommunityLicenseValidator(LicenseValidator):
@@ -102,3 +105,30 @@ class CommunityRunEnhancer(RunEnhancer):
     def build_enhancements(self, catalog: Any) -> RunEnhancements:
         _ = catalog
         return RunEnhancements()
+
+
+class CommunityObjectWriter(ObjectWriter):
+    """Local artifact writes only; cloud URIs require a plugin."""
+
+    def write(
+        self,
+        uri: str,
+        data: bytes,
+        *,
+        content_type: str | None = None,
+    ) -> None:
+        _ = content_type
+        parsed = parse_object_uri(uri)
+        if parsed.kind in {ObjectUriKind.S3, ObjectUriKind.AZURE_BLOB}:
+            raise ConfigError(
+                "Writing compliance artifact",
+                cause=(
+                    f"Cloud object URIs such as {parsed.kind.value}:// are not "
+                    "available in community mode."
+                ),
+                remediation=(
+                    "Install the commercial layer, register a privaci.plugins "
+                    "object_writer entry point, or use a local path."
+                ),
+            )
+        write_local_object(parsed, data)

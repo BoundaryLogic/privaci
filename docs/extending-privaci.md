@@ -17,6 +17,8 @@ registers them via Python entry points under the group `privaci.plugins`.
 | `notifier.slack` | `Notifier` | Slack webhook |
 | `notifier.webhook` | `Notifier` | Generic HTTP webhook |
 | `drift_detector` | `DriftDetector` | Schema drift detection |
+| `run_enhancer` | `RunEnhancer` | Subsetting and JSONB transforms |
+| `object_writer` | `ObjectWriter` | Compliance artifact upload (`s3://`, local) |
 
 ## Community mode
 

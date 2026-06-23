@@ -154,3 +154,17 @@ class RunEnhancer(abc.ABC):
         Args:
             catalog: :class:`~privaci.catalog.models.CatalogResult` for the source.
         """
+
+
+class ObjectWriter(abc.ABC):
+    """Write small compliance artifacts to local or cloud object URIs."""
+
+    @abc.abstractmethod
+    def write(
+        self,
+        uri: str,
+        data: bytes,
+        *,
+        content_type: str | None = None,
+    ) -> None:
+        """Persist ``data`` at ``uri`` (local path, ``file://``, or cloud scheme)."""

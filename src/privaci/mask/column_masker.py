@@ -11,14 +11,22 @@ from privaci.config.actions import (
     ColumnAction,
     FakeAction,
     HashAction,
+    HmacHashAction,
     NerMaskAction,
     NullAction,
     PassthroughAction,
+    PseudonymAction,
     RegexMaskAction,
     StaticAction,
 )
 from privaci.errors import L3NotInstalledError, MaskingError
 from privaci.mask.faker import FakeRequest, generate_fake
+from privaci.mask.keyed import (
+    compute_keyed_digest,
+    encode_keyed_digest,
+    generate_keyed_pseudonym,
+    normalize_for_hmac,
+)
 from privaci.mask.ner import mask_entities_in_text
 from privaci.mask.regex_safe import safe_regex_sub
 
@@ -72,6 +80,7 @@ def mask_column_value(
     salt: str,
     column_path: str,
     is_unique: bool,
+    pseudonym_key: str | None = None,
 ) -> Any:
     """Mask one cell according to its configured action.
 
@@ -87,7 +96,12 @@ def mask_column_value(
     if isinstance(value, str) and value == "":
         return _mask_empty_string(action)
     return _dispatch_mask_action(
-        value, action, salt=salt, column_path=column_path, is_unique=is_unique
+        value,
+        action,
+        salt=salt,
+        column_path=column_path,
+        is_unique=is_unique,
+        pseudonym_key=pseudonym_key,
     )
 
 
@@ -106,6 +120,7 @@ def _dispatch_mask_action(
     salt: str,
     column_path: str,
     is_unique: bool,
+    pseudonym_key: str | None,
 ) -> Any:
     if isinstance(action, PassthroughAction):
         return value
@@ -115,6 +130,10 @@ def _dispatch_mask_action(
         return action.value
     elif isinstance(action, HashAction):
         return _hash_value(value, salt)
+    elif isinstance(action, HmacHashAction):
+        return _hmac_hash_value(value, action, column_path, pseudonym_key)
+    elif isinstance(action, PseudonymAction):
+        return _pseudonym_value(value, action, column_path, is_unique, pseudonym_key)
     elif isinstance(action, FakeAction):
         return _fake_value(value, action, salt, column_path, is_unique)
     elif isinstance(action, RegexMaskAction):
@@ -143,6 +162,50 @@ def _hash_value(value: Any, salt: str) -> str:
     digest.update(salt.encode("utf-8"))
     digest.update(text.encode("utf-8"))
     return digest.hexdigest()
+
+
+def _require_pseudonym_key(pseudonym_key: str | None) -> str:
+    if pseudonym_key is None:
+        raise MaskingError(
+            "Applying keyed masking action",
+            cause="pseudonym_key was not resolved for this run.",
+            remediation=(
+                "Set pseudonym_key or PSEUDONYM_KEY before using keyed actions."
+            ),
+        )
+    return pseudonym_key
+
+
+def _hmac_hash_value(
+    value: Any,
+    action: HmacHashAction,
+    column_path: str,
+    pseudonym_key: str | None,
+) -> str:
+    key = _require_pseudonym_key(pseudonym_key)
+    normalized = normalize_for_hmac(value)
+    digest = compute_keyed_digest(key, column_path, normalized)
+    return encode_keyed_digest(digest, encoding=action.encoding)
+
+
+def _pseudonym_value(
+    value: Any,
+    action: PseudonymAction,
+    column_path: str,
+    is_unique: bool,
+    pseudonym_key: str | None,
+) -> str:
+    key = _require_pseudonym_key(pseudonym_key)
+    request = FakeRequest(
+        salt="",
+        column_path=column_path,
+        value=str(value),
+        provider=action.provider,
+        seed_alias=action.seed_alias,
+        is_unique=is_unique,
+        params=dict(action.params),
+    )
+    return generate_keyed_pseudonym(request, pseudonym_key=key)
 
 
 def _fake_value(

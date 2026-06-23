@@ -367,7 +367,14 @@ pytest -m "not integration" --cov=src --cov-fail-under=85
 pip-audit --requirement requirements.txt
 ```
 
-Pre-commit hooks run a subset of these on `git commit` automatically.
+Pre-commit hooks run a subset of these on `git commit` automatically; when
+`src/`, `tests/`, or `scripts/` change, **`./scripts/ci-local.sh` runs on
+commit** (full `lint-and-test` parity). Run it manually before commit if hooks
+are not installed:
+
+```bash
+./scripts/ci-local.sh
+```
 
 ---
 
@@ -410,6 +417,13 @@ Reports: `reports/capability-tests/` in the repo you invoke (absolute paths at
 the end). From `privaci-commercial`, use `./scripts/capability-test.sh` or
 `./scripts/capability-test-suite.sh` — reports default to
 `privaci-commercial/reports/capability-tests/`.
+
+**Pre-commit (required):** when `src/`, `tests/`, or `scripts/capability_test/`
+change, hooks run `scripts/check_capability_registry.py` and
+`./scripts/capability-test-suite.sh quick` (public-unit only if
+`../privaci-commercial` is absent). Register every new user-facing capability in
+`scripts/capability_test/registry.py` before commit — see
+`.cursor/rules/capability-test-registry.mdc`.
 
 If the script prints `REFUSED`, free memory first — do not bypass.
 

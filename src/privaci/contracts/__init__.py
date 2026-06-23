@@ -11,6 +11,7 @@ from privaci.contracts.base import (
     LicenseValidator,
     LLMConnector,
     Notifier,
+    ObjectWriter,
     RedactionResult,
     ReportRenderer,
     RunCompletionEvent,
@@ -18,6 +19,7 @@ from privaci.contracts.base import (
 )
 from privaci.contracts.fallbacks import (
     CommunityLicenseValidator,
+    CommunityObjectWriter,
     JsonReportRenderer,
     NoOpLLMConnector,
     NoOpNotifier,
@@ -30,6 +32,7 @@ __all__ = [
     "CONTRACT_VERSION",
     "ColumnContext",
     "CommunityLicenseValidator",
+    "CommunityObjectWriter",
     "DriftDetector",
     "DriftReport",
     "FakeProvider",
@@ -41,6 +44,7 @@ __all__ = [
     "NoOpNotifier",
     "NoOpUsageMeter",
     "Notifier",
+    "ObjectWriter",
     "RedactionResult",
     "ReportRenderer",
     "RunCompletionEvent",

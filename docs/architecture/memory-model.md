@@ -38,6 +38,13 @@ COPY TO STDOUT (BINARY) →  decode → mask → encode  →  COPY FROM STDIN (B
 
 Only **one batch** of row data is hot in memory at a time per active stream.
 
+### Passthrough-only tables
+
+Tables with no masking (all columns `passthrough`, or no column rules) use a
+**piped COPY-binary fast path**: source `COPY OUT` and target `COPY IN` run
+concurrently, connected by a bounded in-process chunk queue (default depth 16).
+Memory stays proportional to in-flight COPY chunks, not table size.
+
 ## Memory bound (simplified formula)
 
 ```text

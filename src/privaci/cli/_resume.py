@@ -38,6 +38,7 @@ def execute_resume(
             target_dsn=ctx.target_dsn,
             salt=ctx.salt,
             audit_enabled=None if not no_audit_table else False,
+            pseudonym_key=ctx.pseudonym_key,
         )
     )
     typer.echo(
@@ -53,6 +54,7 @@ async def _resume_async(
     target_dsn: str,
     salt: str,
     audit_enabled: bool | None,
+    pseudonym_key: str | None = None,
 ) -> PipelineSummary:
     report = await run_preflight(
         config=config,
@@ -86,4 +88,5 @@ async def _resume_async(
         catalog=report.catalog,
         resume_run_id=run_id,
         checkpoints=checkpoints,
+        pseudonym_key=pseudonym_key,
     )

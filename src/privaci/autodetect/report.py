@@ -7,10 +7,11 @@ from pathlib import Path
 from privaci.autodetect.models import DetectionFinding, DetectionResult
 from privaci.catalog.models import CatalogResult
 from privaci.config.models import Config
+from privaci.storage import write_object
 
 
 def write_detection_report(
-    path: Path,
+    destination: str | Path,
     *,
     catalog: CatalogResult,
     detection: DetectionResult,
@@ -28,7 +29,8 @@ def write_detection_report(
     table_ids = sorted({f.table_id for f in detection.findings})
     for table_id in table_ids:
         lines.extend(_table_section(table_id, detection))
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    body = "\n".join(lines) + "\n"
+    write_object(str(destination), body.encode("utf-8"), content_type="text/markdown")
 
 
 def _table_section(table_id: str, detection: DetectionResult) -> list[str]:

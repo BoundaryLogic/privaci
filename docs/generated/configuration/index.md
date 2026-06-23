@@ -9,9 +9,11 @@ One page per ``mask-rules.yaml`` schema block. Regenerate with
 | `AiRefineAction` | [AiRefineAction](airefineaction.md) |
 | `FakeAction` | [FakeAction](fakeaction.md) |
 | `HashAction` | [HashAction](hashaction.md) |
+| `HmacHashAction` | [HmacHashAction](hmachashaction.md) |
 | `NerMaskAction` | [NerMaskAction](nermaskaction.md) |
 | `NullAction` | [NullAction](nullaction.md) |
 | `PassthroughAction` | [PassthroughAction](passthroughaction.md) |
+| `PseudonymAction` | [PseudonymAction](pseudonymaction.md) |
 | `RegexMaskAction` | [RegexMaskAction](regexmaskaction.md) |
 | `StaticAction` | [StaticAction](staticaction.md) |
 | `TableConfig` | [TableConfig](tableconfig.md) |

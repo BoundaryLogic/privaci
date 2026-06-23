@@ -35,6 +35,7 @@ class MaskingEngine:
 
     __slots__ = (
         "_cell_post_processor",
+        "_pseudonym_key",
         "_salt",
         "_table_config",
         "_table_id",
@@ -50,8 +51,10 @@ class MaskingEngine:
         table_config: TableConfig,
         *,
         cell_post_processor: CellPostProcessor | None = None,
+        pseudonym_key: str | None = None,
     ) -> None:
         self._salt = salt
+        self._pseudonym_key = pseudonym_key
         self._table_id = table_id
         self._table_info = table_info
         self._table_config = table_config
@@ -97,6 +100,7 @@ class MaskingEngine:
                     salt=self._salt,
                     column_path=column_path,
                     is_unique=is_unique,
+                    pseudonym_key=self._pseudonym_key,
                 )
             except Exception:
                 logger.debug(

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Mirror .github/workflows/ci.yml locally before push.
+# Mirror .github/workflows/ci.yml locally — run before every commit.
 #
 # Usage:
-#   ./scripts/ci-local.sh                 # lint-and-test (default; pre-push hook)
+#   ./scripts/ci-local.sh                 # lint-and-test (default; pre-commit hook)
 #   ./scripts/ci-local.sh --integration   # + Postgres integration (needs Docker)
 #   ./scripts/ci-local.sh --docs          # + generate_docs --check + mkdocs build
 #   ./scripts/ci-local.sh --helm          # + helm lint

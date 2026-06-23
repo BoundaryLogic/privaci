@@ -1,0 +1,40 @@
+---
+description: Mandatory CI parity before every commit — agents must run ci-local.sh first
+alwaysApply: true
+---
+
+# CI before commit (non-negotiable)
+
+**Never run `git commit` until `./scripts/ci-local.sh` exits 0.**
+
+This mirrors GitHub `lint-and-test` exactly (black, isort, ruff, mypy, guards,
+pytest + coverage). Pre-push is too late — CI must pass **before** commit.
+
+## Agent workflow (every time)
+
+1. Finish code/docs changes.
+2. Run `./scripts/ci-local.sh` from the repo root (public or commercial).
+3. If it fails, fix and re-run until green.
+4. Only then stage and `git commit`.
+5. If the user asks to commit, **run ci-local in the same turn first** — do not
+   ask the user to run it and do not skip because hooks "should" catch it.
+
+## Commercial repo
+
+```bash
+cd privaci-commercial
+./scripts/ci-local.sh
+```
+
+Uses `.engine-pin` to checkout the public engine (same as GitHub Actions).
+
+## Optional (not a substitute for ci-local)
+
+- `./scripts/capability-test-suite.sh quick` — capability smoke only
+- `./scripts/agent-safe-test.sh tests/one_file.py` — while iterating on one file
+
+## Never
+
+- Commit after only running a single test file or the quick capability suite.
+- Assume pre-commit hooks ran (they may not be installed).
+- Push broken CI and "fix in a follow-up commit."

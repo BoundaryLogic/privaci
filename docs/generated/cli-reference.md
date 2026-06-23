@@ -50,7 +50,7 @@ Pre-flight checks only; no writes.
 | `--config` | — | `/config/mask-rules.yaml` | Path to mask-rules.yaml. |
 | `--source` | `SOURCE_DB_URL` | — | Source database URL or secret URI. |
 | `--target` | `TARGET_DB_URL` | — | Target database URL or secret URI. |
-| `--report` | — | — | Write a markdown auto-detect report to this path. |
+| `--report` | — | — | Write auto-detect markdown to a local path or object URI (s3:// with commercial plugin; see docs/object-output.md). |
 
 ## `privaci gen-salt`
 
@@ -107,7 +107,7 @@ Render a compliance report for a completed run.
 |--------|---------|---------|-------------|
 | `--run` | — | — | Run UUID to report on. |
 | `--format` | — | `json` | Output format (json; pdf requires commercial layer). |
-| `--output` | — | — | Write report bytes to this path (default: stdout). |
+| `--output` | — | — | Write report bytes to a local path or object URI (s3:// with commercial plugin; default: stdout). See docs/object-output.md. |
 
 ## `privaci resume`
 

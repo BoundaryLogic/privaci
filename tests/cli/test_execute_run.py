@@ -24,6 +24,7 @@ from privaci.cli._run import execute_run, execute_verify
 from privaci.config.actions import FakeAction, HashAction
 from privaci.config.models import Config
 from privaci.contracts.base import LicenseStatus
+from privaci.contracts.fallbacks import CommunityObjectWriter
 from privaci.errors import ConfigError
 from privaci.pipeline.runner import PipelineSummary
 from privaci.preflight.runner import PreflightReport
@@ -263,7 +264,9 @@ def test_dry_run_report_writes_before_strict_failure(
         is_valid=True,
         message="ok",
     )
+    plugins.object_writer = CommunityObjectWriter()
     mocker.patch("privaci.cli.context.load_plugins", return_value=plugins)
+    mocker.patch("privaci.storage.writer.load_plugins", return_value=plugins)
     mocker.patch(
         "privaci.cli._run.run_preflight", new_callable=AsyncMock, return_value=report
     )

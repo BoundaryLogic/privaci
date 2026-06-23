@@ -67,6 +67,31 @@ CAPABILITIES: dict[str, Capability] = {
         test_paths=("tests/contracts/test_fallbacks.py",),
         tags=frozenset({"unit", "contracts", "public"}),
     ),
+    "public-object-output": Capability(
+        id="public-object-output",
+        label="Object output URIs",
+        description=(
+            "``ObjectWriter`` plugin, URI parsing, and ``write_object`` "
+            "for report/dry-run artifact paths."
+        ),
+        repo="public",
+        test_paths=(
+            "tests/storage/test_object_parser.py",
+            "tests/storage/test_writer.py",
+        ),
+        tags=frozenset({"unit", "storage", "public", "artifacts"}),
+    ),
+    "public-keyed-pseudonymisation": Capability(
+        id="public-keyed-pseudonymisation",
+        label="Keyed pseudonymisation",
+        description=(
+            "``hmac_hash`` and ``pseudonym`` actions with ``PSEUDONYM_KEY`` "
+            "determinism and salt separation."
+        ),
+        repo="public",
+        test_paths=("tests/mask/test_keyed.py",),
+        tags=frozenset({"unit", "masking", "public", "keyed"}),
+    ),
     # --- Public engine (integration / Postgres) ---
     "public-spacy-ner": Capability(
         id="public-spacy-ner",
@@ -226,6 +251,17 @@ CAPABILITIES: dict[str, Capability] = {
             "tests/test_entitlement.py",
         ),
         tags=frozenset({"unit", "license", "commercial"}),
+    ),
+    "commercial-object-writer": Capability(
+        id="commercial-object-writer",
+        label="Commercial object writer (unit)",
+        description=(
+            "``CommercialObjectWriter`` S3 uploads, local paths, and "
+            "entry-point registration."
+        ),
+        repo="commercial",
+        test_paths=("tests/test_object_writer.py",),
+        tags=frozenset({"unit", "storage", "commercial", "artifacts"}),
     ),
     # --- Commercial (integration / Postgres) ---
     "commercial-roundtrip": Capability(

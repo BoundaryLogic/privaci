@@ -31,6 +31,25 @@ def test_resume_invokes_execute_resume(tmp_path: Path, mocker: MockerFixture) ->
     execute.assert_called_once()
 
 
+def test_report_writes_output_file(mocker: MockerFixture, tmp_path: Path) -> None:
+    import uuid
+
+    run_id = uuid.uuid4()
+    bundle = mocker.patch("privaci.cli.app.load_plugins").return_value
+    bundle.report_renderer.render.return_value = b'{"run_id": "x"}'
+    write = mocker.patch("privaci.cli.app.write_object")
+    out = tmp_path / "report.json"
+
+    result = runner.invoke(
+        app,
+        ["report", "--run", str(run_id), "--output", str(out)],
+    )
+
+    assert result.exit_code == 0
+    write.assert_called_once_with(str(out), b'{"run_id": "x"}')
+    assert "Wrote report" in result.output
+
+
 def test_report_emits_json(mocker: MockerFixture) -> None:
     # Arrange
     import uuid

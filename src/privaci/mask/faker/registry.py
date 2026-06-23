@@ -67,11 +67,13 @@ def validate_fake_providers(config: Config) -> None:
     Raises:
         ConfigError: When any ``fake`` action names an unregistered provider.
     """
+    from privaci.config.actions import FakeAction, PseudonymAction
+
     known = known_providers()
     missing: list[str] = []
     for table_id, table in config.tables.items():
         for column, action in table.columns.items():
-            if action.action != "fake":
+            if not isinstance(action, FakeAction | PseudonymAction):
                 continue
             if action.provider not in known:
                 missing.append(f"{table_id}.{column} -> {action.provider}")

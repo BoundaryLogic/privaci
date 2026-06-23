@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import io
+import asyncio
 import time
 import uuid
 from typing import Any
@@ -15,6 +15,7 @@ from privaci.config.models import TableConfig
 from privaci.observability import Event, emit
 from privaci.state.checkpoints import mark_table_done, write_checkpoint
 from privaci.stream.coerce import table_needs_text_fallback
+from privaci.stream.copy_pipe import CopyChunkPipe
 from privaci.stream.retry import with_source_retry
 
 
@@ -85,28 +86,48 @@ async def _copy_passthrough_payload(
         lambda: source.fetchval(f"SELECT COUNT(*) FROM {qual}")  # noqa: S608
     )
     row_count = int(count_row or 0)
-    payload = await with_source_retry(lambda: _copy_out_table(source, table))
     if outer_transaction:
-        await _load_binary_payload(target, table, run_id, payload, row_count)
+        await _pipe_binary_passthrough(source, target, table, run_id, row_count)
     else:
         async with target.transaction():
-            await _load_binary_payload(target, table, run_id, payload, row_count)
+            await _pipe_binary_passthrough(source, target, table, run_id, row_count)
     return row_count
 
 
-async def _load_binary_payload(
+async def _pipe_binary_passthrough(
+    source: asyncpg.Connection,
     target: asyncpg.Connection,
     table: TableInfo,
     run_id: uuid.UUID,
-    payload: bytes,
     row_count: int,
 ) -> None:
-    await target.copy_to_table(
-        table.table_name,
-        schema_name=table.schema_name,
-        source=io.BytesIO(payload),
-        format="binary",
-    )
+    """Stream COPY OUT on source directly into COPY IN on target."""
+
+    async def run_pipe() -> None:
+        pipe = CopyChunkPipe()
+
+        async def copy_out() -> None:
+            try:
+                await source.copy_from_table(
+                    table.table_name,
+                    schema_name=table.schema_name,
+                    output=pipe.write,
+                    format="binary",
+                )
+            finally:
+                await pipe.close()
+
+        async def copy_in() -> None:
+            await target.copy_to_table(
+                table.table_name,
+                schema_name=table.schema_name,
+                source=pipe,
+                format="binary",
+            )
+
+        await asyncio.gather(copy_out(), copy_in())
+
+    await with_source_retry(run_pipe)
     await write_checkpoint(
         target,
         run_id,
@@ -116,17 +137,6 @@ async def _load_binary_payload(
         rows_in_batch=row_count,
     )
     await mark_table_done(target, run_id, table.schema_name, table.table_name)
-
-
-async def _copy_out_table(conn: asyncpg.Connection, table: TableInfo) -> bytes:
-    buffer = io.BytesIO()
-    await conn.copy_from_table(
-        table.table_name,
-        schema_name=table.schema_name,
-        output=buffer,
-        format="binary",
-    )
-    return buffer.getvalue()
 
 
 def _requires_overriding_system_value(table: TableInfo) -> bool:
