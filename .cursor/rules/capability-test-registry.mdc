@@ -32,17 +32,14 @@ id (e.g. `public-object-output` covers parser + writer tests).
 ## Before every commit (enforced by pre-commit)
 
 ```bash
-./scripts/capability-test-suite.sh quick
+./scripts/ci-local.sh
 ```
 
-From `privaci-commercial` (sibling `PrivaCI` repo required):
+Do **not** commit until this exits 0. The quick capability suite alone is not
+sufficient — it does not run black/isort/mypy/coverage gates.
 
-```bash
-./scripts/capability-test-precommit.sh
-```
-
-Pre-commit runs `scripts/check_capability_registry.py` (integrity + new test
-files must be registered) and the quick suite when `src/`, `tests/`, or
+Pre-commit also runs `scripts/check_capability_registry.py` and
+`./scripts/capability-test-suite.sh quick` when `src/`, `tests/`, or
 `scripts/capability_test/` change.
 
 ## Targeted development (agents)

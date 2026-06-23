@@ -367,7 +367,14 @@ pytest -m "not integration" --cov=src --cov-fail-under=85
 pip-audit --requirement requirements.txt
 ```
 
-Pre-commit hooks run a subset of these on `git commit` automatically.
+Pre-commit hooks run a subset of these on `git commit` automatically; when
+`src/`, `tests/`, or `scripts/` change, **`./scripts/ci-local.sh` runs on
+commit** (full `lint-and-test` parity). Run it manually before commit if hooks
+are not installed:
+
+```bash
+./scripts/ci-local.sh
+```
 
 ---
 

@@ -1,0 +1,57 @@
+---
+description: Hard resource limits for agent shell — user cannot stop mid-crash
+alwaysApply: true
+---
+
+# Resource safety (mandatory — read before ANY shell command)
+
+**The user cannot message you while the machine is crashing.** Every heavy
+command must be safe *before* it starts.
+
+## Exception: CI before commit
+
+**Before `git commit`**, you MUST run `./scripts/ci-local.sh` (full CI parity).
+This is the sanctioned full gate — not subject to the single-file test limit
+below. Run it once per commit batch; do not parallelize with other heavy jobs.
+
+## Non‑negotiable: use the guard scripts
+
+| Task | Command |
+|------|---------|
+| Unit tests | `./scripts/agent-safe-test.sh tests/<one-file>.py` |
+| Integration (user asked explicitly) | `AGENT_ALLOW_INTEGRATION=1 ./scripts/agent-safe-test.sh tests/integration/<one-file>.py -m integration` |
+| Full suite (user asked explicitly) | `AGENT_ALLOW_FULL_SUITE=1 ./scripts/agent-safe-test.sh` |
+
+**Raw `pytest`, `python -m pytest`, and parallel test runs across repos are
+FORBIDDEN** unless the user explicitly requested a full suite and
+`AGENT_ALLOW_FULL_SUITE=1` is set.
+
+The guard script **refuses to start** when MemAvailable &lt; 2GB or swap &gt; 35%,
+caps virtual memory (~3GB), enforces a hard timeout (90s unit / 180s integration),
+and blocks integration/full-suite by default.
+
+## One heavy job, ever
+
+- Never run two guarded commands in parallel (tests, pip install, mypy, docker,
+  ripgrep over whole repo, Task subagents that scan or test).
+- Never chain “public tests then commercial tests” without confirming memory
+  recovered (`free -h` — MemAvailable ≥ 2GB, swap not climbing).
+
+## Default verification = one file
+
+After a code change, run **one** test file for the module you touched. Do not
+re-run 600+ tests to validate a single fix. Do not run tests at all if the change
+is docs-only.
+
+## Search & read
+
+- Grep: always `path` or `glob`; never whole-repo unscoped search.
+- Read: `limit` on files &gt; 500 lines. Never load multi‑MB JSON into context.
+
+## pip install
+
+Once per repo per session unless `pyproject.toml` / lockfiles changed.
+
+## If guard refuses
+
+Report the refusal to the user and **stop** — do not bypass with raw pytest.

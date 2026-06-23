@@ -57,6 +57,14 @@ repos:
         stages: [pre-commit]
         files: ^(src/|tests/|scripts/capability_test/)
 
+      - id: ci-local-pre-commit
+        name: full CI parity (lint-and-test) — required before commit
+        entry: scripts/ci-local.sh
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        files: ^(src/|tests/|scripts/)
+
       - id: public-repo-language
         name: public repo language guard (ADR-0007)
         entry: python scripts/check_public_repo_language.py
@@ -73,7 +81,7 @@ repos:
         args: [--commit-msg-file]
 
       - id: ci-local-pre-push
-        name: full CI parity (lint-and-test)
+        name: full CI parity (lint-and-test) — safety net on push
         entry: scripts/ci-local.sh
         language: system
         pass_filenames: false

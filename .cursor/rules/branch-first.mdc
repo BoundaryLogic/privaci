@@ -13,31 +13,24 @@ alwaysApply: true
 - Open a PR after local CI passes; **the user merges** — see `no-auto-merge.mdc`.
 - **Exception:** the user explicitly asks to commit/push to `main`.
 
-## Before push
+## Before commit (mandatory)
 
-Run the full CI mirror (same gates as GitHub ``lint-and-test``):
+Run the full CI mirror **before every commit** — same gates as GitHub
+``lint-and-test``:
 
 ```bash
 ./scripts/ci-local.sh
 ```
 
-Optional: ``./scripts/ci-local.sh --integration --docs --helm`` for the full workflow matrix.
+Do not commit until it exits 0. See ``.cursor/rules/ci-before-commit.mdc``.
 
-``pre-commit install`` enables format/lint on commit and ``ci-local.sh`` on **pre-push**.
+Optional extras (not substitutes): ``./scripts/ci-local.sh --integration``,
+``--docs``, ``--helm``; ``./scripts/capability-test-suite.sh quick``.
 
-Manual equivalent:
+``pre-commit install`` runs ``ci-local.sh`` on commit when ``src/``,
+``tests/``, or ``scripts/`` change (and again on pre-push as a safety net).
 
-```bash
-black --check src/ tests/
-isort --check-only --profile black src/ tests/
-ruff check src/ tests/
-mypy src/ --strict
-pytest --cov=src --cov-fail-under=85 -m "not integration"
-python scripts/check_public_repo_language.py
-python scripts/check_public_repo_language.py --git-log 30
-```
-
-## Push the branch, not main
+## Before push
 
 ```bash
 git push -u origin HEAD
