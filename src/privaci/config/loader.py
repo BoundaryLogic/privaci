@@ -219,7 +219,7 @@ def check_null_actions(config: Config, not_null_columns: dict[str, set[str]]) ->
 
 
 def is_commercial_installed() -> bool:
-    """Return True when a commercial plugin is registered via entry points."""
+    """Return True when a plugin package is registered via entry points."""
     eps = importlib.metadata.entry_points(group=PLUGIN_GROUP)
     return any(
         ep.name == "license_validator" or ep.name.startswith("llm_connector.")

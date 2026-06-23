@@ -18,6 +18,12 @@ repo owns billing, entitlement, Marketplace, and tier limits.
 - "commercial hooks", "commercial UsageMeter", "commercial entitlement"
 - "commercial metering" when describing **engine** pipeline wiring
 - Framing a public-engine change as a commercial feature
+- Product **tier names** (`Growth`, `Growth+`, `Starter`, `Business`, `Enterprise`)
+  or **Marketplace** pricing in release notes, CHANGELOG `[x.y.z]` sections,
+  operator docs (`docs/object-output.md`, `docs/configuration.md`), or engine
+  implementation comments — use **plugin contract** / **license-gated** wording
+- "commercial plugin" when you mean a **`privaci.plugins` entry point** (say
+  ``object_writer`` plugin or "plugin package installed")
 
 ## Allowed "commercial" mentions
 

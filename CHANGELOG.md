@@ -7,14 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-06-23
+
 ### Added
 
 - `ObjectWriter` plugin contract and `write_object()` dispatch for compliance
   artifact destinations (`report --output`, `dry-run --report`). Community mode
-  supports local paths; cloud URIs (`s3://`) require the commercial plugin or a
-  custom `object_writer` entry point. See `docs/object-output.md`.
-- Growth+ keyed masking actions `hmac_hash` and `pseudonym` with dedicated
-  `pseudonym_key` / `PSEUDONYM_KEY` resolution (distinct from anonymization salt).
+  supports local paths; cloud URIs (`s3://`) require an `object_writer` plugin.
+  See `docs/object-output.md`.
+- Keyed masking actions `hmac_hash` and `pseudonym` with dedicated
+  `pseudonym_key` / `PSEUDONYM_KEY` resolution (distinct from anonymization salt);
+  enabled when the installed `LicenseValidator` plugin permits keyed actions.
+- Capability test registry entries for object output and keyed pseudonymisation;
+  pre-commit runs `ci-local.sh` before commits touching `src/`, `tests/`, or
+  `scripts/`.
 
 ### Fixed
 

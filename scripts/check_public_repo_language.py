@@ -24,8 +24,10 @@ ROOT = Path(__file__).resolve().parent.parent
 # Paths where "commercial feature" framing is forbidden (not ADR/split docs).
 _WATCHED_PATHS: tuple[Path, ...] = (
     ROOT / "src" / "privaci" / "pipeline",
+    ROOT / "src" / "privaci" / "config",
     ROOT / ".github" / "release-notes",
-    ROOT / "CHANGELOG.md",
+    ROOT / "docs" / "object-output.md",
+    ROOT / "docs" / "configuration.md",
 )
 
 # Forbidden in commit subjects/bodies and in watched implementation/release text.
@@ -45,6 +47,26 @@ _BANNED_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (
         re.compile(r"\bfor\s+commercial\s+entitlement\b", re.I),
         "Entitlement enforcement is private; public commits describe contract hooks.",
+    ),
+    (
+        re.compile(r"\bGrowth\+?\b"),
+        "Do not name product tiers in public release/docs; say license-gated.",
+    ),
+    (
+        re.compile(r"\bGrowth tier\b", re.I),
+        "Do not name product tiers in public release/docs; say license-gated.",
+    ),
+    (
+        re.compile(r"\bMarketplace\b"),
+        "Marketplace is private-repo language; omit from public release/docs.",
+    ),
+    (
+        re.compile(r"\ball tiers\b", re.I),
+        "Do not reference product tiers; describe plugin vs community fallback.",
+    ),
+    (
+        re.compile(r"\bcommercial plugin\b", re.I),
+        "Name the plugin hook (e.g. object_writer) or say plugin package.",
     ),
 )
 
