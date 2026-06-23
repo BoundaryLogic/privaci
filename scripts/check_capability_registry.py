@@ -49,10 +49,7 @@ def validate_test_paths() -> list[str]:
     for cap in CAPABILITIES.values():
         root = _repo_root(cap)
         if root is None:
-            issues.append(
-                f"{cap.id}: commercial repo not found; cannot verify "
-                f"{', '.join(cap.test_paths)}"
-            )
+            # Public CI does not checkout privaci-commercial; skip those paths.
             continue
         for rel in cap.test_paths:
             path = root / rel
