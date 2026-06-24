@@ -1,0 +1,115 @@
+/* BoundaryLogic brand tokens — aligned with boundarylogic.io marketing site. */
+
+:root,
+[data-md-color-scheme="default"] {
+  --bl-bg: #f8faf9;
+  --bl-surface: #ffffff;
+  --bl-text: #143d5d;
+  --bl-muted: #4a6275;
+  --bl-accent: #5e915b;
+  --bl-accent-strong: #4a7548;
+  --bl-navy: #143d5d;
+  --bl-border: #d8e3e0;
+
+  --md-primary-fg-color: var(--bl-accent);
+  --md-primary-fg-color--light: #7aaa77;
+  --md-primary-fg-color--dark: var(--bl-accent-strong);
+  --md-primary-bg-color: var(--bl-surface);
+  --md-accent-fg-color: var(--bl-navy);
+  --md-default-fg-color: var(--bl-text);
+  --md-default-fg-color--light: var(--bl-muted);
+  --md-default-bg-color: var(--bl-bg);
+  --md-code-bg-color: #eef3f1;
+  --md-footer-bg-color: #eef3f1;
+  --md-footer-fg-color: var(--bl-muted);
+}
+
+[data-md-color-scheme="slate"] {
+  --bl-bg: #0f1a24;
+  --bl-surface: #152536;
+  --bl-text: #e8eef2;
+  --bl-muted: #94a8b8;
+  --bl-accent: #6fa86c;
+  --bl-accent-strong: #5e915b;
+  --bl-navy: #a8c4dc;
+  --bl-border: #2a3d4f;
+
+  --md-primary-fg-color: var(--bl-accent);
+  --md-primary-fg-color--light: #8fbd8c;
+  --md-primary-fg-color--dark: var(--bl-accent-strong);
+  --md-primary-bg-color: var(--bl-surface);
+  --md-accent-fg-color: var(--bl-navy);
+  --md-default-fg-color: var(--bl-text);
+  --md-default-fg-color--light: var(--bl-muted);
+  --md-default-bg-color: var(--bl-bg);
+  --md-code-bg-color: #1c2d3d;
+  --md-footer-bg-color: #121e2a;
+  --md-footer-fg-color: var(--bl-muted);
+}
+
+/* Header: white bar + subtle border (marketing site nav). */
+.md-header {
+  background-color: var(--bl-surface);
+  color: var(--bl-text);
+  box-shadow: none;
+  border-bottom: 1px solid var(--bl-border);
+}
+
+[data-md-color-scheme="slate"] .md-header {
+  background-color: var(--bl-surface);
+  color: var(--bl-text);
+}
+
+.md-header__title,
+.md-header__button {
+  color: var(--bl-text);
+}
+
+.md-header__button:hover {
+  color: var(--bl-accent);
+}
+
+/* Logo sizing in header. */
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  height: 2rem;
+  width: auto;
+}
+
+/* Links: navy body, sage on hover. */
+a {
+  color: var(--bl-accent-strong);
+}
+
+a:hover {
+  color: var(--bl-navy);
+}
+
+[data-md-color-scheme="slate"] a {
+  color: var(--bl-accent);
+}
+
+[data-md-color-scheme="slate"] a:hover {
+  color: var(--bl-navy);
+}
+
+/* Active nav tab underline uses brand accent. */
+.md-tabs__link--active {
+  opacity: 1;
+  color: var(--bl-accent-strong);
+}
+
+/* Admonition titles pick up accent. */
+.md-typeset .admonition-title {
+  font-weight: 600;
+}
+
+/* Slightly rounder cards / code blocks — marketing site radius. */
+.md-typeset pre > code,
+.md-typeset code {
+  border-radius: 6px;
+}
+
+.md-typeset .highlight pre {
+  border-radius: 8px;
+}

@@ -13,14 +13,19 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
+  logo: assets/brand/logo-full.png
+  favicon: assets/brand/logo-icon.png
+  font: false
   palette:
     - scheme: default
-      primary: green
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
-      primary: green
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -30,6 +35,18 @@ theme:
     - navigation.top
     - content.code.copy
     - search.suggest
+
+extra_css:
+  - stylesheets/brand.css
+
+extra:
+  social:
+    - icon: fontawesome/solid/globe
+      link: https://boundarylogic.io
+      name: BoundaryLogic
+    - icon: fontawesome/brands/github
+      link: https://github.com/BoundaryLogic/privaci
+      name: GitHub
 
 plugins:
   - search
