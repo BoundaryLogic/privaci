@@ -66,8 +66,9 @@ markdown_extensions:
   - pymdownx.superfences
 
 nav:
-  - Home: index.md
-  - Quickstart: quickstart.md
+  - Getting started:
+      - Overview: index.md
+      - Quickstart: quickstart.md
   - Operating:
       - CLI guide: cli-reference.md
       - CLI reference (generated): generated/cli-reference.md

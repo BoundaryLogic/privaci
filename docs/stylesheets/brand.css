@@ -76,27 +76,57 @@
   width: auto;
 }
 
-/* Links: navy body, sage on hover. */
-a {
-  color: var(--bl-accent-strong);
+/* Tab bar: match white header — inactive tabs were dark-on-green (illegible). */
+.md-tabs {
+  background-color: var(--bl-surface);
+  border-bottom: 1px solid var(--bl-border);
+  color: var(--bl-text);
 }
 
-a:hover {
+.md-tabs__link {
+  color: var(--bl-muted);
+  opacity: 1;
+}
+
+.md-tabs__link:hover {
   color: var(--bl-navy);
 }
 
-[data-md-color-scheme="slate"] a {
+.md-tabs__link--active {
+  color: var(--bl-accent-strong);
+  font-weight: 600;
+}
+
+/* Sidebar section links (Operating, Architecture, …). */
+.md-nav__link {
+  color: var(--bl-text);
+}
+
+.md-nav__link--active,
+.md-nav__item .md-nav__link--active {
+  color: var(--bl-accent-strong);
+  font-weight: 600;
+}
+
+.md-nav__link:hover {
   color: var(--bl-accent);
 }
 
-[data-md-color-scheme="slate"] a:hover {
+/* Links in body copy — scoped below nav so tabs/sidebar keep their colors. */
+.md-content a {
+  color: var(--bl-accent-strong);
+}
+
+.md-content a:hover {
   color: var(--bl-navy);
 }
 
-/* Active nav tab underline uses brand accent. */
-.md-tabs__link--active {
-  opacity: 1;
-  color: var(--bl-accent-strong);
+[data-md-color-scheme="slate"] .md-content a {
+  color: var(--bl-accent);
+}
+
+[data-md-color-scheme="slate"] .md-content a:hover {
+  color: var(--bl-navy);
 }
 
 /* Admonition titles pick up accent. */

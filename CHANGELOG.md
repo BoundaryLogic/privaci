@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Docs site (`docs.boundarylogic.io`): BoundaryLogic brand palette, logo,
-  favicon, and custom stylesheet aligned with the marketing site.
+  favicon, and custom stylesheet aligned with the marketing site. Tab bar and
+  sidebar contrast fixes; **Getting started** tab groups Overview + Quickstart.
 
 ## [1.0.2] - 2026-06-23
 
