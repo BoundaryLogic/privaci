@@ -76,7 +76,6 @@ repos:
         name: public repo commit message language guard
         entry: python scripts/check_public_repo_language.py
         language: system
-        pass_filenames: false
         stages: [commit-msg]
         args: [--commit-msg-file]
 

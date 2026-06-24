@@ -23,7 +23,7 @@ export ANONYMIZATION_SALT="$(openssl rand -hex 32)"
 make eval-up
 ```
 
-See [`docs/quickstart.md`](docs/quickstart.md) for the full walkthrough.
+See the [quickstart](https://docs.boundarylogic.io/quickstart/) for the full walkthrough.
 
 **Your own databases:**
 
@@ -41,25 +41,33 @@ Browse the docs site locally: `pip install -e ".[dev]" && make docs-serve`
 
 ## Documentation
 
-Start with the [documentation index](docs/README.md) or [quickstart](docs/quickstart.md).
+Start with the [documentation site](https://docs.boundarylogic.io/) or
+[quickstart](https://docs.boundarylogic.io/quickstart/).
 Key pages:
 
 **Using PrivaCI**
 
-- [CLI reference](docs/cli-reference.md) — every command, its options, and examples
-- [Configuration reference](docs/configuration.md) — the `mask-rules.yaml` format
-- [Error codes](docs/error-codes.md) — exit codes and message format
-- [State & audit schema](docs/state-schema.md) — what runs write to `_privaci`
-- [Extending PrivaCI](docs/extending-privaci.md) — the plugin contract model
+- [CLI reference](https://docs.boundarylogic.io/cli-reference/) — every command, its options, and examples
+- [Configuration reference](https://docs.boundarylogic.io/configuration/) — the `mask-rules.yaml` format
+- [Error codes](https://docs.boundarylogic.io/error-codes/) — exit codes and message format
+- [State & audit schema](https://docs.boundarylogic.io/state-schema/) — what runs write to `_privaci`
+- [Extending PrivaCI](https://docs.boundarylogic.io/extending-privaci/) — the plugin contract model
 
 **Developing PrivaCI**
 
-- [Local development & testing](docs/local-development.md)
-- [Test fixtures — MedicalHelpDesk Corp](docs/test-fixtures.md)
-- [Architecture decision records](docs/adr/README.md)
+- [Local development & testing](https://docs.boundarylogic.io/local-development/)
+- [Test fixtures — MedicalHelpDesk Corp](https://docs.boundarylogic.io/test-fixtures/)
+- [Architecture decision records](https://docs.boundarylogic.io/adr/)
 
 ## License
 
 The engine is licensed under the [Elastic License 2.0](LICENSE). Optional
 paid features ship as a separate plugin layer via the
-[plugin contracts](docs/extending-privaci.md).
+[plugin contracts](https://docs.boundarylogic.io/extending-privaci/).
+
+## Commercial
+
+Optional paid capabilities — signed compliance reports, schema-drift detection,
+FK-aware subsetting, JSONB path masking, and more — ship as a separate plugin
+layer on top of this engine, still entirely in your VPC. Learn more at
+[BoundaryLogic](https://boundarylogic.io/commercial).
