@@ -61,7 +61,7 @@ Auto-generated reference pages (regenerate with `make docs-generate`):
 | Doc | What it covers |
 |-----|----------------|
 | [`extending-privaci.md`](extending-privaci.md) | Plugin/contract model for the commercial layer |
-| [`commercial/index.md`](commercial/index.md) | **Commercial** — licensing, signed reports, subsetting (synced mirror) |
+| [`commercial/index.md`](commercial/index.md) | **Commercial** — licensing, signed reports, subsetting (build-time from private commercial repo) |
 | [`object-output.md`](object-output.md) | Artifact destinations (`s3://`, local paths) for report and preview outputs |
 
 ## Architecture decisions

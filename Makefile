@@ -25,8 +25,12 @@ eval-down:
 docs-generate:
 	python scripts/generate_docs.py
 
-docs-serve: docs-generate
+docs-sync-commercial:
+	@src="$${COMMERCIAL_DOCS_SOURCE:-../privaci-commercial}"; \
+	python scripts/sync_commercial_docs.py --source "$$src"
+
+docs-serve: docs-generate docs-sync-commercial
 	mkdocs serve
 
-docs-build: docs-generate
-	mkdocs build --strict
+docs-build:
+	./scripts/docs_build.sh

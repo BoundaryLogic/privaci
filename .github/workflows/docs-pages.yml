@@ -8,8 +8,14 @@ on:
       - "mkdocs.yml"
       - "scripts/generate_docs.py"
       - "scripts/sync_commercial_docs.py"
+      - "scripts/docs_build.sh"
       - "src/**"
       - ".github/workflows/docs-pages.yml"
+  repository_dispatch:
+    types: [rebuild-commercial-docs]
+  schedule:
+    # Rebuild with latest commercial docs when dispatch is missed
+    - cron: "0 6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -37,19 +43,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Generate reference docs
-        run: python scripts/generate_docs.py
+      - name: Checkout commercial docs source
+        uses: actions/checkout@v4
+        with:
+          repository: BoundaryLogic/privaci-commercial
+          token: ${{ secrets.COMMERCIAL_REPO_READ_TOKEN }}
+          path: commercial-src
+          ref: main
 
-      - name: Build site
-        run: mkdocs build --strict
-
-      - name: Write robots.txt
-        run: |
-          printf '%s\n' \
-            'User-agent: *' \
-            'Allow: /' \
-            'Sitemap: https://docs.boundarylogic.io/sitemap.xml' \
-            > site/robots.txt
+      - name: Build site (sync commercial docs at build time)
+        env:
+          COMMERCIAL_DOCS_SOURCE: commercial-src
+        run: ./scripts/docs_build.sh
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

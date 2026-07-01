@@ -60,7 +60,11 @@ run_integration() {
 run_docs() {
   pip install -e ".[dev]"
   python scripts/generate_docs.py --check
-  mkdocs build --strict
+  if [[ ! -d ../privaci-commercial ]]; then
+    echo "ERROR: --docs requires a sibling privaci-commercial clone (commercial pages are build-time synced)."
+    exit 1
+  fi
+  COMMERCIAL_DOCS_SOURCE=../privaci-commercial ./scripts/docs_build.sh
 }
 
 run_helm() {

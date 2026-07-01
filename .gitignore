@@ -72,8 +72,8 @@ tests/fixtures/sql/demo-corp-regen/
 # Private commercial / web staging checkouts (separate repos; never publish here)
 .private-staging/
 
-# Internal-only developer notes (not for the public repo)
-DEVELOPER_NOTES.md
+# Generated at build time from privaci-commercial (see scripts/sync_commercial_docs.py)
+docs/commercial/
 
 # Mutation testing working copy (cosmic-ray)
 mutants/

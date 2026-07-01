@@ -31,13 +31,17 @@ _ALLOWLIST_EXACT: frozenset[str] = frozenset(
         "docs/adr/0001-elv2-license.md",
         "docs/extending-privaci.md",
         "scripts/sync_commercial_docs.py",
+        "scripts/docs_build.sh",
         "docs/runbooks/commercial-docs-sync.md",
-        ".github/workflows/sync-commercial-docs.yml",
+        ".github/workflows/docs-pages.yml",
+        ".github/workflows/ci.yml",
+        "Makefile",
+        "scripts/ci-local.sh",
+        ".gitignore",
     }
 )
 
 _ALLOWLIST_PREFIXES: tuple[str, ...] = (
-    "docs/commercial/",
     "docs/adr/",
     "docs/spikes/",
     "openspec/changes/archive/",
