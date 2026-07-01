@@ -1,3 +1,8 @@
+---
+title: "Architecture decision records"
+description: "Numbered ADRs documenting licensing, runtime, FK strategy, streaming, and public/commercial split."
+---
+
 # Architecture Decision Records
 
 This directory captures every significant architectural decision made

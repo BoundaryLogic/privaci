@@ -1,3 +1,8 @@
+---
+title: "ADR-0005: Salt UX"
+description: "Require explicit ANONYMIZATION_SALT — no silent default salt value."
+---
+
 # ADR-0005: Require an explicit user-supplied salt with no silent default
 
 ## Status

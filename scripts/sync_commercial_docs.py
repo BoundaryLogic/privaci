@@ -24,17 +24,51 @@ _GITHUB_ENGINE_BLOB = re.compile(
     r"https://github\.com/BoundaryLogic/privaci/blob/main/docs/([^)\s#]+)([#][^)\s]*)?"
 )
 
-_NAV_TITLES: dict[str, str] = {
-    "quickstart.md": "Quickstart",
-    "licensing-and-entitlement.md": "Licensing & entitlement",
-    "signed-reports.md": "Signed reports",
-    "drift-detection.md": "Drift detection",
-    "subsetting.md": "Data subsetting",
-    "jsonb-masking.md": "JSONB path masking",
-    "preview-and-ci.md": "Preview & CI gates",
-    "compliance-evidence-mapping.md": "Compliance evidence",
-    "troubleshooting.md": "Troubleshooting",
+_PAGE_META: dict[str, tuple[str, str]] = {
+    "quickstart.md": (
+        "Commercial quickstart",
+        "Run the AWS Marketplace PrivaCI Commercial image in your VPC and "
+        "produce a signed compliance report.",
+    ),
+    "licensing-and-entitlement.md": (
+        "Licensing & entitlement",
+        "Marketplace subscription, tier limits, JWT offline licenses, and "
+        "usage metering for PrivaCI Commercial.",
+    ),
+    "signed-reports.md": (
+        "Signed reports",
+        "Generate, sign, verify, and archive tamper-evident JSON compliance "
+        "reports after a mask run.",
+    ),
+    "drift-detection.md": (
+        "Drift detection",
+        "Detect production schema drift vs stored snapshots and block stale "
+        "staging refreshes in CI.",
+    ),
+    "subsetting.md": (
+        "Data subsetting",
+        "Subset production tables with filters while preserving referential "
+        "integrity in masked output.",
+    ),
+    "jsonb-masking.md": (
+        "JSONB path masking",
+        "Mask nested JSONB fields by path without flattening documents.",
+    ),
+    "preview-and-ci.md": (
+        "Preview & CI gates",
+        "Run privaci preview in CI to diff masking policy before production jobs.",
+    ),
+    "compliance-evidence-mapping.md": (
+        "Compliance evidence",
+        "Map PrivaCI run artifacts to GDPR, HIPAA, SOC 2, and ISO 27001 evidence.",
+    ),
+    "troubleshooting.md": (
+        "Commercial troubleshooting",
+        "Commercial exit codes 5 and 6 — license, entitlement, and drift failures.",
+    ),
 }
+
+_DEV_LICENSE_LINE = re.compile(r"^.*PRIVACI_COMMERCIAL_DEV_LICENSE.*\n?", re.MULTILINE)
 
 _INTERNAL_LINK = re.compile(
     r"\[([^\]]+)\]\((?:\.\./)?(?:adr|spikes|strategy|openspec|runbooks)/[^)]+\)"
@@ -67,8 +101,37 @@ def _sanitize_internal_links(content: str) -> str:
     return _BROKEN_ANCHOR.sub("#field-framework-mapping", content)
 
 
-def _prepare_content(content: str) -> str:
-    return _sanitize_internal_links(_rewrite_engine_links(content))
+def _strip_internal_only_content(content: str) -> str:
+    """Remove contributor-only env vars and FAQ blocks from customer-facing copy."""
+    content = _DEV_LICENSE_LINE.sub("", content)
+    content = re.sub(
+        r"\*\*Is `PRIVACI_COMMERCIAL_DEV_LICENSE` for customers\?\*\*\s*\n[^\n]+\n[^\n]+\n\n",
+        "",
+        content,
+    )
+    return content
+
+
+def _ensure_frontmatter(content: str, *, title: str, description: str) -> str:
+    """Inject or replace YAML front matter for page title and meta description."""
+    esc_title = title.replace('"', '\\"')
+    esc_desc = description.replace('"', '\\"')
+    block = f'---\ntitle: "{esc_title}"\ndescription: "{esc_desc}"\n---\n\n'
+    if content.startswith("---"):
+        end = content.find("\n---", 3)
+        if end != -1:
+            body = content[end + 4 :].lstrip("\n")
+            return block + body
+    return block + content
+
+
+def _prepare_content(content: str, *, basename: str) -> str:
+    content = _strip_internal_only_content(content)
+    content = _sanitize_internal_links(_rewrite_engine_links(content))
+    meta = _PAGE_META.get(basename)
+    if meta:
+        content = _ensure_frontmatter(content, title=meta[0], description=meta[1])
+    return content
 
 
 def _load_manifest(commercial_root: Path) -> list[Path]:
@@ -94,12 +157,18 @@ def _load_manifest(commercial_root: Path) -> list[Path]:
 
 def _sync_file(source: Path, dest: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
-    rewritten = _prepare_content(source.read_text(encoding="utf-8"))
+    rewritten = _prepare_content(source.read_text(encoding="utf-8"), basename=dest.name)
     dest.write_text(rewritten, encoding="utf-8")
 
 
 def _write_index(dest_dir: Path, synced: list[str]) -> None:
     lines = [
+        "---",
+        'title: "Commercial overview"',
+        'description: "PrivaCI Commercial AWS Marketplace docs — licensing, signed '
+        'reports, drift detection, subsetting, and compliance evidence."',
+        "---",
+        "",
         "# PrivaCI Commercial",
         "",
         "Documentation for the **PrivaCI Commercial** AWS Marketplace container",
@@ -113,9 +182,8 @@ def _write_index(dest_dir: Path, synced: list[str]) -> None:
         "",
     ]
     for name in synced:
-        title = _NAV_TITLES.get(
-            name, name.removesuffix(".md").replace("-", " ").title()
-        )
+        meta = _PAGE_META.get(name)
+        title = meta[0] if meta else name.removesuffix(".md").replace("-", " ").title()
         lines.append(f"- [{title}]({name})")
     lines.append("")
     (dest_dir / "index.md").write_text("\n".join(lines), encoding="utf-8")

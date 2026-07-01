@@ -103,4 +103,4 @@ nav:
   - Developing:
       - Local development: local-development.md
       - Test fixtures: test-fixtures.md
-      - Spikes: spikes/README.md
+      - Architecture benchmarks: spikes/README.md

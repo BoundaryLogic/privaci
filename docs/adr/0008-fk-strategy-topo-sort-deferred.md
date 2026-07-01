@@ -1,3 +1,8 @@
+---
+title: "ADR-0008: FK load strategy"
+description: "Topological table order plus deferred constraints for cyclic foreign keys."
+---
+
 # ADR-0008: Topological-sort FK loading with deferred constraints for cycles
 
 ## Status

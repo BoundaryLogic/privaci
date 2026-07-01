@@ -1,8 +1,13 @@
+---
+title: "Quickstart"
+description: "Run your first PrivaCI mask in under five minutes with the Docker evaluation stack."
+---
+
 # Quickstart
 
 Copy-pasteable path from zero to your first masked row. This guide uses the
-self-contained evaluation stack (synthetic Postgres source + empty target +
-PrivaCI engine). For your own databases, skip to
+self-contained evaluation stack (demo Postgres source + empty target +
+PrivaCI engine). For your own databases, skip to the section
 [Run against your databases](#run-against-your-databases).
 
 ## Prerequisites
@@ -45,7 +50,7 @@ make eval-up
 
 `make eval-up` auto-detects `docker compose` or `podman compose`. The stack:
 
-- Seeds **source** Postgres with ~500 synthetic users (`example.test` emails).
+- Seeds **source** Postgres with ~500 demo users (`example.test` emails).
 - Creates an empty **target** Postgres.
 - Runs PrivaCI with `examples/mask-rules.demo.yaml`.
 
@@ -65,7 +70,7 @@ docker compose exec target-pg psql -U postgres -d privaci_target \
   -c "SELECT email, first_name FROM public.users LIMIT 5;"
 ```
 
-Emails should be synthetic (`example.test` domain is replaced); names should
+Emails should be masked (`example.test` domain is replaced); names should
 not match the source.
 
 ## Run against your databases

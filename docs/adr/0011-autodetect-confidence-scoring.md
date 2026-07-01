@@ -1,3 +1,8 @@
+---
+title: "ADR-0011: Autodetect scoring"
+description: "Confidence scores for auto-detected PII columns in mask-rules.yaml."
+---
+
 # ADR-0011: Auto-detect confidence scoring and table context
 
 ## Status

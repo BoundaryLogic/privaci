@@ -1,3 +1,8 @@
+---
+title: "Runbook: pack signing"
+description: "Generate, rotate, and verify Ed25519 keys for signed mask-rules config packs."
+---
+
 # Runbook: Config-pack signing key
 
 Config packs are JSON manifests signed with an Ed25519 key. The engine verifies

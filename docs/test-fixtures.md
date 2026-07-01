@@ -1,3 +1,8 @@
+---
+title: "Test fixtures"
+description: "MedicalHelpDesk Corp synthetic schema and SQL fixtures for integration and regression tests."
+---
+
 # Test Fixtures — MedicalHelpDesk Corp
 
 This document defines the reference source database used to test

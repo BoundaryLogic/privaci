@@ -1,3 +1,8 @@
+---
+title: "ADR-0001: ELv2 license"
+description: "Why the public PrivaCI engine uses Elastic License 2.0."
+---
+
 # ADR-0001: Use Elastic License 2.0 (ELv2) for the public engine
 
 ## Status

@@ -1,3 +1,8 @@
+---
+title: "Error codes"
+description: "PrivaCI exit codes 0–6 and 130 with context, cause, remediation, and CI branching guidance."
+---
+
 # PrivaCI Error Codes & Message Format
 
 This page is the authoritative reference for every exit code PrivaCI can

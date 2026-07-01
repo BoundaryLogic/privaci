@@ -1,3 +1,8 @@
+---
+title: "Building a plugin"
+description: "Extend PrivaCI with entry-point plugins for custom maskers, drift detectors, and report renderers."
+---
+
 # Building a PrivaCI Plugin
 
 The engine defines stable contracts in `privaci.contracts`. Any plugin —

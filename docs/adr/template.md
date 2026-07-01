@@ -1,3 +1,8 @@
+---
+title: "ADR template"
+description: "Template for new PrivaCI architecture decision records."
+---
+
 # ADR-NNNN: Title
 
 ## Status

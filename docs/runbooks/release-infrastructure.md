@@ -1,3 +1,8 @@
+---
+title: "Runbook: release infrastructure"
+description: "Operator notes for PrivaCI release pipelines, artifact promotion, and infra hooks."
+---
+
 # Release infrastructure checklist
 
 Use this after creating a **new** `privaci` repository, rotating credentials, or

@@ -1,3 +1,8 @@
+---
+title: "State & audit schema"
+description: "_privaci runs, checkpoints, and audit_log tables written to the target database during masking."
+---
+
 # Run state & audit (`_privaci` schema)
 
 PrivaCI records every run's progress and audit trail in a dedicated `_privaci`

@@ -1,3 +1,8 @@
+---
+title: "ADR-0007: Public/commercial split"
+description: "Separate public engine repo from private commercial layer and docs policy."
+---
+
 # ADR-0007: Split into public engine + private commercial layer
 
 ## Status

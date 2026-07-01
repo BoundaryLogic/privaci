@@ -1,3 +1,8 @@
+---
+title: "Local development"
+description: "Contributor workstation setup, test suites, compose stacks, and end-to-end engine verification."
+---
+
 # Local Development & Testing
 
 This document captures how a contributor develops and tests PrivaCI
@@ -517,7 +522,7 @@ These are non-negotiable per `.cursorrules` §3:
   databases (batch sizing, backpressure, K8s sizing).
 - **`docs/test-fixtures.md`** — the representative "Demo Corp" source
   schema, generation strategy, and tier-1/2/3 dataset sizes.
-- **`docs/spikes/`** — Week-1 architecture spikes and how to run them.
+- **`docs/spikes/`** — Architecture benchmarks for contributors (COPY-binary, SpaCy, cyclic FK).
 - **`docs/adr/`** — every load-bearing architectural decision with
   context and consequences.
 - **`openspec/changes/init-privaci-engine/`** — the source of truth

@@ -1,3 +1,8 @@
+---
+title: "ADR-0003: Source DB billing"
+description: "Bill commercial usage by rolling distinct source database count."
+---
+
 # ADR-0003: Bill by unique source databases (relocated)
 
 ## Status

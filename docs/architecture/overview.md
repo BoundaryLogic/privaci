@@ -1,3 +1,8 @@
+---
+title: "Architecture overview"
+description: "Batch CLI shape, COPY-binary streaming, FK ordering, checkpoints, and extension points."
+---
+
 # Architecture overview
 
 This page summarizes the MVP architecture documented in full in
