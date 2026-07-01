@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Commercial docs section at `docs.boundarylogic.io/commercial/`, synced from
+  the private commercial repo publishable manifest via `sync-commercial-docs.yml`.
+
 ### Changed
 
 - Docs site (`docs.boundarylogic.io`): BoundaryLogic brand palette, logo,

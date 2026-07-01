@@ -30,10 +30,14 @@ _ALLOWLIST_EXACT: frozenset[str] = frozenset(
         "docs/adr/0003-billing-dimension-source-dbs.md",
         "docs/adr/0001-elv2-license.md",
         "docs/extending-privaci.md",
+        "scripts/sync_commercial_docs.py",
+        "docs/runbooks/commercial-docs-sync.md",
+        ".github/workflows/sync-commercial-docs.yml",
     }
 )
 
 _ALLOWLIST_PREFIXES: tuple[str, ...] = (
+    "docs/commercial/",
     "docs/adr/",
     "docs/spikes/",
     "openspec/changes/archive/",
@@ -149,7 +153,10 @@ def _is_allowlisted(rel: str) -> bool:
 
 
 def _is_operator_ux(rel: str) -> bool:
-    return any(rel.startswith(prefix) or rel == prefix.rstrip("/") for prefix in _OPERATOR_UX_PREFIXES)
+    return any(
+        rel.startswith(prefix) or rel == prefix.rstrip("/")
+        for prefix in _OPERATOR_UX_PREFIXES
+    )
 
 
 def _patterns_for(rel: str) -> tuple[tuple[re.Pattern[str], str], ...]:

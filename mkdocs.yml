@@ -89,6 +89,17 @@ nav:
       - ADRs: adr/README.md
   - Extending:
       - Building a plugin: extending-privaci.md
+  - Commercial:
+      - Overview: commercial/index.md
+      - Quickstart: commercial/quickstart.md
+      - Licensing & entitlement: commercial/licensing-and-entitlement.md
+      - Signed reports: commercial/signed-reports.md
+      - Drift detection: commercial/drift-detection.md
+      - Data subsetting: commercial/subsetting.md
+      - JSONB path masking: commercial/jsonb-masking.md
+      - Preview & CI gates: commercial/preview-and-ci.md
+      - Compliance evidence: commercial/compliance-evidence-mapping.md
+      - Troubleshooting: commercial/troubleshooting.md
   - Developing:
       - Local development: local-development.md
       - Test fixtures: test-fixtures.md
