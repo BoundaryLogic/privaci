@@ -14,7 +14,6 @@ from __future__ import annotations
 import argparse
 import re
 import sys
-from datetime import UTC, datetime
 from pathlib import Path
 
 _ENGINE_ROOT = Path(__file__).resolve().parents[1]
@@ -103,15 +102,12 @@ def _write_index(dest_dir: Path, synced: list[str]) -> None:
     lines = [
         "# PrivaCI Commercial",
         "",
-        "Customer-facing documentation for the **PrivaCI Commercial** layer",
-        "(AWS Marketplace container image).",
+        "Documentation for the **PrivaCI Commercial** AWS Marketplace container",
+        "image: licensing, signed compliance reports, drift detection, data",
+        "subsetting, JSONB masking, CI preview gates, and GRC evidence exports.",
         "",
-        "> **Build-time copy.** Edit sources in the private",
-        "> [`privaci-commercial`](https://github.com/BoundaryLogic/privaci-commercial)",
-        "> repository (`docs/publishable.txt`). Pages are generated during the",
-        "> docs site build — nothing is committed to the public engine repo.",
-        "",
-        f"_Last synced: {datetime.now(tz=UTC).strftime('%Y-%m-%d %H:%M UTC')}_",
+        "For the open engine (install, configuration, CLI), see the",
+        "[Getting started](../index.md) and [Operating](../cli-reference.md) tabs.",
         "",
         "## Guides",
         "",
