@@ -3,7 +3,7 @@
 ## Setup order (do not skip)
 
 1. Add `COMMERCIAL_REPO_READ_TOKEN` to **`privaci`** repo secrets (read access to commercial repo).
-2. Add the same token to **Cloudflare Pages** env vars for the docs project.
+2. Add the same token to **Cloudflare Pages** → **Production and Preview** env vars (separate lists — PR builds use Preview). Type **Secret**, not Plaintext. Also add `PYTHON_VERSION=3.12` (Plaintext) to both.
 3. Update Cloudflare build command to `pip install -e ".[dev]" && ./scripts/docs_build.sh`.
 4. Create Cloudflare deploy hook; add `CLOUDFLARE_DOCS_DEPLOY_HOOK_URL` to **`privaci`** and **commercial** repo secrets.
 5. Merge [privaci #22](https://github.com/BoundaryLogic/privaci/pull/22) and [commercial #31](https://github.com/BoundaryLogic/privaci-commercial/pull/31) — **`docs-build` CI requires the read token** and fails loudly if it is missing.
@@ -40,8 +40,8 @@ doc changes do **not** push to `privaci`; they POST a **deploy hook** instead.
 | --- | --- |
 | Build command | `pip install -e ".[dev]" && ./scripts/docs_build.sh` |
 | Build output | `site` |
-| Env: `PYTHON_VERSION` | `3.12` |
-| Env: `COMMERCIAL_REPO_READ_TOKEN` | Read token for private commercial repo |
+| Env: `PYTHON_VERSION` | `3.12` (Plaintext) — set on **Production and Preview** |
+| Env: `COMMERCIAL_REPO_READ_TOKEN` | Read PAT — type **Secret** — set on **Production and Preview** |
 
 Create the deploy hook under Cloudflare → Pages → docs project → **Settings →
 Builds → Deploy hooks**. Store the hook URL as:
