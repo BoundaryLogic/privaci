@@ -34,6 +34,7 @@ _ALLOWLIST_EXACT: frozenset[str] = frozenset(
         "scripts/docs_build.sh",
         "docs/runbooks/commercial-docs-sync.md",
         ".github/workflows/docs-pages.yml",
+        ".github/workflows/cloudflare-docs-rebuild.yml",
         ".github/workflows/ci.yml",
         "Makefile",
         "scripts/ci-local.sh",

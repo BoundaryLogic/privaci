@@ -1,3 +1,7 @@
+# Optional GitHub Pages mirror (boundarylogic.github.io/privaci/).
+# Production: docs.boundarylogic.io is Cloudflare Pages — see
+# .github/workflows/cloudflare-docs-rebuild.yml and
+# docs/runbooks/commercial-docs-sync.md.
 name: Docs (GitHub Pages)
 
 on:
@@ -11,11 +15,6 @@ on:
       - "scripts/docs_build.sh"
       - "src/**"
       - ".github/workflows/docs-pages.yml"
-  repository_dispatch:
-    types: [rebuild-commercial-docs]
-  schedule:
-    # Rebuild with latest commercial docs when dispatch is missed
-    - cron: "0 6 * * *"
   workflow_dispatch:
 
 permissions:

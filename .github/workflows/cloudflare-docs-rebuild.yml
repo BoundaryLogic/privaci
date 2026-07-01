@@ -1,0 +1,17 @@
+# Production docs host: Cloudflare Pages (see boundarylogic-web/docs/deploying-cloudflare-pages.md).
+# Rebuilds privaci main on Cloudflare, which runs scripts/docs_build.sh with
+# COMMERCIAL_REPO_READ_TOKEN to pull latest publishable commercial docs at build time.
+name: Cloudflare docs rebuild
+
+on:
+  schedule:
+    # Fallback when a commercial doc deploy hook was missed
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cloudflare Pages rebuild
+        run: curl -fsS -X POST "${{ secrets.CLOUDFLARE_DOCS_DEPLOY_HOOK_URL }}"

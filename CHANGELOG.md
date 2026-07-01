@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Commercial docs section at `docs.boundarylogic.io/commercial/`, built at deploy
   time from the private commercial repo (`publishable.txt`) — no mirror commits
-  on the public engine repo.
+  on the public engine repo. Production host is Cloudflare Pages (deploy hook on
+  commercial doc changes; see `docs/runbooks/commercial-docs-sync.md`).
 
 ### Changed
 
