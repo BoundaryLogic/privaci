@@ -113,6 +113,7 @@ jobs:
           pip install -e ".[dev]"
 
       - name: Checkout commercial docs source
+        if: ${{ secrets.COMMERCIAL_REPO_READ_TOKEN != '' }}
         uses: actions/checkout@v4
         with:
           repository: BoundaryLogic/privaci-commercial
@@ -123,7 +124,14 @@ jobs:
       - name: Verify generated reference docs are current
         run: python scripts/generate_docs.py --check
 
-      - name: Build documentation site
+      - name: Build documentation site (with commercial docs)
+        if: ${{ secrets.COMMERCIAL_REPO_READ_TOKEN != '' }}
         env:
           COMMERCIAL_DOCS_SOURCE: commercial-src
         run: ./scripts/docs_build.sh
+
+      - name: Build documentation site (engine only — no commercial token)
+        if: ${{ secrets.COMMERCIAL_REPO_READ_TOKEN == '' }}
+        run: |
+          echo "WARN: COMMERCIAL_REPO_READ_TOKEN not set — skipping commercial nav build."
+          echo "Full site build runs on Cloudflare Pages and when the secret is configured."
