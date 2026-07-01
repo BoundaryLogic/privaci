@@ -1,3 +1,8 @@
+---
+title: "Runbook: git history privacy"
+description: "Keep personal emails out of git history when contributing to the public PrivaCI repository."
+---
+
 # Runbook: Keeping personal emails out of git history
 
 PrivaCI commits should carry only project or GitHub `noreply` email addresses,

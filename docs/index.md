@@ -1,10 +1,15 @@
+---
+title: "Getting started"
+description: "In-VPC PostgreSQL masking — overview, pipeline stages, and links to run your first job."
+---
+
 # PrivaCI
 
 **One command. Sanitized staging data. No data leaves your VPC.**
 
 PrivaCI is a stateless batch engine that reads from a PostgreSQL source
 (typically a production replica), masks PII with a three-tier pipeline, and
-writes realistic synthetic data to a staging database with referential
+writes realistic masked data to a staging database with referential
 integrity preserved.
 
 ## Start here

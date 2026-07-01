@@ -1,3 +1,8 @@
+---
+title: "Observability"
+description: "Structured JSON logs, run lifecycle events, metrics hooks, and operator troubleshooting signals."
+---
+
 # Observability
 
 PrivaCI emits a structured, machine-readable event stream so a run can be

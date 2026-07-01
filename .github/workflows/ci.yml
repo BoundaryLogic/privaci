@@ -112,8 +112,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
+      - name: Checkout commercial docs source
+        uses: actions/checkout@v4
+        with:
+          repository: BoundaryLogic/privaci-commercial
+          token: ${{ secrets.COMMERCIAL_REPO_READ_TOKEN }}
+          path: commercial-src
+          ref: main
+
       - name: Verify generated reference docs are current
         run: python scripts/generate_docs.py --check
 
       - name: Build documentation site
-        run: mkdocs build --strict
+        env:
+          COMMERCIAL_DOCS_SOURCE: commercial-src
+        run: ./scripts/docs_build.sh

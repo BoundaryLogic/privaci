@@ -1,3 +1,8 @@
+---
+title: "Memory model"
+description: "Constant-memory COPY-binary streaming, batch sizing, and O(1) row processing guarantees."
+---
+
 # Memory model
 
 PrivaCI is designed to mask **very large PostgreSQL databases** (100 GB+)

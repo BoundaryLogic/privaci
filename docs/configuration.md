@@ -1,3 +1,8 @@
+---
+title: "Configuration guide"
+description: "Author mask-rules.yaml — table rules, masking actions, regex, NER, and strict validation."
+---
+
 # Configuring PrivaCI (`mask-rules.yaml`)
 
 PrivaCI is driven by a single declarative YAML file, mounted in the container at

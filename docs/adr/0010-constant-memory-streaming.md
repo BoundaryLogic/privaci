@@ -1,3 +1,8 @@
+---
+title: "ADR-0010: Constant memory"
+description: "O(batch_size) memory model for multi-terabyte source databases."
+---
+
 # ADR-0010: Constant-memory streaming bounds
 
 ## Status

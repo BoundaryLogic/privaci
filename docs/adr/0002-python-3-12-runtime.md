@@ -1,3 +1,8 @@
+---
+title: "ADR-0002: Python 3.12 runtime"
+description: "Python 3.12+ as the sole supported runtime and dependency baseline."
+---
+
 # ADR-0002: Build the engine in Python 3.12
 
 ## Status

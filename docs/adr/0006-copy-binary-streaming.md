@@ -1,3 +1,8 @@
+---
+title: "ADR-0006: COPY-binary streaming"
+description: "Use PostgreSQL COPY binary format for constant-memory row transfer."
+---
+
 # ADR-0006: Stream via PostgreSQL `COPY ... (FORMAT BINARY)`
 
 ## Status

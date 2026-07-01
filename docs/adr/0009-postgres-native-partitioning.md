@@ -1,3 +1,8 @@
+---
+title: "ADR-0009: Native partitioning"
+description: "Support Postgres declarative partitions in schema discovery and load order."
+---
+
 # ADR-0009: Support PostgreSQL native partitioning in MVP
 
 ## Status

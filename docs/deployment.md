@@ -1,3 +1,8 @@
+---
+title: "Deployment"
+description: "Docker image, compose evaluation stack, Helm CronJob, secrets, and in-VPC batch deployment patterns."
+---
+
 # Deployment
 
 PrivaCI ships as a container image, a local evaluation `compose.yml` (Docker or

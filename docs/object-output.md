@@ -1,3 +1,8 @@
+---
+title: "Object output URIs"
+description: "Write masked table exports to S3, GCS, or local paths using object-output URIs in mask-rules.yaml."
+---
+
 # Object output URIs
 
 Compliance artifacts (`privaci report --output`, `dry-run --report`, and

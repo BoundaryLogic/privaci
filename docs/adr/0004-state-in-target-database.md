@@ -1,3 +1,8 @@
+---
+title: "ADR-0004: State on target"
+description: "Store checkpoints, runs, and audit_log on the target PostgreSQL database."
+---
+
 # ADR-0004: Store run state in a `_privaci` schema in the target database
 
 ## Status

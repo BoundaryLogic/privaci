@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Commercial docs section at `docs.boundarylogic.io/commercial/`, built at deploy
+  time from the private commercial repo (`publishable.txt`) — no mirror commits
+  on the public engine repo. Production host is Cloudflare Pages (deploy hook on
+  commercial doc changes). Operator setup: private commercial repo runbook.
+
 ### Changed
 
 - Docs site (`docs.boundarylogic.io`): BoundaryLogic brand palette, logo,

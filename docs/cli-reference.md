@@ -1,3 +1,8 @@
+---
+title: "CLI guide"
+description: "Operator guide to privaci run, introspect, drift-check, and copy-pasteable CLI examples."
+---
+
 # PrivaCI CLI Reference
 
 The `privaci` executable is the single entry point for every operation. This
