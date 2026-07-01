@@ -165,8 +165,10 @@ def _write_index(dest_dir: Path, synced: list[str]) -> None:
     lines = [
         "---",
         'title: "Commercial overview"',
-        'description: "PrivaCI Commercial AWS Marketplace docs — licensing, signed '
-        'reports, drift detection, subsetting, and compliance evidence."',
+        (
+            'description: "PrivaCI Commercial AWS Marketplace docs — licensing, signed '
+            + 'reports, drift detection, subsetting, and compliance evidence."'
+        ),
         "---",
         "",
         "# PrivaCI Commercial",
