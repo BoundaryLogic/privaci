@@ -112,16 +112,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
+      - name: Checkout commercial docs source
+        uses: actions/checkout@v4
+        with:
+          repository: BoundaryLogic/privaci-commercial
+          token: ${{ secrets.COMMERCIAL_REPO_READ_TOKEN }}
+          path: commercial-src
+          ref: main
+
       - name: Verify generated reference docs are current
         run: python scripts/generate_docs.py --check
 
       - name: Build documentation site
         env:
-          COMMERCIAL_REPO_READ_TOKEN: ${{ secrets.COMMERCIAL_REPO_READ_TOKEN }}
-        run: |
-          if [ -n "${COMMERCIAL_REPO_READ_TOKEN}" ]; then
-            ./scripts/docs_build.sh
-          else
-            echo "WARN: COMMERCIAL_REPO_READ_TOKEN not set — skipping full mkdocs build."
-            echo "Configure the secret after merge; Cloudflare runs the full build in production."
-          fi
+          COMMERCIAL_DOCS_SOURCE: commercial-src
+        run: ./scripts/docs_build.sh

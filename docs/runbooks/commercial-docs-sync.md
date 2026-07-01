@@ -1,5 +1,14 @@
 # Syncing commercial docs to docs.boundarylogic.io
 
+## Setup order (do not skip)
+
+1. Add `COMMERCIAL_REPO_READ_TOKEN` to **`privaci`** repo secrets (read access to commercial repo).
+2. Add the same token to **Cloudflare Pages** env vars for the docs project.
+3. Update Cloudflare build command to `pip install -e ".[dev]" && ./scripts/docs_build.sh`.
+4. Create Cloudflare deploy hook; add `CLOUDFLARE_DOCS_DEPLOY_HOOK_URL` to **`privaci`** and **commercial** repo secrets.
+5. Merge [privaci #22](https://github.com/BoundaryLogic/privaci/pull/22) and [commercial #31](https://github.com/BoundaryLogic/privaci-commercial/pull/31) — **`docs-build` CI requires the read token** and fails loudly if it is missing.
+6. Trigger Cloudflare redeploy; verify `https://docs.boundarylogic.io/commercial/`.
+
 Customer-facing commercial documentation lives in the private commercial repo
 (`docs/publishable.txt`). The public site serves it under `/commercial/` **without
 committing copies** into the public engine repo — content is pulled at **build
