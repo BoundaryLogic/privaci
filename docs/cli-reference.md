@@ -275,6 +275,7 @@ stub; signed PDF reports require the commercial layer.
 ```bash
 privaci report --run 019eaca5-32d9-7957-9b00-43d088b7ec6e --format json
 privaci report --run 019eaca5-… --format json --output report.json
+privaci report --run 019eaca5-… --format pdf --output report.pdf
 privaci report --run 019eaca5-… --output "s3://evidence/privaci/run/report.json"
 ```
 
