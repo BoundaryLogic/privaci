@@ -1,7 +1,6 @@
 # Optional GitHub Pages mirror (boundarylogic.github.io/privaci/).
-# Production: docs.boundarylogic.io is Cloudflare Pages — see
-# .github/workflows/cloudflare-docs-rebuild.yml and
-# docs/runbooks/commercial-docs-sync.md.
+# Production: docs.boundarylogic.io is Cloudflare Pages — operator setup in
+# privaci-commercial (private) and boundarylogic-web/docs/deploying-cloudflare-pages.md.
 name: Docs (GitHub Pages)
 
 on:
