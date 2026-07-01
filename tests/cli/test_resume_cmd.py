@@ -50,6 +50,25 @@ def test_report_writes_output_file(mocker: MockerFixture, tmp_path: Path) -> Non
     assert "Wrote report" in result.output
 
 
+def test_report_emits_pdf_bytes_to_stdout(mocker: MockerFixture) -> None:
+    # Arrange
+    import uuid
+
+    run_id = uuid.uuid4()
+    bundle = mocker.patch("privaci.cli.app.load_plugins").return_value
+    bundle.report_renderer.render.return_value = b"%PDF-1.4 test"
+
+    # Act
+    result = runner.invoke(
+        app,
+        ["report", "--run", str(run_id), "--format", "pdf"],
+    )
+
+    # Assert
+    assert result.exit_code == 0
+    assert result.stdout_bytes.startswith(b"%PDF")
+
+
 def test_report_emits_json(mocker: MockerFixture) -> None:
     # Arrange
     import uuid

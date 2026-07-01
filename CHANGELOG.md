@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-07-01
+
 ### Added
 
 - Commercial docs section at `docs.boundarylogic.io/commercial/`, built at deploy
@@ -19,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docs site (`docs.boundarylogic.io`): BoundaryLogic brand palette, logo,
   favicon, and custom stylesheet aligned with the marketing site. Tab bar and
   sidebar contrast fixes; **Getting started** tab groups Overview + Quickstart.
+
+### Fixed
+
+- `privaci report --format pdf` writes PDF bytes to stdout without UTF-8 decode
+  errors (use `--output` for files; both paths work).
 
 ## [1.0.2] - 2026-06-23
 
