@@ -16,6 +16,8 @@ exit codes see [`error-codes.md`](error-codes.md).
 
 | Command | Purpose |
 |---------|---------|
+| [`init`](#privaci-init) | Scaffold a starter `mask-rules.yaml` from the source schema |
+| [`plan`](#privaci-plan) | Preview masking actions using the source only (no target) |
 | [`run`](#privaci-run) | Execute a masking run against source → target |
 | [`dry-run`](#privaci-dry-run) | Pre-flight checks and a per-table plan; no writes |
 | [`resume`](#privaci-resume) | Continue an interrupted run from checkpoints |
@@ -47,6 +49,61 @@ All lifecycle output is emitted as JSON-lines on stdout; see
 [`observability.md`](observability.md).
 
 `--help` works at every level (`privaci --help`, `privaci run --help`).
+
+---
+
+## `privaci init`
+
+Introspect the source database and write a starter `mask-rules.yaml`. High-
+confidence auto-detect findings become explicit column actions; tables without
+a primary key default to `exclude`. Never connects to the target.
+
+| Option | Env var | Default | Description |
+|--------|---------|---------|-------------|
+| `--source` | `SOURCE_DB_URL` | — | Source DB URL or secret URI. |
+| `--output` / `-o` | — | *(required)* | Path to write the generated YAML. |
+| `--schema` | — | all schemas | Include only these schemas (repeatable). |
+| `--force` | — | `false` | Overwrite an existing output file. |
+
+```bash
+export SOURCE_DB_URL=postgresql://postgres:dev@127.0.0.1:55432/privaci_source
+
+privaci init --source "$SOURCE_DB_URL" --output mask-rules.yaml
+# Wrote starter config to mask-rules.yaml (6 table(s))
+# Review 3 uncertain column(s) with: privaci plan --config mask-rules.yaml
+
+privaci init --source "$SOURCE_DB_URL" --output mask-rules.yaml --schema public
+```
+
+Refuses to overwrite without `--force` (exit **2**). Set
+`ANONYMIZATION_SALT` before `run`; the scaffold uses the literal
+`${ANONYMIZATION_SALT}` placeholder.
+
+---
+
+## `privaci plan`
+
+Preview the masking plan using the source database only — no target connection.
+Use after `init` to review uncertain columns before provisioning a target.
+
+| Option | Env var | Default | Description |
+|--------|---------|---------|-------------|
+| `--config` | — | `/config/mask-rules.yaml` | Path to `mask-rules.yaml`. |
+| `--source` | `SOURCE_DB_URL` | — | Source DB URL or secret URI. |
+| `--format` | — | `text` | `text` for human output or `json` for CI. |
+
+```bash
+privaci plan --config mask-rules.yaml --source "$SOURCE_DB_URL"
+# Plan (6 table(s) in source):
+# Auto-detect: 12 column(s) to mask, 3 uncertain for review
+#   public.users: strategy=transform (~200 rows)
+#       mask: email -> fake/email (autodetect)
+
+privaci plan --config mask-rules.yaml --format json > plan.json
+```
+
+For full pre-flight including target connectivity, use
+[`dry-run`](#privaci-dry-run).
 
 ---
 

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-02
+
+### Added
+
+- `privaci init` — scaffold a starter `mask-rules.yaml` from the source database
+  schema (high-confidence auto-detect columns, `${ANONYMIZATION_SALT}` placeholder).
+- `privaci plan` — source-only masking preview with human text or `--format json`
+  for CI; no target connection required.
+
+### Changed
+
+- `privaci dry-run` plan output shares the same rendering as `privaci plan`.
+
 ## [1.0.3] - 2026-07-01
 
 ### Added

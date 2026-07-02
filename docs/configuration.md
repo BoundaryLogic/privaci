@@ -20,7 +20,18 @@ privaci schema config > mask-rules.schema.json
 
 ## Quickstart
 
-A minimal config that masks two columns on one table:
+**Generate a starter config** from your source schema (no target required):
+
+```bash
+export SOURCE_DB_URL=postgresql://user:pass@source-host:5432/app
+
+privaci init --source "$SOURCE_DB_URL" --output mask-rules.yaml
+privaci plan --config mask-rules.yaml --source "$SOURCE_DB_URL"
+```
+
+Then set `ANONYMIZATION_SALT` and review/edit the YAML before production runs.
+
+A minimal hand-authored config that masks two columns on one table:
 
 ```yaml
 version: "1.0"
