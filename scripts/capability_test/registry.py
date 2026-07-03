@@ -51,6 +51,20 @@ CAPABILITIES: dict[str, Capability] = {
         test_paths=("tests/cli/test_detect_drift.py",),
         tags=frozenset({"unit", "cli", "public"}),
     ),
+    "public-init-plan": Capability(
+        id="public-init-plan",
+        label="Init and plan CLI",
+        description=(
+            "``privaci init`` scaffolds mask-rules.yaml; ``privaci plan`` "
+            "previews masking source-only."
+        ),
+        repo="public",
+        test_paths=(
+            "tests/cli/test_init_plan.py",
+            "tests/config/test_scaffold.py",
+        ),
+        tags=frozenset({"unit", "cli", "public", "config"}),
+    ),
     "public-row-filter": Capability(
         id="public-row-filter",
         label="Streaming row filters",

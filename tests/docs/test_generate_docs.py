@@ -38,6 +38,8 @@ def test_generated_cli_reference_lists_run_command() -> None:
 
     # Assert
     assert "`privaci run`" in content
+    assert "`privaci init`" in content
+    assert "`privaci plan`" in content
     assert "--prometheus-port" in content
 
 

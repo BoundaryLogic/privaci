@@ -82,7 +82,9 @@ export ANONYMIZATION_SALT="$(privaci gen-salt)"
 export SOURCE_DB_URL=postgresql://user:pass@source-host:5432/app
 export TARGET_DB_URL=postgresql://user:pass@target-host:5432/staging
 
-# Author mask-rules.yaml — start from examples/mask-rules.example.yaml
+# Scaffold from source, review the plan, then pre-flight with target
+privaci init   --source "$SOURCE_DB_URL" --output mask-rules.yaml
+privaci plan   --config mask-rules.yaml --source "$SOURCE_DB_URL"
 privaci validate --config mask-rules.yaml
 privaci dry-run  --config mask-rules.yaml
 privaci run      --config mask-rules.yaml

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -62,5 +63,31 @@ LogLevelOption = Annotated[
         "--log-level",
         envvar="PRIVACI_LOG_LEVEL",
         help="Logging level.",
+    ),
+]
+
+InitOutputOption = Annotated[
+    Path,
+    typer.Option(
+        ...,
+        "--output",
+        "-o",
+        help="Path to write the generated mask-rules.yaml.",
+    ),
+]
+
+InitForceOption = Annotated[
+    bool,
+    typer.Option(
+        "--force",
+        help="Overwrite an existing output file.",
+    ),
+]
+
+PlanFormatOption = Annotated[
+    str,
+    typer.Option(
+        "--format",
+        help="Output format: text or json.",
     ),
 ]

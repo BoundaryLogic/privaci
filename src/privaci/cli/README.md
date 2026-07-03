@@ -1,8 +1,8 @@
 # cli
 
 Typer-based command-line interface. All user-facing operations (`run`,
-`validate`, `resume`, …) are registered in `app.py` and executed through the
-centralized error boundary in `_errors.py`.
+`init`, `plan`, `validate`, `resume`, …) are registered in `app.py` and
+executed through the centralized error boundary in `_errors.py`.
 
 ## Public API
 
@@ -20,5 +20,7 @@ environment variable overrides. See
 ## Example
 
 ```bash
+privaci init --source "$SOURCE_DB_URL" --output mask-rules.yaml
+privaci plan --config mask-rules.yaml --source "$SOURCE_DB_URL"
 privaci run --config mask-rules.yaml --dry-run
 ```

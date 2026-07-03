@@ -6,12 +6,15 @@ import secrets
 import sys
 import uuid
 from pathlib import Path
+from typing import Annotated
 
 import typer
 
 from privaci.cli._catalog import inspect_source
 from privaci.cli._detect_drift import execute_detect_drift
 from privaci.cli._errors import run_cli
+from privaci.cli._init import execute_init
+from privaci.cli._plan import execute_plan
 from privaci.cli._preview import execute_preview
 from privaci.cli._resume import execute_resume
 from privaci.cli._run import execute_run, execute_verify
@@ -20,8 +23,11 @@ from privaci.cli.logging_setup import configure_cli_logging
 from privaci.cli.options import (
     ConfigPathOption,
     DryRunOption,
+    InitForceOption,
+    InitOutputOption,
     LogLevelOption,
     NoAuditTableOption,
+    PlanFormatOption,
     PrometheusPortOption,
     SourceDbOption,
     TargetDbOption,
@@ -185,6 +191,45 @@ def dry_run_cmd(
         dry_run=True,
         no_audit_table=False,
         report_path=report,
+    )
+
+
+@app.command()
+def init(
+    output: InitOutputOption,
+    *,
+    source: SourceDbOption = None,
+    schema: Annotated[
+        list[str],
+        typer.Option(
+            "--schema",
+            help="Include only these schemas (repeat for multiple). Default: all.",
+        ),
+    ] = [],  # noqa: B006
+    force: InitForceOption = False,
+) -> None:
+    """Scaffold a starter mask-rules.yaml from the source database schema."""
+    execute_init(
+        source=source,
+        output=output,
+        schemas=tuple(schema),
+        force=force,
+    )
+
+
+@app.command()
+def plan(
+    config: ConfigPathOption = "/config/mask-rules.yaml",
+    source: SourceDbOption = None,
+    output_format: PlanFormatOption = "text",
+) -> None:
+    """Preview masking actions using the source database only (no target)."""
+    if output_format not in {"text", "json"}:
+        raise typer.BadParameter("--format must be text or json")
+    execute_plan(
+        config_path=config,
+        source=source,
+        output_format=output_format,  # type: ignore[arg-type]
     )
 
 

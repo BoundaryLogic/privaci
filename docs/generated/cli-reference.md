@@ -69,6 +69,17 @@ Emit CI/CD workflow files for a chosen platform.
 | `--platform` | — | — | github-actions | gitlab-ci | k8s-cronjob |
 | `--output-dir` | — | `.` | Directory to write generated files into. |
 
+## `privaci init`
+
+Scaffold a starter mask-rules.yaml from the source database schema.
+
+| Option | Env var | Default | Description |
+|--------|---------|---------|-------------|
+| `--output`, `-o` | — | — | Path to write the generated mask-rules.yaml. |
+| `--source` | `SOURCE_DB_URL` | — | Source database URL or secret URI. |
+| `--schema` | — | `[]` | Include only these schemas (repeat for multiple). Default: all. |
+| `--force` | — | `False` | Overwrite an existing output file. |
+
 ## `privaci install-pack`
 
 Fetch, verify, and merge a signed vertical config pack.
@@ -88,6 +99,16 @@ Upgrade a config between schema versions (no-op when versions match).
 |--------|---------|---------|-------------|
 | `--from` | — | — | Current schema version. |
 | `--to` | — | — | Target schema version. |
+
+## `privaci plan`
+
+Preview masking actions using the source database only (no target).
+
+| Option | Env var | Default | Description |
+|--------|---------|---------|-------------|
+| `--config` | — | `/config/mask-rules.yaml` | Path to mask-rules.yaml. |
+| `--source` | `SOURCE_DB_URL` | — | Source database URL or secret URI. |
+| `--format` | — | `text` | Output format: text or json. |
 
 ## `privaci preview`
 
