@@ -7,6 +7,12 @@ description: "Bill commercial usage by rolling distinct source database count."
 
 ## Status
 
+**Superseded** by ADR-0012 (private `privaci-commercial`) — 2026-07-03. The
+source-database-count / data-volume billing dimension is no longer used; the
+commercial layer moved to capability-based flat tiers with stateless
+entitlement. See the tombstone at
+[`0012-capability-tiers-and-license-manager.md`](0012-capability-tiers-and-license-manager.md).
+
 Accepted — 2026-05-28. Relocated to the private `privaci-commercial` repository
 — 2026-06-11 (ADR-0007 placement policy; `init-privaci-engine` task §18.7.2).
 
