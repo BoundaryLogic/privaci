@@ -31,6 +31,39 @@ Without the commercial package installed, `privaci` uses built-in
 fallbacks: unrestricted community license, silent metering, JSON report
 stub, no LLM connector, no drift detector.
 
+## License capabilities
+
+A `LicenseValidator` returns a `LicenseStatus`. Beyond `tier` and `is_valid`, it
+carries `capabilities: frozenset[str]` — opaque capability tokens the engine
+checks by **membership only**. The engine never interprets tier names, so a
+plugin is free to name its tiers however it likes; it grants a feature by
+adding the corresponding token.
+
+Tokens the engine reads today:
+
+| Token | Enables |
+|-------|---------|
+| `keyed_actions` | `hmac_hash` and `pseudonym` masking actions |
+
+Grant a token by including it in the returned set:
+
+```python
+from privaci.contracts import LicenseStatus, LicenseValidator
+
+
+class MyValidator(LicenseValidator):
+    def validate(self) -> LicenseStatus:
+        return LicenseStatus(
+            tier="my-plan",
+            is_valid=True,
+            capabilities=frozenset({"keyed_actions"}),
+        )
+```
+
+Community mode returns an empty capability set, so keyed actions are fail-closed
+in the open-source engine. Additional tokens may be defined and enforced
+entirely by your plugin without any engine change.
+
 ## Contract version
 
 `privaci.contracts.CONTRACT_VERSION` is currently `"1.0"`. Query it with

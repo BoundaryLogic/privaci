@@ -30,8 +30,8 @@ class CommunityLicenseValidator(LicenseValidator):
     """Unrestricted community tier — no license check."""
 
     def validate(self) -> LicenseStatus:
-        """Return a valid community license."""
-        return LicenseStatus(tier="community", is_valid=True)
+        """Return a valid community license with no gated capabilities."""
+        return LicenseStatus(tier="community", is_valid=True, capabilities=frozenset())
 
 
 class NoOpUsageMeter(UsageMeter):

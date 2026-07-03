@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from privaci.contracts.base import ColumnContext, RunCompletionEvent
+from privaci.contracts.base import ColumnContext, LicenseStatus, RunCompletionEvent
 from privaci.contracts.fallbacks import (
     CommunityLicenseValidator,
     JsonReportRenderer,
@@ -28,6 +28,16 @@ def test_community_license_is_valid() -> None:
     # Assert
     assert status.is_valid is True
     assert status.tier == "community"
+    assert status.capabilities == frozenset()
+
+
+def test_license_status_capabilities_default_empty() -> None:
+    # Arrange / Act
+    status = LicenseStatus(tier="community", is_valid=True)
+
+    # Assert — additive field defaults to an empty, membership-only set.
+    assert status.capabilities == frozenset()
+    assert "keyed_actions" not in status.capabilities
 
 
 def test_noop_usage_meter_is_silent() -> None:

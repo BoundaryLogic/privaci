@@ -1,4 +1,4 @@
-"""Validation helpers for keyed masking actions (license-gated)."""
+"""Validation helpers for keyed masking actions (capability-gated)."""
 
 from __future__ import annotations
 
@@ -11,8 +11,8 @@ from privaci.errors import LicenseError
 from privaci.secrets.resolver import SecretResolutionError
 
 KEYED_ACTIONS = frozenset({"hmac_hash", "pseudonym"})
-# LicenseValidator.tier values that enable keyed actions (plugin-defined).
-_KEYED_ACTION_LICENSES = frozenset({"growth", "business", "enterprise"})
+# Capability token an installed LicenseValidator must grant to enable keyed actions.
+KEYED_ACTIONS_CAPABILITY = "keyed_actions"
 
 
 def iter_keyed_columns(config: Config) -> Iterator[tuple[str, str]]:
@@ -38,11 +38,16 @@ def pseudonym_key_configured(config: Config) -> bool:
 
 
 def validate_keyed_actions(config: Config) -> None:
-    """Reject keyed actions when license or key configuration is insufficient.
+    """Reject keyed actions when capability or key configuration is insufficient.
+
+    Keyed actions are gated on the ``keyed_actions`` capability token granted by
+    the installed ``LicenseValidator``. The engine checks membership only — it
+    never matches license-tier name strings. Community mode grants no
+    capabilities, so keyed actions stay fail-closed in the open-source engine.
 
     Raises:
-        LicenseError: When the installed license validator rejects keyed actions
-            (exit 5).
+        LicenseError: When the installed validator does not grant the
+            ``keyed_actions`` capability (exit 5).
         SecretResolutionError: When keyed actions lack a key reference (exit 4).
     """
     keyed = [
@@ -52,10 +57,8 @@ def validate_keyed_actions(config: Config) -> None:
     if not keyed:
         return
 
-    license_tier = _normalize_license_tier(
-        load_plugins().license_validator.validate().tier
-    )
-    if license_tier not in _KEYED_ACTION_LICENSES:
+    status = load_plugins().license_validator.validate()
+    if KEYED_ACTIONS_CAPABILITY not in status.capabilities:
         raise LicenseError(
             "Validating keyed masking actions",
             cause=(
@@ -63,9 +66,9 @@ def validate_keyed_actions(config: Config) -> None:
                 "license on: " + ", ".join(sorted(keyed))
             ),
             remediation=(
-                "Install a plugin package whose LicenseValidator enables keyed "
-                "pseudonymisation, or remove these actions from mask-rules.yaml. "
-                "See docs/configuration.md."
+                "Install a plugin package whose LicenseValidator grants the "
+                "'keyed_actions' capability, or remove these actions from "
+                "mask-rules.yaml. See docs/configuration.md."
             ),
         )
 
@@ -82,12 +85,3 @@ def validate_keyed_actions(config: Config) -> None:
                 "(minimum 32 bytes after resolution)."
             ),
         )
-
-
-def _normalize_license_tier(tier: str) -> str:
-    lowered = tier.lower()
-    if lowered == "team":
-        return "growth"
-    if lowered in {"unlimited", "enterprise"}:
-        return "enterprise"
-    return lowered
