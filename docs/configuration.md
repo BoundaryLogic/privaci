@@ -68,7 +68,7 @@ privaci validate --config mask-rules.yaml
 |-----|------|---------|-------------|
 | `version` | string | _required_ | Config schema version. The v1.x engine accepts `"1.0"` only. |
 | `global_salt` | string \| secret URI | _none_ | Salt literal or secret URI; resolved at run time. Never logged. |
-| `pseudonym_key` | string \| secret URI | _none_ | HMAC key for `hmac_hash` / `pseudonym` when licensed. Distinct from `global_salt`. |
+| `pseudonym_key` | string \| secret URI | _none_ | HMAC key for `hmac_hash` / `pseudonym` (required when the `keyed_actions` capability is granted). Distinct from `global_salt`. |
 | `on_existing_data` | enum | `fail` | Target collision policy: `fail`, `truncate`, `drop_create`. `append` is rejected in the MVP. |
 | `strict_autodetect` | bool | `false` | Fail the run when auto-detect finds uncovered PII columns. |
 | `replicate_all_indexes` | bool | `false` | Replicate every source index, not just unique/PK indexes. |
@@ -146,8 +146,8 @@ names and extra keys are rejected with the offending YAML path.
 | `fake` | `provider` | `seed_alias`, `params` | Deterministic synthetic value from a registered provider. Unknown provider names fail validation (exit 3). |
 | `regex_mask` | `pattern`, `replace` | `flags` | `pattern` must compile; unknown `flags` are rejected. |
 | `hash` | — | — | Salted, deterministic hash. |
-| `hmac_hash` | — | `encoding` | Keyed HMAC-SHA256 using `pseudonym_key` (license-gated). |
-| `pseudonym` | `provider` | `seed_alias`, `params` | Keyed deterministic fake (same providers as `fake`; license-gated). |
+| `hmac_hash` | — | `encoding` | Keyed HMAC-SHA256 using `pseudonym_key`. Requires a plugin granting the `keyed_actions` capability; rejected in community mode (exit 5). |
+| `pseudonym` | `provider` | `seed_alias`, `params` | Keyed deterministic fake (same providers as `fake`). Requires the `keyed_actions` capability; rejected in community mode (exit 5). |
 | `passthrough` | — | — | Copy the value unchanged. |
 | `null` | — | — | Write `NULL`. Rejected at pre-flight on `NOT NULL` columns. |
 | `static` | `value` | — | Replace every value with a constant. |

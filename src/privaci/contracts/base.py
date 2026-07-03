@@ -16,12 +16,19 @@ CellPostProcessor = Callable[[str, str, Any], Any]
 
 @dataclass(frozen=True, slots=True)
 class LicenseStatus:
-    """Result of a license validation check."""
+    """Result of a license validation check.
+
+    Attributes:
+        capabilities: Opaque capability tokens granted by the installed
+            ``LicenseValidator``. The engine checks membership only and never
+            interprets tier names. Empty in community mode.
+    """
 
     tier: str
     is_valid: bool
     source_db_limit: int | None = None
     message: str | None = None
+    capabilities: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)
