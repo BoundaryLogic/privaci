@@ -7,16 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- `LicenseStatus` gains an additive `capabilities: frozenset[str]` field. Keyed
-  masking actions (`hmac_hash`, `pseudonym`) are now gated on the `keyed_actions`
-  capability token granted by the installed `LicenseValidator`, instead of
-  matching license-tier name strings. Community mode grants no capabilities, so
-  keyed actions remain fail-closed. Additive and backward compatible — the
-  contract version is unchanged. See `docs/extending-privaci.md`.
-
-## [1.1.0] - 2026-07-02
+## [1.1.0] - 2026-07-03
 
 ### Added
 
@@ -28,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `privaci dry-run` plan output shares the same rendering as `privaci plan`.
+- `LicenseStatus` gains an additive `capabilities: frozenset[str]` field. Keyed
+  masking actions (`hmac_hash`, `pseudonym`) are now gated on the `keyed_actions`
+  capability token granted by the installed `LicenseValidator`, instead of
+  matching license-tier name strings. Community mode grants no capabilities, so
+  keyed actions remain fail-closed. Additive and backward compatible — the
+  contract version is unchanged. See `docs/extending-privaci.md`.
 
 ## [1.0.3] - 2026-07-01
 
