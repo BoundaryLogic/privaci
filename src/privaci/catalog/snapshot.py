@@ -149,7 +149,10 @@ def _warnings_snapshot(catalog: CatalogResult) -> list[dict[str, Any]]:
             "message": warning.message,
             "table_id": warning.table_id,
         }
-        for warning in catalog.warnings
+        for warning in sorted(
+            catalog.warnings,
+            key=lambda item: (item.code, item.table_id, item.message),
+        )
     ]
 
 
@@ -198,6 +201,22 @@ def _snapshot_payload(raw: object) -> dict[str, Any] | None:
     )
 
 
+def _normalize_for_resume_compare(snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Drop volatile planner stats before comparing resume snapshots.
+
+    ``estimated_rows`` comes from ``pg_class.reltuples`` and may change between
+    two introspection passes against an unchanged schema (ANALYZE, autovacuum,
+    or fresh INSERT statistics). Resume must not fail on that alone.
+    """
+    normalized: dict[str, Any] = json.loads(json.dumps(snapshot))
+    tables = normalized.get("tables")
+    if isinstance(tables, dict):
+        for table in tables.values():
+            if isinstance(table, dict):
+                table.pop("estimated_rows", None)
+    return normalized
+
+
 async def validate_resume_schema_snapshot(
     conn: asyncpg.Connection,
     run_id: uuid.UUID,
@@ -215,7 +234,7 @@ async def validate_resume_schema_snapshot(
     if stored is None:
         return
     current = json.loads(canonical_snapshot_json(catalog))
-    if stored == current:
+    if _normalize_for_resume_compare(stored) == _normalize_for_resume_compare(current):
         return
     raise PreflightError(
         "Validating resume prerequisites",

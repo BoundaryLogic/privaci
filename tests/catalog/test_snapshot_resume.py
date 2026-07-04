@@ -47,6 +47,34 @@ async def test_validate_resume_schema_snapshot_accepts_matching_catalog() -> Non
 
 
 @pytest.mark.asyncio
+async def test_validate_resume_schema_snapshot_ignores_estimated_rows_drift() -> None:
+    # Arrange — reltuples can move between run start and resume preflight.
+    sparse = TableInfo(
+        "public",
+        "users",
+        (ColumnInfo("id", "integer", True),),
+        estimated_rows=-1.0,
+    )
+    dense = TableInfo(
+        "public",
+        "users",
+        (ColumnInfo("id", "integer", True),),
+        estimated_rows=10_000.0,
+    )
+    conn = AsyncMock()
+    conn.fetchrow = AsyncMock(
+        return_value={
+            "source_schema_snapshot": json.loads(
+                canonical_snapshot_json(_catalog(sparse))
+            ),
+        }
+    )
+
+    # Act / Assert
+    await validate_resume_schema_snapshot(conn, uuid.uuid4(), _catalog(dense))
+
+
+@pytest.mark.asyncio
 async def test_validate_resume_schema_snapshot_rejects_drift() -> None:
     # Arrange
     users = TableInfo("public", "users", (ColumnInfo("id", "integer", True),))
