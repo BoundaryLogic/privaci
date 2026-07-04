@@ -19,6 +19,8 @@ from pathlib import Path
 _ENGINE_ROOT = Path(__file__).resolve().parents[1]
 _OUTPUT_DIR = _ENGINE_ROOT / "docs" / "commercial"
 _MANIFEST_NAME = "docs/publishable.txt"
+_QUICK_LAUNCH_REL = Path("infra/marketplace-quick-launch/quick-launch.yaml")
+_QUICK_LAUNCH_URL = "https://docs.boundarylogic.io/commercial/assets/quick-launch.yaml"
 
 _GITHUB_ENGINE_BLOB = re.compile(
     r"https://github\.com/BoundaryLogic/privaci/blob/main/docs/([^)\s#]+)([#][^)\s]*)?"
@@ -161,6 +163,18 @@ def _sync_file(source: Path, dest: Path) -> None:
     dest.write_text(rewritten, encoding="utf-8")
 
 
+def _sync_quick_launch_template(commercial_root: Path) -> Path:
+    """Copy the Marketplace quick-launch CloudFormation template as a static asset."""
+    source = commercial_root / _QUICK_LAUNCH_REL
+    if not source.is_file():
+        msg = f"Quick launch template not found: {source}"
+        raise FileNotFoundError(msg)
+    dest = _OUTPUT_DIR / "assets" / source.name
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(source.read_bytes())
+    return dest
+
+
 def _write_index(dest_dir: Path, synced: list[str]) -> None:
     lines = [
         "---",
@@ -191,8 +205,8 @@ def _write_index(dest_dir: Path, synced: list[str]) -> None:
     (dest_dir / "index.md").write_text("\n".join(lines), encoding="utf-8")
 
 
-def sync_commercial_docs(*, commercial_root: Path) -> list[str]:
-    """Copy publishable commercial docs; return basenames written."""
+def sync_commercial_docs(*, commercial_root: Path) -> tuple[list[str], Path]:
+    """Copy publishable commercial docs and quick-launch CFN; return doc basenames."""
     sources = _load_manifest(commercial_root)
     synced: list[str] = []
     for source in sources:
@@ -200,7 +214,8 @@ def sync_commercial_docs(*, commercial_root: Path) -> list[str]:
         _sync_file(source, _OUTPUT_DIR / basename)
         synced.append(basename)
     _write_index(_OUTPUT_DIR, synced)
-    return synced
+    quick_launch = _sync_quick_launch_template(commercial_root)
+    return synced, quick_launch
 
 
 def main() -> int:
@@ -217,13 +232,15 @@ def main() -> int:
         print(f"ERROR: not a directory: {commercial_root}", file=sys.stderr)
         return 1
     try:
-        synced = sync_commercial_docs(commercial_root=commercial_root)
+        synced, quick_launch = sync_commercial_docs(commercial_root=commercial_root)
     except (FileNotFoundError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
     print(f"Synced {len(synced)} files to {_OUTPUT_DIR.relative_to(_ENGINE_ROOT)}/")
     for name in synced:
         print(f"  - {name}")
+    rel_asset = quick_launch.relative_to(_ENGINE_ROOT)
+    print(f"Synced quick-launch template to {rel_asset} ({_QUICK_LAUNCH_URL})")
     return 0
 
 

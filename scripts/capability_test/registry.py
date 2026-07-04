@@ -195,6 +195,20 @@ CAPABILITIES: dict[str, Capability] = {
         metrics_scope="demo-corp",
         tags=frozenset({"integration", "public", "masking"}),
     ),
+    "public-docs-sync": Capability(
+        id="public-docs-sync",
+        label="Docs build sync",
+        description=(
+            "MkDocs reference generation and publishable operator-doc sync "
+            "including quick-launch CloudFormation asset."
+        ),
+        repo="public",
+        test_paths=(
+            "tests/docs/test_generate_docs.py",
+            "tests/scripts/test_sync_commercial_docs.py",
+        ),
+        tags=frozenset({"unit", "docs", "public"}),
+    ),
     # --- Commercial (unit) ---
     "commercial-subset-closure": Capability(
         id="commercial-subset-closure",
