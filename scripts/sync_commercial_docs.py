@@ -71,7 +71,7 @@ _PAGE_META: dict[str, tuple[str, str]] = {
 _DEV_LICENSE_LINE = re.compile(r"^.*PRIVACI_COMMERCIAL_DEV_LICENSE.*\n?", re.MULTILINE)
 
 _INTERNAL_LINK = re.compile(
-    r"\[([^\]]+)\]\((?:\.\./)?(?:adr|spikes|strategy|openspec|runbooks)/[^)]+\)"
+    r"\[([^\]]+)\]\((?:\.\./)?(?:adr|spikes|strategy|openspec|runbooks|marketplace)/[^)]+\)"
 )
 _ENV_EXAMPLE_LINK = re.compile(
     r"\[`?\.env\.example`?\]\(\.\./\.env\.example\)",
