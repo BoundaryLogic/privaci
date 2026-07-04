@@ -11,6 +11,26 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+# Pin to Python 3.12 (matches CI and the pinned spacy==3.8.7, which has no
+# cp313/cp314 wheel). The machine default may be newer, so prefer an activated
+# venv, then the repo .venv, and fail early with clear guidance otherwise.
+select_python_312() {
+  if [[ -z "${VIRTUAL_ENV:-}" && -f .venv/bin/activate ]]; then
+    # shellcheck disable=SC1091
+    source .venv/bin/activate
+  fi
+  local ver
+  ver="$(python -c 'import sys; print(f"{sys.version_info[0]}.{sys.version_info[1]}")' 2>/dev/null || echo none)"
+  if [[ "$ver" != "3.12" ]]; then
+    echo "ci-local: requires Python 3.12 (CI pins 3.12; spacy==3.8.7 has no 3.13/3.14 wheel)." >&2
+    echo "  Found: ${ver} at $(command -v python 2>/dev/null || echo 'no python')." >&2
+    echo "  Create one: python3.12 -m venv .venv && source .venv/bin/activate && pip install -e '.[dev]'" >&2
+    exit 1
+  fi
+  echo "ci-local: using $(python --version) ($(command -v python))"
+}
+select_python_312
+
 RUN_INTEGRATION=0
 RUN_DOCS=0
 RUN_HELM=0

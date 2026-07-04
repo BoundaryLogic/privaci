@@ -258,11 +258,14 @@ CAPABILITIES: dict[str, Capability] = {
     "commercial-license": Capability(
         id="commercial-license",
         label="License & entitlement (unit)",
-        description="JWT validation, dev license bypass, tier normalization.",
+        description=(
+            "License Manager checkout, offline JWT validation, dev license "
+            "bypass, tier normalization."
+        ),
         repo="commercial",
         test_paths=(
             "tests/test_license_jwt.py",
-            "tests/test_entitlement.py",
+            "tests/test_license_manager.py",
         ),
         tags=frozenset({"unit", "license", "commercial"}),
     ),
