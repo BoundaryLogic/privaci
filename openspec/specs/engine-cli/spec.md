@@ -22,6 +22,10 @@ The CLI SHALL provide the following subcommands:
 - `resume` — resume an in-progress run from its checkpoints.
 - `report` — render a compliance report from a completed run (commercial).
 
+Output destination flags (`report --output`, `dry-run --report`, commercial
+`preview --policy-diff`, `preview --sarif`) SHALL accept local paths,
+`file://`, and cloud URIs when an `ObjectWriter` plugin supports them.
+
 #### Scenario: Default subcommand
 
 - **WHEN** the user runs `privaci` with no subcommand and a valid env
@@ -36,6 +40,17 @@ The CLI SHALL provide the following subcommands:
 
 - **WHEN** the user runs `privaci --help` or `privaci <subcommand> --help`
 - **THEN** the engine SHALL print help and exit with code `0`.
+
+#### Scenario: Report to object URI
+
+- **WHEN** the user runs `privaci report --run <uuid> --output s3://bucket/key.json`
+  with commercial installed and valid AWS credentials
+- **THEN** the engine SHALL upload the report and exit `0`.
+
+#### Scenario: Dry-run report to local path
+
+- **WHEN** the user runs `privaci dry-run --report ./detection.md`
+- **THEN** the engine SHALL write the markdown report locally as before.
 
 ### Requirement: Exit codes
 
