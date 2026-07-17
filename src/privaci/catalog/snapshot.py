@@ -96,6 +96,7 @@ def catalog_to_snapshot_dict(catalog: CatalogResult) -> dict[str, Any]:
     return {
         "tables": ordered_tables,
         "views": _views_snapshot(catalog),
+        "functions": _functions_snapshot(catalog),
         "skipped_objects": _skipped_objects_snapshot(catalog),
         "load_plan": _load_plan_snapshot(catalog),
         "warnings": _warnings_snapshot(catalog),
@@ -105,11 +106,30 @@ def catalog_to_snapshot_dict(catalog: CatalogResult) -> dict[str, Any]:
 def _views_snapshot(catalog: CatalogResult) -> list[dict[str, Any]]:
     return [
         {
+            "definition": view.definition,
+            "depends_on": list(view.depends_on),
+            "is_elevated": view.is_elevated,
             "kind": view.kind,
             "schema_name": view.schema_name,
             "view_name": view.view_name,
         }
         for view in sorted(catalog.views, key=lambda item: item.identifier)
+    ]
+
+
+def _functions_snapshot(catalog: CatalogResult) -> list[dict[str, Any]]:
+    return [
+        {
+            "create_sql": function.create_sql,
+            "depends_on_functions": list(function.depends_on_functions),
+            "depends_on_tables": list(function.depends_on_tables),
+            "function_name": function.function_name,
+            "identity_args": function.identity_args,
+            "is_elevated": function.is_elevated,
+            "language": function.language,
+            "schema_name": function.schema_name,
+        }
+        for function in sorted(catalog.functions, key=lambda item: item.identifier)
     ]
 
 

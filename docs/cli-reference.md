@@ -56,7 +56,9 @@ All lifecycle output is emitted as JSON-lines on stdout; see
 
 Introspect the source database and write a starter `mask-rules.yaml`. High-
 confidence auto-detect findings become explicit column actions; tables without
-a primary key default to `exclude`. Never connects to the target.
+a primary key default to `exclude`. Never connects to the target. Elevated
+views/functions are listed under **ACTION REQUIRED** with an empty
+`elevated_objects: {}` scaffold — never auto-approved.
 
 | Option | Env var | Default | Description |
 |--------|---------|---------|-------------|

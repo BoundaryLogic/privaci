@@ -51,7 +51,10 @@ def execute_init(
             encoding="utf-8",
         )
         _echo_init_summary(
-            output, len(scaffold.config.tables), scaffold.review_findings
+            output,
+            len(scaffold.config.tables),
+            scaffold.review_findings,
+            scaffold.unresolved_elevated,
         )
 
     run_with_signal_handlers(_run)
@@ -61,8 +64,17 @@ def _echo_init_summary(
     output: Path,
     table_count: int,
     review_findings: tuple[DetectionFinding, ...],
+    unresolved_elevated: tuple[str, ...],
 ) -> None:
     typer.echo(f"Wrote starter config to {output} ({table_count} table(s))")
+    if unresolved_elevated:
+        typer.echo("ACTION REQUIRED: set elevated_objects dispositions for:")
+        for identifier in unresolved_elevated:
+            typer.echo(f"  - {identifier}")
+        typer.echo(
+            "Use replicate or skip for each entry before privaci run "
+            "(see docs/configuration.md#elevated-objects)."
+        )
     if review_findings:
         typer.echo(
             f"Review {len(review_findings)} uncertain column(s) "

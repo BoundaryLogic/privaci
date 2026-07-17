@@ -26,6 +26,7 @@ DEFAULT_BATCH_SIZE = 10_000
 OnExistingData = Literal["fail", "truncate", "drop_create", "append"]
 SchemaMode = Literal["replicate", "assume_existing"]
 PassthroughCopy = Literal["auto", "require_binary", "batch"]
+ElevatedDisposition = Literal["replicate", "skip"]
 TableStrategy = Literal["transform", "exclude", "empty", "truncate"]
 
 # ``SecretStr`` is a plain dataclass, so without this override pydantic emits the
@@ -97,6 +98,12 @@ class Config(BaseModel):
         passthrough_copy: Whole-table binary COPY policy for unmasked tables.
             ``auto`` prefers binary when column order matches; ``require_binary``
             fails preflight when ineligible; ``batch`` always uses the named path.
+        replicate_views: When true (default), replicate non-elevated plain views
+            in ``schema_mode: replicate``.
+        replicate_functions: When true (default), replicate non-elevated
+            functions/procedures in ``schema_mode: replicate``.
+        elevated_objects: Explicit ``replicate`` or ``skip`` dispositions for
+            elevated views/functions. Unresolved elevated objects fail preflight.
         strict_autodetect: Fail the run when auto-detect finds uncovered PII.
         replicate_all_indexes: Replicate every source index, not just unique
             and primary-key indexes.
@@ -116,6 +123,9 @@ class Config(BaseModel):
     on_existing_data: OnExistingData = "fail"
     schema_mode: SchemaMode = "replicate"
     passthrough_copy: PassthroughCopy = "auto"
+    replicate_views: bool = True
+    replicate_functions: bool = True
+    elevated_objects: dict[str, ElevatedDisposition] = Field(default_factory=dict)
     strict_autodetect: bool = False
     replicate_all_indexes: bool = False
     batch_size: int = DEFAULT_BATCH_SIZE

@@ -49,6 +49,10 @@ def _write_resume_config(path: Path, *, batch_size: int = 10) -> None:
         "version": "1.0",
         "auto_detect": False,
         "batch_size": batch_size,
+        # Resume fixtures share a source DB that may already hold Demo Corp
+        # elevated objects; this test is about checkpoint resume, not DDL tiers.
+        "replicate_views": False,
+        "replicate_functions": False,
         "tables": {
             _RESUME_TABLE: {
                 "columns": {"email": {"action": "fake", "provider": "email"}},

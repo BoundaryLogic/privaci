@@ -31,6 +31,11 @@ from privaci.schema.assume_existing import (
     validation_failed_payload,
     validation_ok_payload,
 )
+from privaci.schema.elevated import (
+    validate_elevated_dispositions,
+    validate_function_excluded_deps,
+)
+from privaci.schema.objects import ReplicatedObject
 from privaci.state import (
     AuditWriter,
     RunIdentity,
@@ -107,12 +112,17 @@ async def initialize_fresh_run(
         source_db_hash=source_db_hash(source_dsn),
     )
     audit = AuditWriter(run_id, enabled=audit_enabled)
-    previous_snapshot = await _replicate_and_emit_start(
+    previous_snapshot, created = await _replicate_and_emit_start(
         target, catalog, config, run_id, identity, audit
     )
     emit_catalog_warning_events(catalog)
     await _audit_catalog_objects(
-        target, audit, catalog, previous_snapshot, config=config
+        target,
+        audit,
+        catalog,
+        previous_snapshot,
+        config=config,
+        created=created,
     )
     await persist_source_schema_snapshot(target, run_id, catalog)
     return audit
@@ -125,7 +135,7 @@ async def _replicate_and_emit_start(
     run_id: uuid.UUID,
     identity: RunIdentity,
     audit: AuditWriter,
-) -> dict[str, object] | None:
+) -> tuple[dict[str, object] | None, tuple[ReplicatedObject, ...]]:
     emit(
         Event.RUN_START,
         run_id=run_id,
@@ -142,15 +152,17 @@ async def _replicate_and_emit_start(
     )
     if config.schema_mode == "assume_existing":
         await _prepare_assume_existing(target, audit, catalog, config)
-        return previous_snapshot
-    await replicate_schema(target, catalog, config)
+        return previous_snapshot, ()
+    validate_elevated_dispositions(catalog, config)
+    validate_function_excluded_deps(catalog, config)
+    created = await replicate_schema(target, catalog, config)
     emit(
         Event.SCHEMA_CLONED,
         run_id=run_id,
         tables_created=streamable_table_count(catalog, config),
         schemas_created=len({t.schema_name for t in catalog.tables.values()}),
     )
-    return previous_snapshot
+    return previous_snapshot, created
 
 
 async def _prepare_assume_existing(
@@ -206,6 +218,7 @@ async def _audit_catalog_objects(
     previous_snapshot: dict[str, object] | None,
     *,
     config: Config,
+    created: tuple[ReplicatedObject, ...] = (),
 ) -> None:
     if config.schema_mode == "assume_existing":
         return
@@ -223,17 +236,41 @@ async def _audit_catalog_objects(
             table_name=child.table_name,
             reason="new_partition",
         )
-    for schema_name, table_name, payload in iter_skipped_object_audits(catalog):
+    for obj in created:
+        payload: dict[str, object] = {
+            "kind": obj.kind,
+            "depends_on": list(obj.depends_on),
+        }
+        if obj.is_elevated:
+            payload["elevated"] = True
+        await audit.write(
+            target,
+            EventType.CREATED_OBJECT,
+            schema_name=obj.schema_name,
+            table_name=obj.object_name,
+            payload=payload,
+        )
+        emit(
+            Event.CREATED_OBJECT,
+            schema_name=obj.schema_name,
+            object_name=obj.object_name,
+            kind=obj.kind,
+            elevated=obj.is_elevated,
+        )
+    for schema_name, table_name, skip_payload in iter_skipped_object_audits(
+        catalog, config
+    ):
         await audit.write(
             target,
             EventType.SKIPPED_OBJECT,
             schema_name=schema_name,
             table_name=table_name,
-            payload=payload,
+            payload=skip_payload,
         )
         emit(
             Event.SKIPPED_OBJECT,
             schema_name=schema_name,
             object_name=table_name,
-            kind=payload.get("kind"),
+            kind=skip_payload.get("kind"),
+            reason=skip_payload.get("reason"),
         )

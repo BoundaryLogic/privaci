@@ -12,6 +12,7 @@ from privaci.catalog.partitions import is_partition_child
 from privaci.config.actions import ColumnAction
 from privaci.config.loader import SUPPORTED_VERSION
 from privaci.config.models import Config, TableConfig
+from privaci.schema.elevated import elevated_objects_in_scope
 from privaci.secrets.types import SecretStr
 
 
@@ -22,6 +23,7 @@ class ScaffoldResult:
     config: Config
     detection: DetectionResult
     review_findings: tuple[DetectionFinding, ...]
+    unresolved_elevated: tuple[str, ...] = ()
 
 
 def build_scaffold_config(
@@ -47,6 +49,7 @@ def build_scaffold_config(
         on_existing_data="fail",
         auto_detect=True,
         strict_autodetect=False,
+        elevated_objects={},
     )
     baseline = scan_catalog(catalog, skeleton)
     tables = _tables_from_catalog(catalog, baseline, schema_filter=schema_filter)
@@ -57,7 +60,15 @@ def build_scaffold_config(
         for finding in detection.findings
         if finding.confidence == "medium" and finding.matched_pattern is not None
     )
-    return ScaffoldResult(config=config, detection=detection, review_findings=review)
+    unresolved = tuple(
+        identifier for identifier, _kind in elevated_objects_in_scope(catalog, config)
+    )
+    return ScaffoldResult(
+        config=config,
+        detection=detection,
+        review_findings=review,
+        unresolved_elevated=unresolved,
+    )
 
 
 def _tables_from_catalog(

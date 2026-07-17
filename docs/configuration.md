@@ -72,6 +72,9 @@ privaci validate --config mask-rules.yaml
 | `on_existing_data` | enum | `fail` | Target collision policy: `fail`, `truncate`, `drop_create`. Under `assume_existing`, `fail` allows empty prebuilt tables but refuses rows; see [assume_existing](#schema_mode-assume_existing). `append` is rejected in the MVP. |
 | `schema_mode` | enum | `replicate` | Who owns target DDL: `replicate` (engine clones schema) or `assume_existing` (validate prebuilt target, then load). |
 | `passthrough_copy` | enum | `auto` | Binary COPY for unmasked tables: `auto` (binary when column order matches, else named batch), `require_binary` (fail if ineligible), `batch` (always named batch). |
+| `replicate_views` | bool | `true` | Replicate non-elevated plain views in `replicate` mode. |
+| `replicate_functions` | bool | `true` | Replicate non-elevated functions/procedures in `replicate` mode. |
+| `elevated_objects` | map | `{}` | Explicit `replicate` or `skip` for elevated views/functions. Unresolved elevated objects fail preflight. |
 | `strict_autodetect` | bool | `false` | Fail the run when auto-detect finds uncovered PII columns. |
 | `replicate_all_indexes` | bool | `false` | Replicate every source index, not just unique/PK indexes. |
 | `batch_size` | int | `10000` | Default streaming batch size in rows (must be ≥ 1). |
@@ -140,12 +143,45 @@ also compares constraint names. PrivaCI does not silently replace a same-name
 index or constraint whose definition differs. Use schema drift review or
 remove/rename the conflicting target object before retrying.
 
-### Objects not replicated
+### Object replication (views and functions)
 
-Views, materialized views, triggers, rules, and logical-replication publications
-are never copied to the target. Each skipped object is recorded in
-`_privaci.audit_log` as `skipped_object` with a `kind` payload (`view`,
-`materialized_view`, `trigger`, `rule`, or `publication`).
+In `schema_mode: replicate` (defaults):
+
+- **Functions/procedures** then **plain views** are created in dependency order
+  (`replicate_functions` / `replicate_views`, both default `true`).
+- **Elevated** objects require an explicit disposition (see below).
+- **Materialized views**, triggers, rules, and publications remain skipped
+  (matview shells ship in a later phase).
+
+Each created view/function is recorded as `created_object`. Skipped objects use
+`skipped_object` with a `kind` (and `reason` when applicable).
+
+### Elevated objects
+
+An object is **elevated** when it is a `SECURITY DEFINER` function/procedure, or
+a view that does **not** use invoker rights (`security_invoker`). Elevated
+objects are deny-by-default:
+
+```yaml
+elevated_objects:
+  clinical.admin_v: skip
+  reporting.privileged_fn(bigint): replicate
+```
+
+- `replicate` — create on the target; audit `created_object` with `elevated: true`.
+- `skip` — do not create; audit `skipped_object` with
+  `reason: elevated_object_skipped`.
+- Missing entry → preflight exit **2** naming the object.
+
+`privaci init` scaffolds `elevated_objects: {}` and prints **ACTION REQUIRED**
+listing unresolved elevated objects. `privaci plan` prints the same reminder.
+
+### Objects still not replicated
+
+Materialized views (until opt-in definition-only), triggers, rules, and
+logical-replication publications are never copied. Each is recorded as
+`skipped_object` (`kind`: `materialized_view`, `trigger`, `rule`, or
+`publication`).
 
 ### `schema_mode: assume_existing`
 

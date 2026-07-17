@@ -18,7 +18,8 @@ CREATE TABLE public.users (
 CREATE TABLE public.orders (
     id bigint PRIMARY KEY,
     user_id bigint NOT NULL REFERENCES public.users (id),
-    amount_cents integer NOT NULL
+    amount_cents integer NOT NULL,
+    meta jsonb NOT NULL DEFAULT '{}'::jsonb
 );
 
 ANALYZE public.organizations;

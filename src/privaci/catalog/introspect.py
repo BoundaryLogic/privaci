@@ -21,6 +21,7 @@ from privaci.catalog.models import (
     CheckConstraintInfo,
     ColumnInfo,
     ForeignKeyInfo,
+    FunctionInfo,
     IndexInfo,
     SkippedObjectInfo,
     TableInfo,
@@ -34,11 +35,11 @@ from privaci.catalog.queries import (
     COLUMNS_SQL,
     CONSTRAINTS_SQL,
     INDEXES_SQL,
-    MATVIEWS_SQL,
     TABLES_SQL,
-    VIEWS_SQL,
 )
+from privaci.catalog.routines import fetch_functions
 from privaci.catalog.skipped import fetch_skipped_objects
+from privaci.catalog.views_meta import fetch_views
 from privaci.errors import CatalogError
 
 logger = logging.getLogger(__name__)
@@ -65,7 +66,7 @@ async def introspect_catalog(
         CatalogError: When catalog access fails (exit code 2).
     """
     try:
-        tables, views, skipped_objects, partition_warnings = (
+        tables, views, functions, skipped_objects, partition_warnings = (
             await _introspect_in_transaction(conn)
         )
     except asyncpg.PostgresError as exc:
@@ -83,6 +84,7 @@ async def introspect_catalog(
         load_plan=load_plan,
         warnings=warnings,
         views=views,
+        functions=functions,
         skipped_objects=skipped_objects,
     )
 
@@ -110,6 +112,7 @@ async def _introspect_in_transaction(
 ) -> tuple[
     dict[str, TableInfo],
     tuple[ViewInfo, ...],
+    tuple[FunctionInfo, ...],
     tuple[SkippedObjectInfo, ...],
     tuple[CatalogWarning, ...],
 ]:
@@ -122,9 +125,10 @@ async def _introspect_in_transaction(
         await _attach_constraints(conn, tables, column_lookup)
         await _attach_indexes(conn, tables, column_lookup)
         partition_warnings = await attach_partition_metadata(conn, tables)
-        views = await _fetch_views(conn)
+        views = await fetch_views(conn)
+        functions = await fetch_functions(conn)
         skipped_objects = await fetch_skipped_objects(conn)
-    return tables, views, skipped_objects, partition_warnings
+        return tables, views, functions, skipped_objects, partition_warnings
 
 
 async def _fetch_tables(conn: asyncpg.Connection) -> dict[str, TableInfo]:
@@ -328,28 +332,6 @@ async def _attach_indexes(
             columns=columns,
         )
         tables[identifier] = replace(table, indexes=table.indexes + (index,))
-
-
-async def _fetch_views(conn: asyncpg.Connection) -> tuple[ViewInfo, ...]:
-    """Return plain and materialized views in user schemas."""
-    views: list[ViewInfo] = []
-    for row in await conn.fetch(VIEWS_SQL):
-        views.append(
-            ViewInfo(
-                schema_name=row["schema_name"],
-                view_name=row["view_name"],
-                kind="view",
-            )
-        )
-    for row in await conn.fetch(MATVIEWS_SQL):
-        views.append(
-            ViewInfo(
-                schema_name=row["schema_name"],
-                view_name=row["view_name"],
-                kind="materialized_view",
-            )
-        )
-    return tuple(sorted(views, key=lambda view: view.identifier))
 
 
 def _never_analyzed_warnings(

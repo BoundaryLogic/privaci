@@ -4,6 +4,12 @@ on_existing_data: fail
 strict_autodetect: false
 batch_size: 500
 
+# Demo Corp ships one elevated view + one SECURITY DEFINER function.
+# Keys must match catalog identifiers (pg_get_function_identity_arguments).
+elevated_objects:
+  public.elevated_orgs_v: skip
+  public.elevated_org_name(org_id bigint): skip
+
 tables:
   public.organizations:
     strategy: transform

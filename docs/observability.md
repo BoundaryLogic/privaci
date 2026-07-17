@@ -58,20 +58,23 @@ log lines are rendered as `{"event": "log", "message": "...", ...}`.
 | `cycle_break` | info | `tables`, `deferred_constraint` |
 | `polymorphic_fk_warning` | warning | `table_id`, `message` |
 | `implied_fk_warning` | warning | `source_column_path`, `message` |
-| `skipped_object` | info | `schema_name`, `object_name`, `kind` |
+| `skipped_object` | info | `schema_name`, `object_name`, `kind`, `reason` (optional) |
+| `created_object` | info | `schema_name`, `object_name`, `kind`, `elevated` |
 | `new_table` | info | `schema_name`, `table_name`, `reason` |
 | `binary_fallback` | warning | `schema_name`, `table_name`, `unsupported_types` |
 | `warning` | warning | `message` |
 | `error` | error | `message`, `exit_code` |
 | `run.end` | info | `status`, `duration_ms`, `tables_processed`, `rows_processed`, `errors` |
 
-Durable `_privaci.audit_log` event types for assume-existing validation (in
-addition to stdout `preflight.ok` / `preflight.fail`):
+Durable `_privaci.audit_log` event types for schema validation and object
+disposition (in addition to stdout `preflight.ok` / `preflight.fail`):
 
 | Audit `event_type` | When |
 |--------------------|------|
 | `schema.validated` | `schema_mode: assume_existing` validation succeeded |
 | `schema.validation_failed` | Validation refused the load (before exit 2) |
+| `created_object` | View or function DDL replicated to the target |
+| `skipped_object` | Object intentionally not replicated (`kind` / `reason`) |
 
 ### `table.progress` throttling
 

@@ -15,6 +15,7 @@ from privaci.config.models import Config, TableConfig
 from privaci.observability import configure_logging
 from privaci.pipeline import run_masking_pipeline
 from tests.fixtures.constants import TEST_SALT
+from tests.integration.catalog_config import skip_elevated_objects
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -36,7 +37,13 @@ async def _minimal_config(source_dsn: str) -> Config:
     tables["public.users"] = TableConfig(
         columns={"email": FakeAction(action="fake", provider="email")},
     )
-    return Config(version="1.0", auto_detect=False, batch_size=500, tables=tables)
+    return Config(
+        version="1.0",
+        auto_detect=False,
+        batch_size=500,
+        tables=tables,
+        elevated_objects=skip_elevated_objects(catalog),
+    )
 
 
 async def test_run_emits_parseable_lifecycle_events(

@@ -12,6 +12,7 @@ from privaci.catalog.identifiers import quote_pg_identifier
 from privaci.config.actions import FakeAction
 from privaci.config.models import Config, TableConfig
 from privaci.pipeline import run_masking_pipeline
+from tests.integration.catalog_config import skip_elevated_objects
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -43,7 +44,12 @@ async def _minimal_demo_config() -> Config:
     tables["public.users"] = TableConfig(
         columns={"email": FakeAction(action="fake", provider="email")},
     )
-    return Config(version="1.0", batch_size=500, tables=tables)
+    return Config(
+        version="1.0",
+        batch_size=500,
+        tables=tables,
+        elevated_objects=skip_elevated_objects(catalog),
+    )
 
 
 async def _reset_target() -> None:

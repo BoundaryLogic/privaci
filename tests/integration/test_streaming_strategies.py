@@ -14,6 +14,7 @@ from privaci.pipeline import run_masking_pipeline
 from privaci.state.resume import load_checkpoints
 from tests.fixtures.constants import TEST_SALT
 from tests.integration.assertions import count_rows
+from tests.integration.catalog_config import skip_elevated_objects
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -75,7 +76,13 @@ async def _spike_passthrough_config(source_dsn: str) -> Config:
         if table_id != _SPIKE_TABLE
     }
     tables[_SPIKE_TABLE] = TableConfig()
-    return Config(version="1.0", auto_detect=False, batch_size=500, tables=tables)
+    return Config(
+        version="1.0",
+        auto_detect=False,
+        batch_size=500,
+        tables=tables,
+        elevated_objects=skip_elevated_objects(catalog),
+    )
 
 
 async def _spike_cycle_config(source_dsn: str) -> Config:
@@ -87,7 +94,12 @@ async def _spike_cycle_config(source_dsn: str) -> Config:
     tables = {table_id: TableConfig(strategy="exclude") for table_id in catalog.tables}
     tables["public.spike_cycle_a"] = TableConfig()
     tables["public.spike_cycle_b"] = TableConfig()
-    return Config(version="1.0", auto_detect=False, tables=tables)
+    return Config(
+        version="1.0",
+        auto_detect=False,
+        tables=tables,
+        elevated_objects=skip_elevated_objects(catalog),
+    )
 
 
 async def test_passthrough_binary_copy_preserves_spike_table(

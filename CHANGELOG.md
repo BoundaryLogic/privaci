@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `run_masking_pipeline` now enforces elevated-object dispositions and function
+  excluded-dependency checks before replicate DDL (previously CLI preflight only).
 - Pre-push integration gate now runs the same single-session
   `pytest -m "integration and not slow"` command as GitHub (via
   `ci-local.sh --integration`), instead of the per-file capability suite that
@@ -20,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Likelihood-ranked schema_mode capability matrix
+  (`scripts/capability_test/matrix.py`, suite `schema-modes-matrix`) with public
+  P1–P2 integration cells covering elevated dispositions, view/function flags,
+  passthrough_copy, partitions/streaming × `assume_existing`, and keyed hmac.
+- View and function replication in `schema_mode: replicate` (`replicate_views` /
+  `replicate_functions`, default on), with deny-by-default `elevated_objects`
+  dispositions and `created_object` audit events.
 - `schema_mode: assume_existing` — validate a prebuilt target schema (name + type)
   and load without DDL replication; emits durable `schema.validated` /
   `schema.validation_failed` audit events.
