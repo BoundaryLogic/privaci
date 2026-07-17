@@ -143,7 +143,6 @@ async def _replicate_and_emit_start(
     if config.schema_mode == "assume_existing":
         await _prepare_assume_existing(target, audit, catalog, config)
         return previous_snapshot
-    await ensure_target_ready(target, config, catalog)
     await replicate_schema(target, catalog, config)
     emit(
         Event.SCHEMA_CLONED,

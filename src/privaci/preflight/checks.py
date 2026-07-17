@@ -15,6 +15,7 @@ from privaci.errors import CatalogError, ConfigError, PreflightError
 from privaci.preflight.passthrough_copy import verify_passthrough_copy_policy
 from privaci.preflight.target import (
     collision_warning_for_dry_run,
+    ensure_target_ready,
     validate_target_policy,
 )
 from privaci.schema.assume_existing import (
@@ -154,7 +155,7 @@ async def run_target_checks(
     for_resume: bool = False,
     detection: DetectionResult | None = None,
 ) -> list[str]:
-    """Verify target permissions and non-mutating target policy."""
+    """Verify target permissions and prepare greenfield replication targets."""
     await verify_target_writable(conn)
     warnings = warn_disk_capacity(catalog)
     if for_resume:
@@ -169,7 +170,10 @@ async def run_target_checks(
             )
         warnings.extend(await _dry_run_target_warnings(conn, config, catalog))
         return warnings
-    await validate_target_policy(conn, config, catalog)
+    if config.schema_mode == "assume_existing":
+        await validate_target_policy(conn, config, catalog)
+        return warnings
+    await ensure_target_ready(conn, config, catalog)
     return warnings
 
 

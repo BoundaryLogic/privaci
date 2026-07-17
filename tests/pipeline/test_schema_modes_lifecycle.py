@@ -159,11 +159,11 @@ async def test_assume_existing_does_not_emit_schema_cloned(
 
 
 @pytest.mark.asyncio
-async def test_replicate_prepares_target_before_schema_replication(
+async def test_replicate_lifecycle_only_replicates_schema(
     mocker: pytest.MockFixture,
 ) -> None:
     # Arrange
-    config = Config(version=SUPPORTED_VERSION, on_existing_data="truncate")
+    config = Config(version=SUPPORTED_VERSION)
     ensure_ready = mocker.patch(
         "privaci.pipeline.lifecycle.ensure_target_ready",
         new_callable=AsyncMock,
@@ -195,5 +195,5 @@ async def test_replicate_prepares_target_before_schema_replication(
     )
 
     # Assert
-    ensure_ready.assert_awaited_once_with(target, config, catalog)
+    ensure_ready.assert_not_awaited()
     replicate_schema.assert_awaited_once_with(target, catalog, config)
