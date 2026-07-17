@@ -1,0 +1,35 @@
+---
+description: Require public integration before pushing high-risk engine changes
+alwaysApply: true
+---
+
+# Integration Before Push
+
+Before pushing changes that touch any of these paths, run a Postgres-backed
+public integration gate, not just `ci-local.sh` or capability `quick`:
+
+- `src/privaci/cli/`
+- `src/privaci/config/`
+- `src/privaci/pipeline/`
+- `src/privaci/preflight/`
+- `src/privaci/schema/`
+- `src/privaci/stream/`
+- `tests/integration/`
+- related `tests/{pipeline,preflight,schema,stream}/`
+- `scripts/capability_test/`
+
+Use:
+
+```bash
+./scripts/capability-test-suite.sh public --allow-heavy
+```
+
+or, for a narrower explicitly-justified check:
+
+```bash
+AGENT_ALLOW_INTEGRATION=1 ./scripts/agent-safe-test.sh tests/integration/<file>.py -m integration
+```
+
+The pre-push hook `scripts/capability-test-prepush.sh` enforces the public
+capability suite for these paths. If it refuses because of memory pressure,
+stop and report that refusal; do not bypass with raw `pytest`.

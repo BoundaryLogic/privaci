@@ -85,3 +85,10 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-push]
+
+      - id: capability-test-public-pre-push
+        name: public capability suite (integration-sensitive paths)
+        entry: scripts/capability-test-prepush.sh
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
