@@ -116,6 +116,26 @@ def test_iter_skipped_respects_elevated_skip_disposition() -> None:
     assert ("public", "mv", {"kind": "materialized_view"}) in entries
 
 
+def test_iter_skipped_omits_matviews_when_replication_enabled() -> None:
+    catalog = CatalogResult(
+        tables={},
+        load_plan=LoadPlan(layers=()),
+        views=(
+            ViewInfo(
+                schema_name="public",
+                view_name="mv",
+                kind="materialized_view",
+                definition="SELECT 1",
+            ),
+        ),
+    )
+    config = Config(version="1.0", replicate_materialized_views=True)
+
+    entries = list(iter_skipped_object_audits(catalog, config))
+
+    assert ("public", "mv", {"kind": "materialized_view"}) not in entries
+
+
 def test_iter_skipped_marks_views_with_excluded_dependencies() -> None:
     catalog = CatalogResult(
         tables={},

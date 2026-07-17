@@ -41,6 +41,7 @@ class Event(StrEnum):
     IMPLIED_FK_WARNING = "implied_fk_warning"
     SKIPPED_OBJECT = "skipped_object"
     CREATED_OBJECT = "created_object"
+    DEFINITION_ONLY_OBJECT = "definition_only_object"
     NEW_TABLE = "new_table"
     BINARY_FALLBACK = "binary_fallback"
     WARNING = "warning"

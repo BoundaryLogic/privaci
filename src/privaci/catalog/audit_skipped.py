@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 from privaci.catalog.models import CatalogResult, SkippedObjectInfo, ViewInfo
+from privaci.catalog.views_meta import matviews_in_dependency_order, matviews_in_scope
 from privaci.config.models import Config
 from privaci.schema.elevated import disposition_for_function, disposition_for_view
 
@@ -17,7 +18,8 @@ def iter_skipped_object_audits(
 
     When ``config`` is omitted, all views are treated as skipped (legacy unit
     helpers). With config, plain views/functions follow replication flags and
-    elevated dispositions; materialized views remain skipped until Phase 3.
+    elevated dispositions; materialized views are skipped unless
+    ``replicate_materialized_views`` is enabled.
     """
     if config is None:
         for view in catalog.views:
@@ -29,18 +31,22 @@ def iter_skipped_object_audits(
         yield _audit_target(obj), _audit_table_name(obj), _audit_payload(obj)
 
 
+def _excluded_table_ids(config: Config) -> frozenset[str]:
+    return frozenset(
+        table_id
+        for table_id, table_cfg in config.tables.items()
+        if table_cfg.strategy == "exclude"
+    )
+
+
 def _skipped_views(
     catalog: CatalogResult,
     config: Config,
 ) -> Iterator[tuple[str | None, str | None, dict[str, str]]]:
-    excluded = {
-        table_id
-        for table_id, table_cfg in config.tables.items()
-        if table_cfg.strategy == "exclude"
-    }
+    excluded = _excluded_table_ids(config)
+    yield from _skipped_matviews(catalog, config, excluded)
     for view in catalog.views:
         if view.kind == "materialized_view":
-            yield view.schema_name, view.view_name, {"kind": view.kind}
             continue
         disposition = disposition_for_view(view, config)
         if disposition == "replicate":
@@ -55,6 +61,33 @@ def _skipped_views(
         if disposition == "skip" and view.is_elevated:
             payload["reason"] = "elevated_object_skipped"
         yield view.schema_name, view.view_name, payload
+
+
+def _skipped_matviews(
+    catalog: CatalogResult,
+    config: Config,
+    excluded: frozenset[str],
+) -> Iterator[tuple[str | None, str | None, dict[str, str]]]:
+    if not config.replicate_materialized_views:
+        for view in matviews_in_dependency_order(catalog.views):
+            yield view.schema_name, view.view_name, {"kind": view.kind}
+        return
+    in_scope = {
+        view.identifier
+        for view in matviews_in_scope(
+            catalog.views,
+            replicate=True,
+            excluded_table_ids=excluded,
+        )
+    }
+    for view in matviews_in_dependency_order(catalog.views):
+        if view.identifier in in_scope:
+            continue
+        yield (
+            view.schema_name,
+            view.view_name,
+            {"kind": view.kind, "reason": "dependency_excluded"},
+        )
 
 
 def _skipped_functions(

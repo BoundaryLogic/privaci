@@ -36,6 +36,7 @@ async def test_introspect_catalog_lists_demo_corp_views(
     assert by_id["public.monthly_revenue_v"].kind == "view"
     assert by_id["public.elevated_orgs_v"].is_elevated is True
     assert by_id["public.tickets_open_mv"].kind == "materialized_view"
+    assert "public.tickets" in by_id["public.tickets_open_mv"].depends_on
 
     fn_ids = {fn.identifier for fn in catalog.functions}
     assert "public.clinic_label(org_id bigint)" in fn_ids

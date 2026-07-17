@@ -55,6 +55,7 @@ class EventType(StrEnum):
     NEW_TABLE = "new_table"
     SKIPPED_OBJECT = "skipped_object"
     CREATED_OBJECT = "created_object"
+    DEFINITION_ONLY_OBJECT = "definition_only_object"
     SCHEMA_VALIDATED = "schema.validated"
     SCHEMA_VALIDATION_FAILED = "schema.validation_failed"
 

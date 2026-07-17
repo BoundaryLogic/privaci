@@ -27,6 +27,16 @@ INSERT INTO _privaci.audit_log (
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
 """
 
+_MARK_REFRESHED_SQL = """
+UPDATE _privaci.audit_log AS a
+SET payload = a.payload || '{"refreshed": true}'::jsonb
+FROM unnest($2::text[], $3::text[]) AS t(schema_name, table_name)
+WHERE a.run_id = $1
+  AND a.event_type = 'definition_only_object'
+  AND a.schema_name = t.schema_name
+  AND a.table_name = t.table_name
+"""
+
 
 class AuditWriter:
     """Writes audit events for one run, honoring the opt-out switch.
@@ -79,6 +89,35 @@ class AuditWriter:
             column_name=column_name,
             payload=payload,
         )
+
+    async def mark_definition_only_refreshed(
+        self,
+        conn: asyncpg.Connection,
+        objects: tuple[tuple[str, str], ...],
+    ) -> None:
+        """Set ``payload.refreshed=true`` on matching definition_only audit rows.
+
+        Args:
+            conn: Target connection with ``_privaci.audit_log``.
+            objects: ``(schema_name, table_name)`` pairs matching the create-time
+                audit rows. Matching is schema-qualified to avoid cross-schema
+                collisions on identical bare names.
+        """
+        if not self.enabled or not objects:
+            return
+        schemas = [schema for schema, _ in objects]
+        names = [name for _, name in objects]
+        try:
+            await conn.execute(_MARK_REFRESHED_SQL, self.run_id, schemas, names)
+        except asyncpg.PostgresError as exc:
+            raise StateError(
+                "Updating definition_only_object refresh status",
+                cause="The audit refresh flag could not be updated.",
+                remediation=(
+                    "Ensure the _privaci schema exists, or disable the audit "
+                    "log with --no-audit-table."
+                ),
+            ) from exc
 
 
 async def _insert_audit_row(

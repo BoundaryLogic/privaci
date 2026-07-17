@@ -55,14 +55,14 @@
 
 ## Phase 3 — materialized views (definition-only)
 
-- [ ] 3.1 Add `replicate_materialized_views` (default `false`) and
+- [x] 3.1 Add `replicate_materialized_views` (default `false`) and
       `refresh_materialized_views` (default `false`)
-- [ ] 3.2 Emit `CREATE MATERIALIZED VIEW … WITH NO DATA` from `pg_get_viewdef`
-- [ ] 3.3 Add `EventType.DEFINITION_ONLY_OBJECT`; payload `contents_copied: false`
-- [ ] 3.4 Optional post-load `REFRESH MATERIALIZED VIEW` in dependency order
-- [ ] 3.5 Integration test: matview shell exists, no source bytes, refresh derives from
+- [x] 3.2 Emit `CREATE MATERIALIZED VIEW … WITH NO DATA` from `pg_get_viewdef`
+- [x] 3.3 Add `EventType.DEFINITION_ONLY_OBJECT`; payload `contents_copied: false`
+- [x] 3.4 Optional post-load `REFRESH MATERIALIZED VIEW` in dependency order
+- [x] 3.5 Integration test: matview shell exists, no source bytes, refresh derives from
       masked tables
-- [ ] 3.6 Demo Corp e2e: `tickets_open_mv` → `definition_only_object`
+- [x] 3.6 Demo Corp e2e: `tickets_open_mv` → `definition_only_object`
 - [ ] 3.7 **Commercial follow-up:** PDF/Markdown section for definition-only objects
 
 ## Phase 4 — release

@@ -5,8 +5,10 @@ from __future__ import annotations
 import asyncpg
 import pytest
 
+from privaci.catalog import introspect_catalog
 from privaci.config import load_config
 from privaci.pipeline import run_masking_pipeline
+from privaci.schema import replicate_schema
 from tests.fixtures.constants import TEST_SALT
 from tests.integration.assertions import audit_count
 from tests.integration.conftest import DEMO_CORP_CONFIG_PATH
@@ -17,8 +19,8 @@ _CREATED_VIEWS = (
     ("public", "active_clinics_v"),
     ("public", "monthly_revenue_v"),
 )
+_CREATED_MATVIEW = ("public", "tickets_open_mv")
 _SKIPPED_ELEVATED = ("public", "elevated_orgs_v")
-_SKIPPED_MATVIEW = ("public", "tickets_open_mv")
 _SKIPPED_TRIGGER = ("public", "users", "users_audit_noop")
 _SKIPPED_PUBLICATION = "privaci_demo_fixture_pub"
 
@@ -57,24 +59,45 @@ async def test_demo_corp_pipeline_replicates_views_and_syncs_identity_sequences(
             )
             assert exists is True, f"view {schema_name}.{view_name} should be created"
 
-        for schema_name, view_name in (_SKIPPED_ELEVATED, _SKIPPED_MATVIEW):
-            exists = await target.fetchval(
-                """
-                SELECT EXISTS (
-                    SELECT 1
-                    FROM information_schema.views
-                    WHERE table_schema = $1 AND table_name = $2
-                )
-                OR EXISTS (
-                    SELECT 1
-                    FROM pg_catalog.pg_matviews
-                    WHERE schemaname = $1 AND matviewname = $2
-                )
-                """,
-                schema_name,
-                view_name,
+        mv_schema, mv_name = _CREATED_MATVIEW
+        mv_exists = await target.fetchval(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM pg_catalog.pg_matviews
+                WHERE schemaname = $1 AND matviewname = $2
             )
-            assert exists is False, f"{schema_name}.{view_name} should be skipped"
+            """,
+            mv_schema,
+            mv_name,
+        )
+        assert mv_exists is True, "tickets_open_mv shell should be created"
+
+        # Refresh derives from masked target tables (never copies source matview bytes).
+        mv_count = int(
+            await target.fetchval("SELECT count(*)::int FROM public.tickets_open_mv")
+            or 0
+        )
+        open_ticket_count = int(await target.fetchval("""
+                SELECT count(*)::int FROM public.tickets
+                WHERE status <> 'closed'
+                """) or 0)
+        assert mv_count == open_ticket_count
+        assert mv_count > 0
+
+        elev_schema, elev_name = _SKIPPED_ELEVATED
+        elev_exists = await target.fetchval(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.views
+                WHERE table_schema = $1 AND table_name = $2
+            )
+            """,
+            elev_schema,
+            elev_name,
+        )
+        assert elev_exists is False, f"{elev_schema}.{elev_name} should be skipped"
 
         for fn_name in ("clinic_label", "users_audit_noop"):
             fn_exists = await target.fetchval(
@@ -103,6 +126,16 @@ async def test_demo_corp_pipeline_replicates_views_and_syncs_identity_sequences(
         created = await audit_count(target, event_type="created_object")
         assert created >= 4  # 2 views + clinic_label + users_audit_noop
 
+        definition_only = await target.fetchval("""
+            SELECT count(*)::int
+            FROM _privaci.audit_log
+            WHERE event_type = 'definition_only_object'
+              AND table_name = 'tickets_open_mv'
+              AND (payload->>'contents_copied')::boolean IS FALSE
+              AND (payload->>'refreshed')::boolean IS TRUE
+            """)
+        assert int(definition_only or 0) == 1
+
         skipped_elevated = await target.fetchval("""
             SELECT count(*)::int
             FROM _privaci.audit_log
@@ -127,7 +160,7 @@ async def test_demo_corp_pipeline_replicates_views_and_syncs_identity_sequences(
             WHERE event_type = 'skipped_object'
               AND table_name = 'tickets_open_mv'
             """)
-        assert int(skipped_mv or 0) == 1
+        assert int(skipped_mv or 0) == 0
 
         schema_name, table_name, trigger_name = _SKIPPED_TRIGGER
         skipped_trigger = await target.fetchval(
@@ -175,6 +208,96 @@ async def test_demo_corp_pipeline_replicates_views_and_syncs_identity_sequences(
     finally:
         await target.close()
         await source.close()
+
+
+async def test_matview_shell_empty_until_refresh(
+    source_dsn: str,
+    target_dsn: str,
+    demo_corp_source_loaded: None,
+    clean_target: None,
+) -> None:
+    """WITH NO DATA shells stay empty until optional post-load refresh."""
+    base = load_config(DEMO_CORP_CONFIG_PATH)
+    config = base.model_copy(
+        update={
+            "replicate_materialized_views": True,
+            "refresh_materialized_views": False,
+        }
+    )
+
+    await run_masking_pipeline(
+        source_dsn,
+        target_dsn,
+        config,
+        TEST_SALT,
+        audit_enabled=True,
+    )
+
+    target = await asyncpg.connect(target_dsn)
+    try:
+        exists = await target.fetchval("""
+            SELECT EXISTS (
+                SELECT 1 FROM pg_catalog.pg_matviews
+                WHERE schemaname = 'public' AND matviewname = 'tickets_open_mv'
+            )
+            """)
+        assert exists is True
+        populated = await target.fetchval("""
+            SELECT c.relispopulated
+            FROM pg_catalog.pg_class c
+            JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE n.nspname = 'public' AND c.relname = 'tickets_open_mv'
+            """)
+        assert populated is False
+
+        definition_only = await target.fetchval("""
+            SELECT count(*)::int
+            FROM _privaci.audit_log
+            WHERE event_type = 'definition_only_object'
+              AND table_name = 'tickets_open_mv'
+              AND (payload->>'contents_copied')::boolean IS FALSE
+              AND (payload->>'refreshed')::boolean IS FALSE
+            """)
+        assert int(definition_only or 0) == 1
+    finally:
+        await target.close()
+
+
+async def test_matview_replicate_is_idempotent_on_truncate_rerun(
+    source_dsn: str,
+    target_dsn: str,
+    demo_corp_source_loaded: None,
+    clean_target: None,
+) -> None:
+    """Re-applying schema replication must DROP+CREATE matviews, not fail."""
+    config = load_config(DEMO_CORP_CONFIG_PATH)
+    await run_masking_pipeline(
+        source_dsn, target_dsn, config, TEST_SALT, audit_enabled=False
+    )
+
+    source = await asyncpg.connect(source_dsn)
+    target = await asyncpg.connect(target_dsn)
+    try:
+        catalog = await introspect_catalog(source)
+        await replicate_schema(target, catalog, config)
+        exists = await target.fetchval("""
+            SELECT EXISTS (
+                SELECT 1 FROM pg_catalog.pg_matviews
+                WHERE schemaname = 'public' AND matviewname = 'tickets_open_mv'
+            )
+            """)
+        assert exists is True
+        populated = await target.fetchval("""
+            SELECT c.relispopulated
+            FROM pg_catalog.pg_class c
+            JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE n.nspname = 'public' AND c.relname = 'tickets_open_mv'
+            """)
+        # Fresh WITH NO DATA shell after re-create (refresh is pipeline-only).
+        assert populated is False
+    finally:
+        await source.close()
+        await target.close()
 
 
 async def test_assume_existing_does_not_replicate_source_views(

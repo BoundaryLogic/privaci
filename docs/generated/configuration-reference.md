@@ -24,8 +24,10 @@ Regenerate with ``make docs-generate``.
 | `on_existing_data` | enum: `fail`, `truncate`, `drop_create`, `append` | no |  Default: `fail`. |
 | `passthrough_copy` | enum: `auto`, `require_binary`, `batch` | no |  Default: `auto`. |
 | `pseudonym_key` | string \| null | no |  |
+| `refresh_materialized_views` | boolean | no |  Default: `False`. |
 | `replicate_all_indexes` | boolean | no |  Default: `False`. |
 | `replicate_functions` | boolean | no |  Default: `True`. |
+| `replicate_materialized_views` | boolean | no |  Default: `False`. |
 | `replicate_views` | boolean | no |  Default: `True`. |
 | `schema_mode` | enum: `replicate`, `assume_existing` | no |  Default: `replicate`. |
 | `strict_autodetect` | boolean | no |  Default: `False`. |
