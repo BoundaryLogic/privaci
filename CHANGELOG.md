@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Pre-push integration gate now runs the same single-session
+  `pytest -m "integration and not slow"` command as GitHub (via
+  `ci-local.sh --integration`), instead of the per-file capability suite that
+  missed cross-file session-fixture failures.
 - Resume preflight no longer rejects runs when only PostgreSQL row estimates
   (`estimated_rows` / `reltuples`) changed between introspection passes.
 - GitHub Pages mirror deploy retries once on transient API failures and cancels
