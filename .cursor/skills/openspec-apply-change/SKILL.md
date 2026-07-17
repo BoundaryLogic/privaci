@@ -15,6 +15,14 @@ Implement tasks from an OpenSpec change.
 
 **Steps**
 
+0. **Nuclear OpenSpec gate (mandatory)**
+
+   Before any implementation work, follow
+   `.cursor/rules/nuclear-openspec-before-implement.mdc`: run `nuclear-openspec`
+   on this change (or confirm a prior run in-thread still matches current
+   artifacts). If the verdict is amend/re-scope, update OpenSpec first — do not
+   implement High gaps “in code.”
+
 1. **Select the change**
 
    If a name is provided, use it. Otherwise:

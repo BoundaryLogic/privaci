@@ -27,7 +27,7 @@ from privaci.storage.parser import ObjectUriKind, parse_object_uri
 
 
 class CommunityLicenseValidator(LicenseValidator):
-    """Unrestricted community tier — no license check."""
+    """Community mode without a license plugin — no license check."""
 
     def validate(self) -> LicenseStatus:
         """Return a valid community license with no gated capabilities."""

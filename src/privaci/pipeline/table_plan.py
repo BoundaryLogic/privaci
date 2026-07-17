@@ -6,20 +6,15 @@ import logging
 from enum import Enum
 
 from privaci.catalog.models import TableInfo
-from privaci.catalog.partitions import config_table_id
 from privaci.config.models import Config
+from privaci.schema.table_policy import table_strategy
 from privaci.state import TableCheckpoint, ensure_table_resumable
 from privaci.state.models import CheckpointStatus
 
 logger = logging.getLogger(__name__)
 
-
-def table_strategy(table: TableInfo, config: Config) -> str:
-    """Return the configured load strategy for ``table``."""
-    table_cfg = config.tables.get(config_table_id(table))
-    if table_cfg is None:
-        return "transform"
-    return table_cfg.strategy
+# Re-export for callers that historically imported strategy from table_plan.
+__all__ = ["TableAction", "plan_table", "table_strategy"]
 
 
 class TableAction(str, Enum):

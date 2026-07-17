@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import asyncpg
 import typer
 
 from privaci.autodetect import write_detection_report
@@ -15,12 +16,16 @@ from privaci.cli.context import (
 from privaci.cli.plan_display import render_plan_summary
 from privaci.config import load_config
 from privaci.config.models import Config
+from privaci.errors import PreflightError
 from privaci.pipeline import run_masking_pipeline
 from privaci.pipeline.runner import PipelineSummary
 from privaci.preflight import PreflightReport, run_preflight
 from privaci.preflight.checks import verify_strict_autodetect
+from privaci.state import abandon_incomplete_runs, ensure_state_schema
 from privaci.verify import VerifyReport, run_verification
 from privaci.verify.models import Verdict
+
+_FORCE_RESTART_POLICIES = frozenset({"truncate", "drop_create"})
 
 
 def execute_run(
@@ -31,6 +36,7 @@ def execute_run(
     dry_run: bool = False,
     audit_enabled: bool | None = None,
     report_path: str | None = None,
+    force_restart: bool = False,
 ) -> None:
     """Load config, run pre-flight, and optionally execute the masking pipeline."""
     ctx = prepare_cli_run(config_path=config_path, source=source, target=target)
@@ -44,6 +50,7 @@ def execute_run(
             audit_enabled=audit_enabled,
             report_path=report_path,
             pseudonym_key=ctx.pseudonym_key,
+            force_restart=force_restart,
         )
     )
     if summary is None:
@@ -64,7 +71,10 @@ async def _execute_async(
     audit_enabled: bool | None,
     report_path: str | None,
     pseudonym_key: str | None = None,
+    force_restart: bool = False,
 ) -> PipelineSummary | None:
+    if force_restart:
+        await _apply_force_restart(config, target_dsn)
     report = await run_preflight(
         config=config,
         source_dsn=source_dsn,
@@ -88,6 +98,33 @@ async def _execute_async(
         catalog=report.catalog,
         pseudonym_key=pseudonym_key,
     )
+
+
+async def _apply_force_restart(config: Config, target_dsn: str) -> None:
+    """Validate collision policy and abandon incomplete runs before preflight."""
+    if config.on_existing_data not in _FORCE_RESTART_POLICIES:
+        raise PreflightError(
+            "Applying --force-restart",
+            cause=(
+                f"on_existing_data is {config.on_existing_data!r}; "
+                "--force-restart requires truncate or drop_create."
+            ),
+            remediation=(
+                "Set on_existing_data: truncate or drop_create in mask-rules.yaml, "
+                "then re-run with --force-restart."
+            ),
+        )
+    target = await asyncpg.connect(target_dsn)
+    try:
+        await ensure_state_schema(target)
+        abandoned = await abandon_incomplete_runs(target)
+        if abandoned:
+            typer.echo(
+                f"Force-restart: abandoned {abandoned} incomplete run(s).",
+                err=True,
+            )
+    finally:
+        await target.close()
 
 
 def _echo_preflight_warnings(report: PreflightReport) -> None:

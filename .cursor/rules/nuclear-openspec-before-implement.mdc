@@ -1,0 +1,48 @@
+---
+description: Mandatory nuclear-openspec review before implementing an OpenSpec change
+alwaysApply: true
+---
+
+# Nuclear OpenSpec before implementation (non-negotiable)
+
+**Never start implementing an OpenSpec change until `nuclear-openspec` has been
+run on that change and High findings are resolved (or explicitly deferred in the
+OpenSpec with rationale).**
+
+This is the plan-time gate. Code nuclear (`nuclear-branch`) comes later at PR
+time — see `nuclear-branch-before-pr.mdc`.
+
+## When it applies
+
+- User asks to implement / continue / apply an OpenSpec change (`openspec-apply`,
+  `/opsx:apply`, “start phase N”, “implement tasks”)
+- Agent is about to mark the first task `[x]` or write production code for a
+  change under `openspec/changes/<name>/`
+- After a **material design rewrite** (goals, security model, or task graph
+  changed) — re-run before more implementation
+
+## Agent workflow
+
+1. Identify the change name (`openspec/changes/<name>/`).
+2. Read and follow `.cursor/skills/nuclear-openspec/SKILL.md`.
+3. Produce the nuclear-openspec verdict in the conversation (or confirm a prior
+   run in this thread still matches current artifacts).
+4. If verdict is **Amend then implement** or **Re-scope**: update OpenSpec
+   artifacts first; do **not** write feature code until High gaps are closed or
+   explicitly deferred in `design.md` / `tasks.md` with rationale.
+5. Only then proceed with `openspec-apply` / implementation.
+
+## Exceptions (narrow)
+
+- User explicitly says to skip nuclear-openspec for this change (quote that in
+  the reply).
+- Trivial doc-only OpenSpec with no behaviour/security surface — still skim
+  lens C; say why a full nuclear was not needed.
+- Re-applying after nuclear already passed in **this** conversation and
+  proposal/design/specs/tasks are unchanged.
+
+## Never
+
+- Skip straight from `openspec-propose` to coding without nuclear-openspec.
+- Treat “tasks look clear” as a substitute for the skill.
+- Mark High security/correctness design gaps as “fix in implementation.”

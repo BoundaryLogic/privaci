@@ -8,12 +8,12 @@ import json
 import typer
 
 from privaci.catalog import introspect_catalog
-from privaci.catalog.snapshot import load_latest_schema_snapshot
 from privaci.cli.context import resolve_db_url
 from privaci.contracts import load_plugins
 from privaci.contracts.base import DriftReport
 from privaci.errors import DriftError, PreflightError
 from privaci.state.fingerprints import source_db_hash
+from privaci.state.schema_snapshot import load_latest_schema_snapshot
 
 
 def execute_detect_drift(

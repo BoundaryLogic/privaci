@@ -47,6 +47,19 @@ def test_is_unique_column_detects_pk_and_unique_groups() -> None:
         unique_groups=(),
         unique_index_columns=(),
     )
+    # Composite UNIQUE must not trigger per-column uniqueness suffixing.
+    assert not is_unique_column(
+        "a",
+        primary_key=(),
+        unique_groups=(("a", "b"),),
+        unique_index_columns=(),
+    )
+    assert not is_unique_column(
+        "id",
+        primary_key=("id", "tenant_id"),
+        unique_groups=(),
+        unique_index_columns=(),
+    )
 
 
 @pytest.mark.parametrize(

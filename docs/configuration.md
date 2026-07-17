@@ -130,11 +130,15 @@ Each entry under `tables` accepts:
 | `strategy` | enum | `transform` | `transform` (mask + copy), `exclude` (drop in target), `empty` (recreate, no rows), `truncate` (empty before copy). |
 | `columns` | mapping | `{}` | Column name → [action](#actions). |
 | `batch_size` | int | _inherits global_ | Per-table override (must be ≥ 1). |
-| `null_orphan_fks` | bool | `false` | Set FK columns whose referent is lost to `NULL` instead of failing. |
+| `null_orphan_fks` | bool | `false` | When a nullable FK references an **excluded** (or otherwise non-created) parent, set those FK columns to `NULL` on every streamed row instead of leaving dangling values. Forces the batch/cell path for that table (binary COPY is ineligible). Conflicts with `passthrough_copy: require_binary` at preflight. |
 
 `empty` creates the table DDL on the target but streams zero rows and marks the
 table checkpoint `done`. `truncate` does the same after `TRUNCATE` on an
 existing target table — useful when you need the schema but not the data.
+
+When `null_orphan_fks: true`, `privaci plan` / `privaci dry-run` still list the
+child table as streamable; the FK DDL to the excluded parent is omitted either
+way. Review exclude graphs before production runs.
 
 ### Idempotent replicated DDL
 
@@ -152,8 +156,8 @@ In `schema_mode: replicate` (defaults):
 - **Functions/procedures** then **plain views** are created in dependency order
   (`replicate_functions` / `replicate_views`, both default `true`).
 - **Elevated** objects require an explicit disposition (see below).
-- **Materialized views**, triggers, rules, and publications remain skipped
-  (matview shells ship in a later phase).
+- **Materialized views** are opt-in definition-only shells (see below);
+  triggers, rules, and publications are never copied.
 
 Each created view/function is recorded as `created_object`. Skipped objects use
 `skipped_object` with a `kind` (and `reason` when applicable).
@@ -205,6 +209,15 @@ Chained matviews are dropped in reverse dependency order before recreate so trun
 re-runs stay idempotent without `CASCADE`. Plain views that depend on a matview are
 not yet ordered after matview shells; prefer table-backed matviews or create those
 views out of band.
+
+### Source database trust boundary
+
+Function bodies, index definitions, DEFAULT expressions, and similar catalog
+text are copied from the source as-is when replication is enabled. Treat the
+source database as a trust boundary: elevated-object dispositions
+(`elevated_objects`) are the control plane for SECURITY DEFINER / invoker-rights
+risks. PrivaCI does not rewrite or sanitize function/index bodies beyond those
+gates.
 
 ### `schema_mode: assume_existing`
 

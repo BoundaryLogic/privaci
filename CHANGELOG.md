@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CHECK constraint DDL no longer double-wraps `pg_get_constraintdef` output
+  that already includes `CHECK (...)`.
+- Foreign keys to excluded / non-created parents are omitted from target DDL;
+  `null_orphan_fks: true` nulls nullable orphan FK columns on the batch path;
+  NOT NULL orphan FKs with the flag set fail config validation (no silent keep).
+- UsageMeter `register_run` / `final_meter` now share the persisted `_privaci`
+  run id (resume does not double-register); `final_meter` is not called on
+  `interrupted` so abort→resume does not double-finalize.
+- Resume in `schema_mode: replicate` refuses missing schema snapshots (exit 2)
+  and re-runs idempotent schema replication when a snapshot is present.
+- `privaci run --force-restart` abandons incomplete runs (truncate/drop_create
+  only); remediations that cited the flag are now accurate.
+- Observability docs and free-text event fields align with hashed redaction;
+  exit-5 remediation points at License Manager (not metering).
+- Uniqueness suffixing applies only to single-column UNIQUE / PK columns.
+- Streaming commits per table (cycle SCCs still share one transaction) so
+  sibling failures keep prior checkpoints.
+- `drop_create` no longer drops the `_privaci` state schema.
 - `run_masking_pipeline` now enforces elevated-object dispositions and function
   excluded-dependency checks before replicate DDL (previously CLI preflight only).
 - Pre-push integration gate now runs the same single-session
@@ -19,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`estimated_rows` / `reltuples`) changed between introspection passes.
 - GitHub Pages mirror deploy retries once on transient API failures and cancels
   in-progress deploys when a newer `main` build starts.
+
+### Changed
+
+- `skipped_object` audit/emit payloads always include a `reason` token.
+- `run.start` sets `commercial_layer_present` from plugin install detection.
+- Canonical `table_strategy` / `excluded_table_ids` live in
+  `privaci.schema.table_policy`; run open/stream/close seam in
+  `privaci.pipeline.run_lifecycle`.
 
 ### Added
 

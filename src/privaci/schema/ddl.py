@@ -51,9 +51,21 @@ def _table_body(table: TableInfo) -> str:
         pk_cols = ", ".join(quote_pg_identifier(name) for name in table.primary_key)
         lines.append(f"PRIMARY KEY ({pk_cols})")
     for check in table.check_constraints:
-        constraint = quote_pg_identifier(check.name)
-        lines.append(f"CONSTRAINT {constraint} CHECK ({check.definition})")
+        lines.append(_check_constraint_line(check.name, check.definition))
     return ",\n    ".join(lines)
+
+
+def _check_constraint_line(name: str, definition: str) -> str:
+    """Emit one named CHECK constraint from introspected or fixture text.
+
+    ``pg_get_constraintdef`` already returns ``CHECK (...)``. Expression-only
+    fixtures (legacy unit tests) still get a ``CHECK`` wrapper.
+    """
+    constraint = quote_pg_identifier(name)
+    body = definition.strip()
+    if body.upper().startswith("CHECK"):
+        return f"CONSTRAINT {constraint} {body}"
+    return f"CONSTRAINT {constraint} CHECK ({body})"
 
 
 def emit_unique_indexes(table: TableInfo, *, replicate_all: bool) -> list[str]:

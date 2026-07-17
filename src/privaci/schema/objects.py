@@ -16,6 +16,7 @@ from privaci.catalog.views_meta import (
 from privaci.config.models import Config
 from privaci.errors import PreflightError
 from privaci.schema.elevated import disposition_for_function, disposition_for_view
+from privaci.schema.table_policy import excluded_table_ids
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,20 +79,12 @@ def _function_audit_name(function: FunctionInfo) -> str:
     return function.function_name
 
 
-def _excluded_table_ids(config: Config) -> frozenset[str]:
-    return frozenset(
-        table_id
-        for table_id, table_cfg in config.tables.items()
-        if table_cfg.strategy == "exclude"
-    )
-
-
 def _in_scope_matviews(catalog: CatalogResult, config: Config) -> list[ViewInfo]:
     """Matviews eligible for create/refresh under current config."""
     return matviews_in_scope(
         catalog.views,
         replicate=config.replicate_materialized_views,
-        excluded_table_ids=_excluded_table_ids(config),
+        excluded_table_ids=excluded_table_ids(config),
     )
 
 
@@ -101,7 +94,7 @@ async def _replicate_views(
     config: Config,
 ) -> list[ReplicatedObject]:
     created: list[ReplicatedObject] = []
-    excluded = _excluded_table_ids(config)
+    excluded = excluded_table_ids(config)
     for view in plain_views_in_dependency_order(catalog.views):
         if disposition_for_view(view, config) != "replicate":
             continue

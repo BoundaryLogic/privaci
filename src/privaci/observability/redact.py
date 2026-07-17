@@ -16,15 +16,15 @@ _REDACT_PEPPER = "privaci-observability-redact-v1"
 _HASH_HEX_CHARS = 8
 
 # Field names whose string values are structural metadata, never raw PII.
+# Free-text fields (message / detail / cause) are NOT listed: they are redacted
+# by default so accidental PII in operator-facing prose cannot leak.
 STRUCTURAL_FIELDS: frozenset[str] = frozenset(
     {
         "action",
-        "cause",
         "code",
         "column_name",
         "commercial_layer_present",
         "config_hash",
-        "detail",
         "duration_ms",
         "engine_version",
         "errors",
@@ -33,7 +33,6 @@ STRUCTURAL_FIELDS: frozenset[str] = frozenset(
         "kind",
         "level",
         "matched_pattern",
-        "message",
         "object_name",
         "provider",
         "reason",

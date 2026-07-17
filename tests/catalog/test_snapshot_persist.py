@@ -14,8 +14,8 @@ from privaci.catalog.models import (
     TableInfo,
     table_id,
 )
-from privaci.catalog.snapshot import persist_source_schema_snapshot
 from privaci.errors import StateError
+from privaci.state.schema_snapshot import persist_source_schema_snapshot
 
 
 @pytest.mark.asyncio

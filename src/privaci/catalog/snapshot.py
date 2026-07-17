@@ -1,16 +1,15 @@
-"""Canonical JSON snapshots for catalog introspection results."""
+"""Canonical JSON snapshots for catalog introspection results.
+
+Pure serialize path only — persist/load/validate against ``_privaci.runs``
+lives in :mod:`privaci.state.schema_snapshot`.
+"""
 
 from __future__ import annotations
 
 import json
-import uuid
 from typing import Any
 
-import asyncpg
-
 from privaci.catalog.models import CatalogResult, TableInfo
-from privaci.errors import PreflightError, StateError
-from privaci.state.models import RunStatus
 
 
 def table_to_dict(table: TableInfo) -> dict[str, Any]:
@@ -186,42 +185,7 @@ def canonical_snapshot_json(catalog: CatalogResult) -> str:
     return json.dumps(payload, sort_keys=True, separators=(",", ":"))
 
 
-_LOAD_LATEST_SNAPSHOT_SQL = """
-SELECT source_schema_snapshot
-FROM _privaci.runs
-WHERE source_db_hash = $1
-  AND status = $2
-  AND source_schema_snapshot IS NOT NULL
-  AND ($3::uuid IS NULL OR run_id != $3)
-ORDER BY started_at DESC
-LIMIT 1
-"""
-
-_LOAD_RUN_SNAPSHOT_SQL = """
-SELECT source_schema_snapshot
-FROM _privaci.runs
-WHERE run_id = $1
-"""
-
-
-def _snapshot_payload(raw: object) -> dict[str, Any] | None:
-    """Normalize a jsonb column value to a dict."""
-    if raw is None:
-        return None
-    if isinstance(raw, str):
-        parsed: dict[str, Any] = json.loads(raw)
-        return parsed
-    if isinstance(raw, dict):
-        return dict(raw)
-    msg = f"unexpected snapshot payload type: {type(raw).__name__}"
-    raise StateError(
-        "Loading source schema snapshot",
-        cause=msg,
-        remediation="Re-run with a fresh `privaci run`.",
-    )
-
-
-def _normalize_for_resume_compare(snapshot: dict[str, Any]) -> dict[str, Any]:
+def normalize_snapshot_for_resume_compare(snapshot: dict[str, Any]) -> dict[str, Any]:
     """Drop volatile planner stats before comparing resume snapshots.
 
     ``estimated_rows`` comes from ``pg_class.reltuples`` and may change between
@@ -235,35 +199,6 @@ def _normalize_for_resume_compare(snapshot: dict[str, Any]) -> dict[str, Any]:
             if isinstance(table, dict):
                 table.pop("estimated_rows", None)
     return normalized
-
-
-async def validate_resume_schema_snapshot(
-    conn: asyncpg.Connection,
-    run_id: uuid.UUID,
-    catalog: CatalogResult,
-) -> None:
-    """Fail resume when the live source catalog drifted from the run snapshot.
-
-    Raises:
-        PreflightError: When a stored snapshot exists and differs from ``catalog``.
-    """
-    row = await conn.fetchrow(_LOAD_RUN_SNAPSHOT_SQL, run_id)
-    if row is None:
-        return
-    stored = _snapshot_payload(row["source_schema_snapshot"])
-    if stored is None:
-        return
-    current = json.loads(canonical_snapshot_json(catalog))
-    if _normalize_for_resume_compare(stored) == _normalize_for_resume_compare(current):
-        return
-    raise PreflightError(
-        "Validating resume prerequisites",
-        cause="The source database schema changed since the incomplete run.",
-        remediation=(
-            "Restore the original source schema, truncate affected target tables, "
-            "and start a fresh run with `privaci run --force-restart`."
-        ),
-    )
 
 
 def find_new_partition_children(
@@ -280,52 +215,3 @@ def find_new_partition_children(
         if table.parent_partition is not None and table.identifier not in known
     ]
     return tuple(sorted(new_children, key=lambda table: table.identifier))
-
-
-async def load_latest_schema_snapshot(
-    conn: asyncpg.Connection,
-    *,
-    source_db_hash: str,
-    exclude_run_id: uuid.UUID | None = None,
-) -> dict[str, Any] | None:
-    """Load the newest succeeded run snapshot for one source database."""
-    row = await conn.fetchrow(
-        _LOAD_LATEST_SNAPSHOT_SQL,
-        source_db_hash,
-        RunStatus.SUCCEEDED.value,
-        exclude_run_id,
-    )
-    if row is None:
-        return None
-    return _snapshot_payload(row["source_schema_snapshot"])
-
-
-async def persist_source_schema_snapshot(
-    conn: asyncpg.Connection,
-    run_id: uuid.UUID,
-    catalog: CatalogResult,
-) -> None:
-    """Write the canonical snapshot JSON to ``_privaci.runs``.
-
-    Raises:
-        StateError: When the snapshot cannot be written.
-    """
-    snapshot = canonical_snapshot_json(catalog)
-    try:
-        await conn.execute(
-            """
-            UPDATE _privaci.runs
-            SET source_schema_snapshot = $2::jsonb
-            WHERE run_id = $1
-            """,
-            run_id,
-            snapshot,
-        )
-    except asyncpg.PostgresError as exc:
-        raise StateError(
-            "Persisting source schema snapshot",
-            cause="Could not write source_schema_snapshot to _privaci.runs.",
-            remediation=(
-                "Ensure the _privaci schema exists and the run row was created."
-            ),
-        ) from exc

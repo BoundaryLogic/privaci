@@ -72,7 +72,12 @@ async def introspect_catalog(
     except asyncpg.PostgresError as exc:
         raise _map_postgres_error(exc) from exc
 
-    assert_safe_identifiers(tables)
+    assert_safe_identifiers(
+        tables,
+        views=views,
+        functions=functions,
+        skipped_objects=skipped_objects,
+    )
     tables = mark_self_cycles(tables)
     warnings = _never_analyzed_warnings(tables)
     warnings += partition_warnings

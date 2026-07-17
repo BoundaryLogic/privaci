@@ -18,8 +18,8 @@ from privaci.catalog.models import (
 )
 from privaci.catalog.snapshot import (
     canonical_snapshot_json,
-    persist_source_schema_snapshot,
 )
+from privaci.state.schema_snapshot import persist_source_schema_snapshot
 
 __all__ = [
     "CatalogResult",

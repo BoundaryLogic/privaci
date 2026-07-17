@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from privaci.catalog.audit_skipped import iter_skipped_object_audits
 from privaci.catalog.graph import build_load_plan
 from privaci.catalog.models import CatalogResult, SkippedObjectInfo, ViewInfo
 from privaci.catalog.skipped import fetch_skipped_objects
+from privaci.schema.skipped_audits import iter_skipped_object_audits
 
 
 @pytest.mark.asyncio
@@ -82,7 +82,7 @@ def test_iter_skipped_object_audits_includes_views_and_triggers() -> None:
 
     # Assert
     assert entries == [
-        ("public", "active_users", {"kind": "view"}),
+        ("public", "active_users", {"kind": "view", "reason": "not_replicated"}),
         (
             "public",
             "users",

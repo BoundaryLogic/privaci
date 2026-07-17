@@ -7,10 +7,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 from privaci.catalog.models import CatalogResult, LoadPlan, TableInfo
-from privaci.catalog.snapshot import (
-    find_new_partition_children,
-    load_latest_schema_snapshot,
-)
+from privaci.catalog.snapshot import find_new_partition_children
+from privaci.state.schema_snapshot import load_latest_schema_snapshot
 
 
 def _child(name: str, parent: str) -> TableInfo:

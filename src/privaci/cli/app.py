@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import secrets
 import sys
-import uuid
 from pathlib import Path
 from typing import Annotated
 
@@ -16,6 +15,7 @@ from privaci.cli._errors import run_cli
 from privaci.cli._init import execute_init
 from privaci.cli._plan import execute_plan
 from privaci.cli._preview import execute_preview
+from privaci.cli._report import execute_report
 from privaci.cli._resume import execute_resume
 from privaci.cli._run import execute_run, execute_verify
 from privaci.cli.generate_ci import generate_ci_files
@@ -23,6 +23,7 @@ from privaci.cli.logging_setup import configure_cli_logging
 from privaci.cli.options import (
     ConfigPathOption,
     DryRunOption,
+    ForceRestartOption,
     InitForceOption,
     InitOutputOption,
     LogLevelOption,
@@ -33,10 +34,9 @@ from privaci.cli.options import (
     TargetDbOption,
 )
 from privaci.config import export_json_schema, load_config, migrate_config
-from privaci.contracts import CONTRACT_VERSION, load_plugins
+from privaci.contracts import CONTRACT_VERSION
 from privaci.observability import start_metrics_server
 from privaci.packs import install_pack
-from privaci.storage import write_object
 
 app = typer.Typer(
     name="privaci",
@@ -61,6 +61,7 @@ def _invoke_run(
     no_audit_table: bool,
     report_path: str | None = None,
     prometheus_port: int | None = None,
+    force_restart: bool = False,
 ) -> None:
     """Shared implementation for ``privaci`` (default) and ``privaci run``."""
     if prometheus_port is not None:
@@ -73,6 +74,7 @@ def _invoke_run(
         dry_run=dry_run,
         audit_enabled=audit_enabled,
         report_path=report_path,
+        force_restart=force_restart,
     )
 
 
@@ -83,7 +85,7 @@ def main_callback(
     contract_version: bool = typer.Option(
         False,
         "--contract-version",
-        help="Print the commercial-tier contract version and exit.",
+        help="Print the plugin contract ABI version and exit.",
         is_eager=True,
     ),
     config: ConfigPathOption = "/config/mask-rules.yaml",
@@ -92,6 +94,7 @@ def main_callback(
     dry_run: DryRunOption = False,
     no_audit_table: NoAuditTableOption = False,
     prometheus_port: PrometheusPortOption = None,
+    force_restart: ForceRestartOption = False,
 ) -> None:
     """Default entry: run masking when no subcommand is given."""
     if contract_version:
@@ -106,6 +109,7 @@ def main_callback(
             dry_run=dry_run,
             no_audit_table=no_audit_table,
             prometheus_port=prometheus_port,
+            force_restart=force_restart,
         )
 
 
@@ -117,6 +121,7 @@ def run(
     dry_run: DryRunOption = False,
     no_audit_table: NoAuditTableOption = False,
     prometheus_port: PrometheusPortOption = None,
+    force_restart: ForceRestartOption = False,
 ) -> None:
     """Execute a masking run against the configured source and target."""
     _invoke_run(
@@ -126,6 +131,7 @@ def run(
         dry_run=dry_run,
         no_audit_table=no_audit_table,
         prometheus_port=prometheus_port,
+        force_restart=force_restart,
     )
 
 
@@ -355,18 +361,6 @@ def resume(
     )
 
 
-_BINARY_REPORT_FORMATS = frozenset({"pdf"})
-
-
-def _emit_report_payload(payload: bytes, *, output_format: str) -> None:
-    """Write report bytes to stdout (binary-safe for PDF)."""
-    if output_format in _BINARY_REPORT_FORMATS:
-        sys.stdout.buffer.write(payload)
-        sys.stdout.buffer.flush()
-        return
-    typer.echo(payload.decode())
-
-
 @app.command()
 def report(
     run_id: str = typer.Option(..., "--run", help="Run UUID to report on."),
@@ -386,15 +380,7 @@ def report(
     ),
 ) -> None:
     """Render a compliance report for a completed run."""
-    plugins = load_plugins()
-    payload = plugins.report_renderer.render(
-        uuid.UUID(run_id), output_format=output_format
-    )
-    if output is None:
-        _emit_report_payload(payload, output_format=output_format)
-        return
-    write_object(output, payload)
-    typer.echo(f"Wrote report to {output}")
+    execute_report(run_id=run_id, output_format=output_format, output=output)
 
 
 def main() -> int:

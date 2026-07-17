@@ -44,17 +44,20 @@ def unique_column_names(
     unique_groups: tuple[tuple[str, ...], ...],
     unique_index_columns: tuple[tuple[str, ...], ...],
 ) -> frozenset[str]:
-    """Return the set of column names that participate in a uniqueness guarantee.
+    """Return columns that alone form a uniqueness guarantee.
 
-    The single source of truth for what counts as "unique" (primary key, unique
-    constraints, unique indexes). Callers in hot paths precompute this once and
-    test membership rather than re-scanning the tuples per row.
+    Composite primary keys / UNIQUE constraints are excluded: uniqueness
+    suffixing applies only when a single column is independently unique.
     """
-    names: set[str] = set(primary_key)
+    names: set[str] = set()
+    if len(primary_key) == 1:
+        names.add(primary_key[0])
     for group in unique_groups:
-        names.update(group)
+        if len(group) == 1:
+            names.add(group[0])
     for group in unique_index_columns:
-        names.update(group)
+        if len(group) == 1:
+            names.add(group[0])
     return frozenset(names)
 
 

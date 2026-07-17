@@ -15,11 +15,9 @@ from privaci.catalog.models import (
     LoadPlan,
     TableInfo,
 )
-from privaci.catalog.snapshot import (
-    canonical_snapshot_json,
-    validate_resume_schema_snapshot,
-)
+from privaci.catalog.snapshot import canonical_snapshot_json
 from privaci.errors import PreflightError
+from privaci.state.schema_snapshot import validate_resume_schema_snapshot
 
 
 def _catalog(*tables: TableInfo) -> CatalogResult:
@@ -100,11 +98,27 @@ async def test_validate_resume_schema_snapshot_rejects_drift() -> None:
 
 
 @pytest.mark.asyncio
-async def test_validate_resume_schema_snapshot_skips_when_missing() -> None:
+async def test_validate_resume_schema_snapshot_fails_when_missing_replicate() -> None:
     # Arrange
     conn = AsyncMock()
     conn.fetchrow = AsyncMock(return_value={"source_schema_snapshot": None})
     catalog = _catalog(TableInfo("public", "users", ()))
 
     # Act / Assert
-    await validate_resume_schema_snapshot(conn, uuid.uuid4(), catalog)
+    with pytest.raises(PreflightError, match="schema snapshot"):
+        await validate_resume_schema_snapshot(
+            conn, uuid.uuid4(), catalog, schema_mode="replicate"
+        )
+
+
+@pytest.mark.asyncio
+async def test_validate_resume_schema_snapshot_skips_when_missing_assume() -> None:
+    # Arrange
+    conn = AsyncMock()
+    conn.fetchrow = AsyncMock(return_value={"source_schema_snapshot": None})
+    catalog = _catalog(TableInfo("public", "users", ()))
+
+    # Act / Assert — assume_existing may resume without a snapshot
+    await validate_resume_schema_snapshot(
+        conn, uuid.uuid4(), catalog, schema_mode="assume_existing"
+    )

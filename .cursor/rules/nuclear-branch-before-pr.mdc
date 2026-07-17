@@ -1,0 +1,55 @@
+---
+description: Mandatory nuclear-branch review before opening or updating a PR
+alwaysApply: true
+---
+
+# Nuclear branch before PR (non-negotiable)
+
+**Never open or push-for-review a PR until `nuclear-branch` has been run on the
+branch (or uncommitted set about to ship) and High findings are fixed or
+explicitly waived by the user.**
+
+This is the PR-time gate. Plan-time OpenSpec nuclear is separate — see
+`nuclear-openspec-before-implement.mdc`.
+
+## When it applies
+
+- User asks to create a PR (`gh pr create`, “open a PR”, “ship it”)
+- User asks to push a branch that is intended for review (first push of a
+  feature/fix branch, or push after substantial new commits)
+- Agent is about to run `gh pr create` per user request
+
+## Agent workflow
+
+1. Ensure CI gates for commit/push are already satisfied (`ci-before-commit`,
+   `integration-before-push` as applicable).
+2. Read and follow `.cursor/skills/nuclear-branch/SKILL.md` (triple: review,
+   quality, contracts). Prefer Diff `branch changes` vs the PR base.
+3. Fix High findings on the branch (new commit(s) + `ci-local` again) **or**
+   get an explicit user waiver per finding.
+4. Only then `git push` (if needed) and `gh pr create` / update the PR body with
+   a short **Nuclear** note: pass / findings fixed / waived.
+
+## PR description
+
+Include a one-liner under Test plan or a **Nuclear** subsection, e.g.:
+
+- `nuclear-branch: pass` 
+- `nuclear-branch: fixed N High (…); M Medium deferred`
+
+## Exceptions (narrow)
+
+- User explicitly waives nuclear-branch for this PR (quote in the reply and PR
+  body).
+- Docs-only / skills-only / chore with no behaviour change — run a **contracts
+  skim** (docs/CHANGELOG) and state that full triple was scoped down; do not
+  silently skip.
+- PR already open and user asks only for a tiny follow-up push: re-run nuclear
+  on the **new** commits (or full branch if unsure).
+
+## Never
+
+- Open a PR immediately after commit without nuclear-branch.
+- Treat stock plugin `thermos` alone as meeting this gate — use `nuclear-branch`
+  (expanded triple including contracts).
+- Merge the PR (maintainers only — `no-auto-merge.mdc`).

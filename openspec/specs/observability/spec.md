@@ -126,9 +126,10 @@ exception during startup).
 
 ### Requirement: PII redaction in events
 
-No event payload SHALL contain raw column values. Any value-bearing
-field (e.g., for debugging matches) SHALL be truncated to 8 chars and
-prefixed with `***`.
+No event payload SHALL contain raw column values. Any value-bearing field
+SHALL be collapsed to a non-reversible marker of the form
+`***len={n}:{hex}` (length plus a salted hash prefix). Free-text fields such
+as `message`, `detail`, and `cause` SHALL be redacted by default.
 
 #### Scenario: Audit-quality logs reveal no PII
 

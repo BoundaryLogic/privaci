@@ -13,6 +13,9 @@ disable-model-invocation: true
 Incremental counterpart to `nuclear-codebase`. Triple review of **branch / PR /
 uncommitted** diffs, then synthesize.
 
+**Enforced by** `.cursor/rules/nuclear-branch-before-pr.mdc` before `gh pr create`
+(and before pushing a branch intended for review).
+
 | Pass | Skill |
 |---|---|
 | Correctness / security | `nuclear-branch-review` |
@@ -63,6 +66,7 @@ Follow <repo>/.cursor/skills/nuclear-branch-contracts/SKILL.md exactly.
 | Plugin `thermos` | Diff | Stock thermo ×2 |
 | `nuclear-branch` | Diff | Nuclear ×3 (incl. contracts) |
 | `nuclear-codebase` | Tree roots | Nuclear ×3 |
+| `nuclear-openspec` | OpenSpec change | Plan-time triple lens (before code) |
 
 ## Examples
 

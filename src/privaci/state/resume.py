@@ -12,6 +12,7 @@ import asyncpg
 from privaci.catalog.models import table_id
 from privaci.errors import PreflightError, StateError
 from privaci.state.models import CheckpointStatus, RunIdentity, RunStatus
+from privaci.state.runs import finish_run
 from privaci.stream.coerce import parse_text_cursor
 
 logger = logging.getLogger(__name__)
@@ -57,6 +58,12 @@ FROM _privaci.table_checkpoints
 WHERE run_id = $1
 """
 
+_ABANDON_INCOMPLETE_SQL = """
+SELECT run_id
+FROM _privaci.runs
+WHERE status = ANY($1::text[])
+"""
+
 
 @dataclass(frozen=True, slots=True)
 class TableCheckpoint:
@@ -71,6 +78,30 @@ class TableCheckpoint:
     @property
     def identifier(self) -> str:
         return table_id(self.schema_name, self.table_name)
+
+
+async def abandon_incomplete_runs(conn: asyncpg.Connection) -> int:
+    """Mark every non-terminal run as ``failed`` (for ``--force-restart``).
+
+    Returns:
+        Count of runs abandoned.
+    """
+    rows = await conn.fetch(_ABANDON_INCOMPLETE_SQL, _RESUMABLE_STATUS_VALUES)
+    abandoned = 0
+    for row in rows:
+        await finish_run(
+            conn,
+            row["run_id"],
+            RunStatus.FAILED,
+            summary={"reason": "force_restart"},
+        )
+        abandoned += 1
+    if abandoned:
+        logger.info(
+            "Abandoned incomplete runs for force-restart",
+            extra={"count": abandoned},
+        )
+    return abandoned
 
 
 async def find_resumable_run(

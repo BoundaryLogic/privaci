@@ -6,10 +6,10 @@ import asyncpg
 
 from privaci.catalog.identifiers import quote_pg_identifier
 from privaci.catalog.models import CatalogResult, TableInfo
-from privaci.catalog.partitions import config_table_id
 from privaci.config.models import Config
 from privaci.errors import PreflightError
 from privaci.schema.replicate import tables_in_load_order
+from privaci.schema.table_policy import is_excluded_table
 
 
 async def ensure_target_ready(
@@ -139,16 +139,11 @@ async def _first_populated_in_scope_table(
     config: Config,
 ) -> str | None:
     for table in tables_in_load_order(catalog):
-        if _is_excluded(table, config):
+        if is_excluded_table(table, config):
             continue
         if await _table_has_rows(conn, table):
             return table.identifier
     return None
-
-
-def _is_excluded(table: TableInfo, config: Config) -> bool:
-    table_cfg = config.tables.get(config_table_id(table))
-    return table_cfg is not None and table_cfg.strategy == "exclude"
 
 
 async def _table_has_rows(conn: asyncpg.Connection, table: TableInfo) -> bool:
@@ -182,6 +177,7 @@ async def _drop_user_schemas(conn: asyncpg.Connection) -> None:
         FROM information_schema.schemata
         WHERE schema_name NOT IN ('pg_catalog', 'information_schema')
           AND schema_name NOT LIKE 'pg\\_%'
+          AND schema_name <> '_privaci'
         """)
     for row in rows:
         schema = quote_pg_identifier(row["schema_name"])
@@ -196,7 +192,7 @@ async def _truncate_in_scope_tables(
     config: Config,
 ) -> None:
     for table in tables_in_load_order(catalog):
-        if _is_excluded(table, config):
+        if is_excluded_table(table, config):
             continue
         qual = table.sql_ref
         exists = await conn.fetchval("SELECT to_regclass($1)", qual)
