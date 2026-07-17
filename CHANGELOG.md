@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Opt-in materialized-view replication: `replicate_materialized_views` creates
+  shells with `WITH NO DATA` (idempotent reverse-order drop+create) and audits
+  `definition_only_object` (`contents_copied: false`, `refreshed` after optional
+  post-load refresh). `refresh_materialized_views` requires the replicate flag
+  and only runs in `schema_mode: replicate`. Both matview flags are rejected under
+  `assume_existing`. Catalog introspection records matview `depends_on`. Demo Corp
+  enables both for `tickets_open_mv`.
 - Likelihood-ranked schema_mode capability matrix
   (`scripts/capability_test/matrix.py`, suite `schema-modes-matrix`) with public
   P1–P2 integration cells covering elevated dispositions, view/function flags,

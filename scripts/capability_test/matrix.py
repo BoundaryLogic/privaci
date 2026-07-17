@@ -114,6 +114,19 @@ MATRIX_CELLS: tuple[MatrixCell, ...] = (
         triage_note="Documented near-current behaviour rollback",
     ),
     MatrixCell(
+        id="matview-x-replicate",
+        rank="P1",
+        repo="public",
+        label="Opt-in matview shells + refresh under replicate",
+        axes={
+            "schema_mode": "replicate",
+            "replicate_materialized_views": "true",
+            "refresh_materialized_views": "true",
+        },
+        capability_ids=("public-schema-modes-replicate-integration",),
+        triage_note="Demo Corp tickets_open_mv definition-only path",
+    ),
+    MatrixCell(
         id="jsonb-x-assume",
         rank="P1",
         repo="commercial",

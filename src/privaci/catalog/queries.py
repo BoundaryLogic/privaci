@@ -203,7 +203,7 @@ JOIN pg_catalog.pg_depend d
 JOIN pg_catalog.pg_class cr ON cr.oid = d.refobjid
 JOIN pg_catalog.pg_namespace nr ON nr.oid = cr.relnamespace
 WHERE r.ev_type = '1'
-  AND cv.relkind = 'v'
+  AND cv.relkind IN ('v', 'm')
   AND cr.oid <> cv.oid
   AND cr.relkind IN ('r', 'p', 'v', 'm')
   AND """

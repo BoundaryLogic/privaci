@@ -25,6 +25,8 @@ def test_config_applies_documented_defaults(valid_config_dict: dict[str, Any]) -
     assert config.auto_detect is True
     assert config.strict_autodetect is False
     assert config.replicate_all_indexes is False
+    assert config.replicate_materialized_views is False
+    assert config.refresh_materialized_views is False
     assert config.implied_fk_ignore == []
 
 
@@ -140,3 +142,26 @@ def test_explicit_global_batch_size_accepted() -> None:
 
     # Assert
     assert config.batch_size == 5000
+
+
+def test_refresh_materialized_views_requires_replicate_flag() -> None:
+    with pytest.raises(ValidationError, match="refresh_materialized_views"):
+        Config.model_validate(
+            {
+                "version": SUPPORTED_CONFIG_VERSION,
+                "refresh_materialized_views": True,
+                "replicate_materialized_views": False,
+            }
+        )
+
+
+def test_assume_existing_rejects_matview_flags() -> None:
+    with pytest.raises(ValidationError, match="assume_existing cannot use"):
+        Config.model_validate(
+            {
+                "version": SUPPORTED_CONFIG_VERSION,
+                "schema_mode": "assume_existing",
+                "on_existing_data": "truncate",
+                "replicate_materialized_views": True,
+            }
+        )

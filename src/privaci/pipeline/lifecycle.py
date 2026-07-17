@@ -222,6 +222,21 @@ async def _audit_catalog_objects(
 ) -> None:
     if config.schema_mode == "assume_existing":
         return
+    await _audit_new_partitions(target, audit, previous_snapshot, catalog)
+    for obj in created:
+        if obj.definition_only:
+            await _emit_definition_only_audit(target, audit, obj)
+        else:
+            await _emit_created_object_audit(target, audit, obj)
+    await _audit_skipped_objects(target, audit, catalog, config)
+
+
+async def _audit_new_partitions(
+    target: asyncpg.Connection,
+    audit: AuditWriter,
+    previous_snapshot: dict[str, object] | None,
+    catalog: CatalogResult,
+) -> None:
     for child in find_new_partition_children(previous_snapshot, catalog):
         await audit.write(
             target,
@@ -236,27 +251,69 @@ async def _audit_catalog_objects(
             table_name=child.table_name,
             reason="new_partition",
         )
-    for obj in created:
-        payload: dict[str, object] = {
-            "kind": obj.kind,
-            "depends_on": list(obj.depends_on),
-        }
-        if obj.is_elevated:
-            payload["elevated"] = True
-        await audit.write(
-            target,
-            EventType.CREATED_OBJECT,
-            schema_name=obj.schema_name,
-            table_name=obj.object_name,
-            payload=payload,
-        )
-        emit(
-            Event.CREATED_OBJECT,
-            schema_name=obj.schema_name,
-            object_name=obj.object_name,
-            kind=obj.kind,
-            elevated=obj.is_elevated,
-        )
+
+
+async def _emit_definition_only_audit(
+    target: asyncpg.Connection,
+    audit: AuditWriter,
+    obj: ReplicatedObject,
+) -> None:
+    payload: dict[str, object] = {
+        "kind": obj.kind,
+        "contents_copied": False,
+        "refreshed": False,
+        "depends_on": list(obj.depends_on),
+    }
+    await audit.write(
+        target,
+        EventType.DEFINITION_ONLY_OBJECT,
+        schema_name=obj.schema_name,
+        table_name=obj.object_name,
+        payload=payload,
+    )
+    emit(
+        Event.DEFINITION_ONLY_OBJECT,
+        schema_name=obj.schema_name,
+        object_name=obj.object_name,
+        kind=obj.kind,
+        contents_copied=False,
+        refreshed=False,
+    )
+
+
+async def _emit_created_object_audit(
+    target: asyncpg.Connection,
+    audit: AuditWriter,
+    obj: ReplicatedObject,
+) -> None:
+    created_payload: dict[str, object] = {
+        "kind": obj.kind,
+        "depends_on": list(obj.depends_on),
+    }
+    if obj.is_elevated:
+        created_payload["elevated"] = True
+    await audit.write(
+        target,
+        EventType.CREATED_OBJECT,
+        schema_name=obj.schema_name,
+        table_name=obj.object_name,
+        payload=created_payload,
+    )
+    emit(
+        Event.CREATED_OBJECT,
+        schema_name=obj.schema_name,
+        object_name=obj.object_name,
+        kind=obj.kind,
+        elevated=obj.is_elevated,
+    )
+
+
+async def _audit_skipped_objects(
+    target: asyncpg.Connection,
+    audit: AuditWriter,
+    catalog: CatalogResult,
+    config: Config,
+) -> None:
     for schema_name, table_name, skip_payload in iter_skipped_object_audits(
         catalog, config
     ):

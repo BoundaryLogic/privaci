@@ -74,6 +74,8 @@ privaci validate --config mask-rules.yaml
 | `passthrough_copy` | enum | `auto` | Binary COPY for unmasked tables: `auto` (binary when column order matches, else named batch), `require_binary` (fail if ineligible), `batch` (always named batch). |
 | `replicate_views` | bool | `true` | Replicate non-elevated plain views in `replicate` mode. |
 | `replicate_functions` | bool | `true` | Replicate non-elevated functions/procedures in `replicate` mode. |
+| `replicate_materialized_views` | bool | `false` | Create materialized-view shells with `WITH NO DATA` (never copy source storage). Rejected under `assume_existing`. |
+| `refresh_materialized_views` | bool | `false` | After masked loads, `REFRESH MATERIALIZED VIEW` in dependency order (requires `replicate_materialized_views`; `replicate` mode only). Rejected under `assume_existing`. |
 | `elevated_objects` | map | `{}` | Explicit `replicate` or `skip` for elevated views/functions. Unresolved elevated objects fail preflight. |
 | `strict_autodetect` | bool | `false` | Fail the run when auto-detect finds uncovered PII columns. |
 | `replicate_all_indexes` | bool | `false` | Replicate every source index, not just unique/PK indexes. |
@@ -178,10 +180,31 @@ listing unresolved elevated objects. `privaci plan` prints the same reminder.
 
 ### Objects still not replicated
 
-Materialized views (until opt-in definition-only), triggers, rules, and
-logical-replication publications are never copied. Each is recorded as
-`skipped_object` (`kind`: `materialized_view`, `trigger`, `rule`, or
-`publication`).
+Triggers, rules, and logical-replication publications are never copied. Each is
+recorded as `skipped_object` (`kind`: `trigger`, `rule`, or `publication`).
+
+### Materialized views (opt-in, definition-only)
+
+```yaml
+version: "1.0"
+replicate_materialized_views: true   # CREATE … WITH NO DATA (default false)
+refresh_materialized_views: true     # REFRESH after masked table loads
+```
+
+When `replicate_materialized_views: true`, PrivaCI creates the matview shell from
+`pg_get_viewdef` and audits `definition_only_object` with `contents_copied: false`
+(and `refreshed: false` until an optional refresh completes). It never copies stored
+rows from the source matview. Optional `refresh_materialized_views: true` re-derives
+contents from the masked base tables after streaming completes (`schema_mode:
+replicate` only) and sets `refreshed: true` on the audit row. Setting refresh without
+replicate is rejected at config load. Both matview flags are rejected under
+`schema_mode: assume_existing` — pre-create and refresh shells out of band, or use
+`replicate`.
+
+Chained matviews are dropped in reverse dependency order before recreate so truncate
+re-runs stay idempotent without `CASCADE`. Plain views that depend on a matview are
+not yet ordered after matview shells; prefer table-backed matviews or create those
+views out of band.
 
 ### `schema_mode: assume_existing`
 

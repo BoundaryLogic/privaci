@@ -16,8 +16,10 @@ from privaci.catalog.models import CatalogResult
 from privaci.config.models import Config
 from privaci.contracts import load_plugins
 from privaci.errors import RunInterruptedError
+from privaci.observability import Event, emit
 from privaci.pipeline.lifecycle import emit_run_end, initialize_fresh_run
 from privaci.pipeline.streaming import stream_all_tables
+from privaci.schema.objects import refresh_materialized_views
 from privaci.state import (
     AuditWriter,
     RunIdentity,
@@ -249,6 +251,7 @@ async def _stream_to_summary(
         checkpoints=checkpoints or {},
         pseudonym_key=pseudonym_key,
     )
+    await _refresh_matviews_and_audit(target, catalog, config, audit)
     summary = PipelineSummary(
         run_id=run_id,
         tables_processed=tables_done,
@@ -264,6 +267,27 @@ async def _stream_to_summary(
         source_db_hash_value=source_db_hash(source_dsn),
     )
     return summary
+
+
+async def _refresh_matviews_and_audit(
+    target: asyncpg.Connection,
+    catalog: CatalogResult,
+    config: Config,
+    audit: AuditWriter,
+) -> None:
+    refreshed = await refresh_materialized_views(target, catalog, config)
+    if not refreshed:
+        return
+    await audit.mark_definition_only_refreshed(target, refreshed)
+    for schema_name, object_name in refreshed:
+        emit(
+            Event.DEFINITION_ONLY_OBJECT,
+            schema_name=schema_name,
+            object_name=object_name,
+            kind="materialized_view",
+            contents_copied=False,
+            refreshed=True,
+        )
 
 
 async def _finish_successful_run(
