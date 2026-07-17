@@ -4,6 +4,9 @@ on_existing_data: fail
 auto_detect: true
 strict_autodetect: false
 batch_size: 100
+# Focused fixture — ignore Demo Corp elevated objects if present on shared source.
+replicate_views: false
+replicate_functions: false
 
 tables:
   autodetect_demo.contacts:

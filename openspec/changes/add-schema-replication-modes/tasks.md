@@ -31,23 +31,27 @@
 
 ## Phase 2 — functions + views + elevated dispositions + object audit taxonomy
 
-- [ ] 2.1 Introspect functions/procedures + dependency graph + elevated markers
+- [x] 2.1 Introspect functions/procedures + dependency graph + elevated markers
       (`postgres-catalog`)
-- [ ] 2.2 Add `replicate_views` / `replicate_functions` config (default `true`)
-- [ ] 2.3 Add `elevated_objects` map (`schema.object` → `replicate` | `skip`)
-- [ ] 2.4 Implement DDL replication: functions → views (topological order); apply
+- [x] 2.2 Add `replicate_views` / `replicate_functions` config (default `true`)
+- [x] 2.3 Add `elevated_objects` map (`schema.object` → `replicate` | `skip`)
+- [x] 2.4 Implement DDL replication: functions → views (topological order); apply
       elevated dispositions (deny unresolved)
-- [ ] 2.5 `privaci init` / `plan`: detect elevated objects; scaffold empty map; print
+- [x] 2.5 `privaci init` / `plan`: detect elevated objects; scaffold empty map; print
       ACTION REQUIRED listing objects needing disposition
-- [ ] 2.6 Add `EventType.CREATED_OBJECT`; emit for replicated views/functions
-- [ ] 2.7 Update `iter_skipped_object_audits` — views no longer always skipped; elevated
+- [x] 2.6 Add `EventType.CREATED_OBJECT`; emit for replicated views/functions
+- [x] 2.7 Update `iter_skipped_object_audits` — views no longer always skipped; elevated
       `skip` disposition emits `skipped_object` with reason `elevated_object_skipped`
-- [ ] 2.8 Update Demo Corp e2e: non-elevated views assert `created_object`, triggers
+- [x] 2.8 Update Demo Corp e2e: non-elevated views assert `created_object`, triggers
       `skipped_object`; cover at least one elevated disposition path
-- [ ] 2.9 Update `docs/configuration.md`, `docs/observability.md`, `docs/cli-reference.md`
+- [x] 2.9 Update `docs/configuration.md`, `docs/observability.md`, `docs/cli-reference.md`
       (init), `docs/test-fixtures.md` — elevated policy prominent
 - [ ] 2.10 **Commercial follow-up (separate PR):** `report_summary` collectors for
       `created_object` and updated `skipped_object` reasons
+- [x] 2.11 Likelihood-ranked schema_mode matrix: `scripts/capability_test/matrix.py`,
+      public `test_schema_modes_matrix.py` (P1–P2), commercial matrix cells
+      (JSONB/subset/roundtrip × `assume_existing`); suite `schema-modes-matrix`.
+      P3 cells (resume/determinism/autodetect × assume) deferred.
 
 ## Phase 3 — materialized views (definition-only)
 

@@ -1,0 +1,140 @@
+"""Replicate functions and plain views onto the target database."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+import asyncpg
+
+from privaci.catalog.identifiers import qualify, quote_pg_identifier
+from privaci.catalog.models import CatalogResult, FunctionInfo, ViewInfo
+from privaci.catalog.routines import functions_in_dependency_order
+from privaci.catalog.views_meta import plain_views_in_dependency_order
+from privaci.config.models import Config
+from privaci.errors import PreflightError
+from privaci.schema.elevated import disposition_for_function, disposition_for_view
+
+
+@dataclass(frozen=True, slots=True)
+class ReplicatedObject:
+    """One object successfully created during schema replication."""
+
+    schema_name: str
+    object_name: str
+    kind: str
+    is_elevated: bool
+    depends_on: tuple[str, ...] = ()
+
+    def __repr__(self) -> str:
+        return (
+            f"ReplicatedObject({self.schema_name}.{self.object_name!r}, "
+            f"kind={self.kind!r}, elevated={self.is_elevated})"
+        )
+
+
+async def replicate_functions_and_views(
+    conn: asyncpg.Connection,
+    catalog: CatalogResult,
+    config: Config,
+) -> tuple[ReplicatedObject, ...]:
+    """Create in-scope functions then plain views; return created objects."""
+    created: list[ReplicatedObject] = []
+    created.extend(await _replicate_functions(conn, catalog, config))
+    created.extend(await _replicate_views(conn, catalog, config))
+    return tuple(created)
+
+
+async def _replicate_functions(
+    conn: asyncpg.Connection,
+    catalog: CatalogResult,
+    config: Config,
+) -> list[ReplicatedObject]:
+    created: list[ReplicatedObject] = []
+    for function in functions_in_dependency_order(catalog.functions):
+        if disposition_for_function(function, config) != "replicate":
+            continue
+        await _execute(conn, function.create_sql)
+        created.append(
+            ReplicatedObject(
+                schema_name=function.schema_name,
+                object_name=_function_audit_name(function),
+                kind="function",
+                is_elevated=function.is_elevated,
+                depends_on=function.depends_on_functions + function.depends_on_tables,
+            )
+        )
+    return created
+
+
+def _function_audit_name(function: FunctionInfo) -> str:
+    if function.identity_args.strip():
+        return f"{function.function_name}({function.identity_args})"
+    return function.function_name
+
+
+def _excluded_table_ids(config: Config) -> frozenset[str]:
+    return frozenset(
+        table_id
+        for table_id, table_cfg in config.tables.items()
+        if table_cfg.strategy == "exclude"
+    )
+
+
+async def _replicate_views(
+    conn: asyncpg.Connection,
+    catalog: CatalogResult,
+    config: Config,
+) -> list[ReplicatedObject]:
+    created: list[ReplicatedObject] = []
+    excluded = _excluded_table_ids(config)
+    for view in plain_views_in_dependency_order(catalog.views):
+        if disposition_for_view(view, config) != "replicate":
+            continue
+        if excluded.intersection(view.depends_on):
+            continue
+        await _set_search_path(conn, view.schema_name)
+        await _execute(conn, emit_create_view(view))
+        created.append(
+            ReplicatedObject(
+                schema_name=view.schema_name,
+                object_name=view.view_name,
+                kind="view",
+                is_elevated=view.is_elevated,
+                depends_on=view.depends_on,
+            )
+        )
+    return created
+
+
+async def _set_search_path(conn: asyncpg.Connection, schema_name: str) -> None:
+    schema = quote_pg_identifier(schema_name)
+    # SECURITY: schema is quote_pg_identifier-escaped.
+    await conn.execute(f"SET search_path TO {schema}, pg_catalog")  # noqa: S608
+
+
+def emit_create_view(view: ViewInfo) -> str:
+    """Emit ``CREATE OR REPLACE VIEW`` including invoker option when needed."""
+    if view.definition is None:
+        msg = f"view {view.identifier} has no definition for replication"
+        raise PreflightError(
+            "Replicating views to the target database",
+            cause=msg,
+            remediation="Re-introspect the source and retry.",
+        )
+    qual = qualify(view.schema_name, view.view_name)
+    options = ""
+    if not view.is_elevated:
+        options = " WITH (security_invoker = true)"
+    # SECURITY: schema/view names are quote_pg_identifier-escaped via qualify.
+    return f"CREATE OR REPLACE VIEW {qual}{options} AS\n{view.definition}"
+
+
+async def _execute(conn: asyncpg.Connection, sql: str) -> None:
+    try:
+        await conn.execute(sql)
+    except asyncpg.PostgresError as exc:
+        raise PreflightError(
+            "Replicating schema to the target database",
+            cause=f"DDL execution failed on the target ({type(exc).__name__}: {exc}).",
+            remediation="Verify target permissions, required extensions, and retry.",
+        ) from exc

@@ -72,26 +72,143 @@ ORDER BY n.nspname, parent.relname, child.relname
 VIEWS_SQL = (
     """
 SELECT
-    v.schemaname AS schema_name,
-    v.viewname AS view_name
-FROM pg_catalog.pg_views v
-WHERE """
-    + _SCHEMA_WHERE.replace("n.nspname", "v.schemaname")
+    n.nspname AS schema_name,
+    c.relname AS view_name,
+    pg_catalog.pg_get_viewdef(c.oid, true) AS definition,
+    COALESCE(
+        (
+            SELECT true
+            FROM pg_catalog.pg_options_to_table(c.reloptions) opt
+            WHERE opt.option_name = 'security_invoker'
+              AND lower(opt.option_value) IN ('true', 'on', '1')
+        ),
+        false
+    ) AS security_invoker
+FROM pg_catalog.pg_class c
+JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+WHERE c.relkind = 'v'
+  AND """
+    + _SCHEMA_WHERE
     + """
-ORDER BY v.schemaname, v.viewname
+ORDER BY n.nspname, c.relname
 """
 )
 
 MATVIEWS_SQL = (
     """
 SELECT
-    mv.schemaname AS schema_name,
-    mv.matviewname AS view_name
-FROM pg_catalog.pg_matviews mv
-WHERE """
-    + _SCHEMA_WHERE.replace("n.nspname", "mv.schemaname")
+    n.nspname AS schema_name,
+    c.relname AS view_name,
+    pg_catalog.pg_get_viewdef(c.oid, true) AS definition
+FROM pg_catalog.pg_class c
+JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+WHERE c.relkind = 'm'
+  AND """
+    + _SCHEMA_WHERE
     + """
-ORDER BY mv.schemaname, mv.matviewname
+ORDER BY n.nspname, c.relname
+"""
+)
+
+FUNCTIONS_SQL = (
+    """
+SELECT
+    n.nspname AS schema_name,
+    p.proname AS function_name,
+    p.oid AS function_oid,
+    p.prosecdef AS is_security_definer,
+    l.lanname AS language,
+    pg_catalog.pg_get_function_identity_arguments(p.oid) AS identity_args,
+    pg_catalog.pg_get_functiondef(p.oid) AS create_sql
+FROM pg_catalog.pg_proc p
+JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+JOIN pg_catalog.pg_language l ON l.oid = p.prolang
+WHERE p.prokind IN ('f', 'p')
+  AND NOT EXISTS (
+      SELECT 1
+      FROM pg_catalog.pg_depend d
+      WHERE d.objid = p.oid
+        AND d.deptype = 'e'
+        AND d.refclassid = 'pg_catalog.pg_extension'::pg_catalog.regclass
+  )
+  AND """
+    + _SCHEMA_WHERE
+    + """
+ORDER BY n.nspname, p.proname, identity_args
+"""
+)
+
+FUNCTION_DEPENDENCIES_SQL = (
+    """
+SELECT
+    n.nspname AS schema_name,
+    p.proname AS function_name,
+    pg_catalog.pg_get_function_identity_arguments(p.oid) AS identity_args,
+    ref_n.nspname AS ref_schema,
+    ref_p.proname AS ref_function_name,
+    pg_catalog.pg_get_function_identity_arguments(ref_p.oid) AS ref_identity_args
+FROM pg_catalog.pg_depend d
+JOIN pg_catalog.pg_proc p ON p.oid = d.objid
+JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+JOIN pg_catalog.pg_proc ref_p ON ref_p.oid = d.refobjid
+JOIN pg_catalog.pg_namespace ref_n ON ref_n.oid = ref_p.pronamespace
+WHERE d.classid = 'pg_catalog.pg_proc'::pg_catalog.regclass
+  AND d.refclassid = 'pg_catalog.pg_proc'::pg_catalog.regclass
+  AND d.deptype IN ('n', 'a')
+  AND p.prokind IN ('f', 'p')
+  AND ref_p.prokind IN ('f', 'p')
+  AND """
+    + _SCHEMA_WHERE
+    + """
+"""
+)
+
+FUNCTION_TABLE_DEPENDENCIES_SQL = (
+    """
+SELECT
+    n.nspname AS schema_name,
+    p.proname AS function_name,
+    pg_catalog.pg_get_function_identity_arguments(p.oid) AS identity_args,
+    ref_n.nspname AS ref_schema,
+    ref_c.relname AS ref_table
+FROM pg_catalog.pg_depend d
+JOIN pg_catalog.pg_proc p ON p.oid = d.objid
+JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+JOIN pg_catalog.pg_class ref_c ON ref_c.oid = d.refobjid
+JOIN pg_catalog.pg_namespace ref_n ON ref_n.oid = ref_c.relnamespace
+WHERE d.classid = 'pg_catalog.pg_proc'::pg_catalog.regclass
+  AND d.refclassid = 'pg_catalog.pg_class'::pg_catalog.regclass
+  AND d.deptype IN ('n', 'a')
+  AND p.prokind IN ('f', 'p')
+  AND ref_c.relkind IN ('r', 'p')
+  AND """
+    + _SCHEMA_WHERE
+    + """
+"""
+)
+
+VIEW_DEPENDENCIES_SQL = (
+    """
+SELECT DISTINCT
+    nv.nspname AS view_schema,
+    cv.relname AS view_name,
+    nr.nspname AS ref_schema,
+    cr.relname AS ref_name,
+    cr.relkind AS ref_kind
+FROM pg_catalog.pg_rewrite r
+JOIN pg_catalog.pg_class cv ON cv.oid = r.ev_class
+JOIN pg_catalog.pg_namespace nv ON nv.oid = cv.relnamespace
+JOIN pg_catalog.pg_depend d
+    ON d.objid = r.oid AND d.refclassid = 'pg_catalog.pg_class'::pg_catalog.regclass
+JOIN pg_catalog.pg_class cr ON cr.oid = d.refobjid
+JOIN pg_catalog.pg_namespace nr ON nr.oid = cr.relnamespace
+WHERE r.ev_type = '1'
+  AND cv.relkind = 'v'
+  AND cr.oid <> cv.oid
+  AND cr.relkind IN ('r', 'p', 'v', 'm')
+  AND """
+    + _SCHEMA_WHERE.replace("n.nspname", "nv.nspname")
+    + """
 """
 )
 

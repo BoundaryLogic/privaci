@@ -14,6 +14,7 @@ from privaci.cli.source_catalog import introspect_source_catalog
 from privaci.config import load_config
 from privaci.preflight import PreflightReport
 from privaci.preflight.checks import collect_dry_run_rows, verify_config_tables_exist
+from privaci.schema.elevated import elevated_objects_in_scope
 
 
 def execute_plan(
@@ -48,3 +49,12 @@ def execute_plan(
         typer.echo(render_plan_json(report), nl=False)
         return
     render_plan_summary(report)
+    unresolved = [
+        identifier
+        for identifier, _kind in elevated_objects_in_scope(report.catalog, config)
+        if identifier not in config.elevated_objects
+    ]
+    if unresolved:
+        typer.echo("ACTION REQUIRED: set elevated_objects dispositions for:")
+        for identifier in unresolved:
+            typer.echo(f"  - {identifier}")

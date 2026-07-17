@@ -20,6 +20,7 @@ from privaci.schema.ddl import (
     foreign_key_exists,
 )
 from privaci.schema.extensions import emit_create_extension, required_extensions
+from privaci.schema.objects import ReplicatedObject, replicate_functions_and_views
 from privaci.schema.sequences import sequence_columns
 
 logger = logging.getLogger(__name__)
@@ -31,11 +32,12 @@ async def replicate_schema(
     conn: asyncpg.Connection,
     catalog: CatalogResult,
     config: Config,
-) -> None:
+) -> tuple[ReplicatedObject, ...]:
     """Clone in-scope source DDL into the target.
 
     Creates schemas and tables (honoring per-table strategy), then unique
-    indexes and foreign keys. Does not stream rows.
+    indexes and foreign keys, then functions and plain views. Does not stream
+    rows.
 
     Raises:
         ConfigError: When ``exclude`` leaves a dangling NOT NULL FK.
@@ -46,6 +48,7 @@ async def replicate_schema(
     await _create_schemas_and_tables(conn, catalog, config, tables)
     await _create_partition_children(conn, catalog, config, tables)
     await _create_foreign_keys(conn, catalog, config, tables)
+    return await replicate_functions_and_views(conn, catalog, config)
 
 
 async def _create_schemas_and_tables(

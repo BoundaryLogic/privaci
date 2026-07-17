@@ -185,10 +185,11 @@ CAPABILITIES: dict[str, Capability] = {
     ),
     "public-schema-modes": Capability(
         id="public-schema-modes",
-        label="Schema replication modes",
+        label="Schema replication modes (unit)",
         description=(
-            "assume_existing validation, passthrough_copy policy, and "
-            "idempotent DDL helpers."
+            "Unit coverage for schema_mode replicate vs assume_existing: "
+            "validation, passthrough_copy, elevated dispositions, and "
+            "view/function ordering helpers."
         ),
         repo="public",
         test_paths=(
@@ -197,14 +198,34 @@ CAPABILITIES: dict[str, Capability] = {
             "tests/preflight/test_passthrough_copy.py",
             "tests/preflight/test_target_collision.py",
             "tests/pipeline/test_schema_modes_lifecycle.py",
+            "tests/catalog/test_routines_order.py",
+            "tests/schema/test_elevated.py",
+            "tests/schema/test_objects.py",
         ),
         tags=frozenset({"unit", "public", "schema"}),
     ),
-    "public-schema-modes-integration": Capability(
-        id="public-schema-modes-integration",
-        label="Prebuilt target schema mode",
+    "public-schema-modes-replicate-integration": Capability(
+        id="public-schema-modes-replicate-integration",
+        label="Replicate mode object DDL",
         description=(
-            "assume_existing loads and audits validation outcomes against Postgres."
+            "schema_mode: replicate creates invoker views/functions, applies "
+            "elevated_objects skip, and audits Tier-3 skipped objects."
+        ),
+        repo="public",
+        test_paths=("tests/integration/test_views_identity.py",),
+        requires_postgres=True,
+        requires_nlp=True,
+        metrics_kind="unit",
+        metrics_scope="demo-corp",
+        tags=frozenset({"integration", "public", "schema", "replicate"}),
+    ),
+    "public-schema-modes-assume-existing-integration": Capability(
+        id="public-schema-modes-assume-existing-integration",
+        label="Assume-existing schema mode",
+        description=(
+            "schema_mode: assume_existing loads into a prebuilt target, emits "
+            "schema.validated / schema.validation_failed, and does not "
+            "replicate source views/functions."
         ),
         repo="public",
         test_paths=("tests/integration/test_assume_existing.py",),
@@ -212,7 +233,23 @@ CAPABILITIES: dict[str, Capability] = {
         requires_nlp=True,
         metrics_kind="unit",
         metrics_scope="demo-corp",
-        tags=frozenset({"integration", "public", "schema"}),
+        tags=frozenset({"integration", "public", "schema", "assume_existing"}),
+    ),
+    "public-schema-modes-matrix": Capability(
+        id="public-schema-modes-matrix",
+        label="Schema modes likelihood matrix (public)",
+        description=(
+            "Ranked P1–P2 public cells: elevated dispositions, view/function "
+            "flags, assume-fail-empty, passthrough_copy, partitions/streaming "
+            "× assume_existing, and keyed hmac on a real load."
+        ),
+        repo="public",
+        test_paths=("tests/integration/test_schema_modes_matrix.py",),
+        requires_postgres=True,
+        requires_nlp=True,
+        metrics_kind="unit",
+        metrics_scope="demo-corp",
+        tags=frozenset({"integration", "public", "schema", "matrix"}),
     ),
     "public-partitions": Capability(
         id="public-partitions",
@@ -381,6 +418,22 @@ CAPABILITIES: dict[str, Capability] = {
         metrics_scope="subsetting",
         tags=frozenset({"integration", "subsetting", "commercial"}),
     ),
+    "commercial-schema-modes-matrix": Capability(
+        id="commercial-schema-modes-matrix",
+        label="Schema modes likelihood matrix (commercial)",
+        description=(
+            "Ranked commercial cells: JSONB/subset/subset+JSONB and licensed "
+            "roundtrip under schema_mode assume_existing + truncate."
+        ),
+        repo="commercial",
+        test_paths=("tests/integration/test_schema_modes_matrix.py",),
+        requires_postgres=True,
+        requires_commercial_env=True,
+        requires_nlp=True,
+        metrics_kind="unit",
+        metrics_scope="demo-corp",
+        tags=frozenset({"integration", "commercial", "schema", "matrix"}),
+    ),
 }
 
 CAPABILITY_GROUPS: dict[str, frozenset[str]] = {
@@ -463,6 +516,19 @@ CAPABILITY_SUITES: dict[str, CapabilitySuite] = {
             ("public-unit", "commercial-unit"),
             ("public-integration",),
             ("commercial-integration",),
+        ),
+        requires_heavy=True,
+    ),
+    "schema-modes-matrix": CapabilitySuite(
+        id="schema-modes-matrix",
+        description=(
+            "Schema-mode unit helpers, then public matrix cells, then "
+            "commercial matrix cells (sequential; heavy)."
+        ),
+        phases=(
+            ("public-schema-modes",),
+            ("public-schema-modes-matrix",),
+            ("commercial-schema-modes-matrix",),
         ),
         requires_heavy=True,
     ),

@@ -18,12 +18,15 @@ Regenerate with ``make docs-generate``.
 | `audit_log` | boolean | no |  Default: `True`. |
 | `auto_detect` | boolean | no |  Default: `True`. |
 | `batch_size` | integer | no |  Default: `10000`. |
+| `elevated_objects` | object | no |  |
 | `global_salt` | string \| null | no |  |
 | `implied_fk_ignore` | array[string] | no |  |
 | `on_existing_data` | enum: `fail`, `truncate`, `drop_create`, `append` | no |  Default: `fail`. |
 | `passthrough_copy` | enum: `auto`, `require_binary`, `batch` | no |  Default: `auto`. |
 | `pseudonym_key` | string \| null | no |  |
 | `replicate_all_indexes` | boolean | no |  Default: `False`. |
+| `replicate_functions` | boolean | no |  Default: `True`. |
+| `replicate_views` | boolean | no |  Default: `True`. |
 | `schema_mode` | enum: `replicate`, `assume_existing` | no |  Default: `replicate`. |
 | `strict_autodetect` | boolean | no |  Default: `False`. |
 | `tables` | object | no |  |

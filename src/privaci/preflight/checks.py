@@ -22,6 +22,10 @@ from privaci.schema.assume_existing import (
     raise_validation_failed,
     validate_assume_existing,
 )
+from privaci.schema.elevated import (
+    validate_elevated_dispositions,
+    validate_function_excluded_deps,
+)
 from privaci.schema.replicate import validate_exclude_fks
 
 logger = logging.getLogger(__name__)
@@ -160,6 +164,9 @@ async def run_target_checks(
     warnings = warn_disk_capacity(catalog)
     if for_resume:
         return warnings
+    if config.schema_mode == "replicate":
+        validate_elevated_dispositions(catalog, config)
+        validate_function_excluded_deps(catalog, config)
     if dry_run:
         if config.schema_mode == "assume_existing":
             await _run_assume_existing_dry_run_checks(

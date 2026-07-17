@@ -86,6 +86,10 @@ def test_iter_skipped_object_audits_includes_views_and_triggers() -> None:
         (
             "public",
             "users",
-            {"kind": "trigger", "object_name": "users_audit"},
+            {
+                "kind": "trigger",
+                "object_name": "users_audit",
+                "reason": "unsafe_during_load",
+            },
         ),
     ]

@@ -209,14 +209,24 @@ public schema   (the SaaS-product side)
   └──────────────────────────────────────────────────────┘
 
   ┌──────────────────────────────────────────────────────┐
-  │              active_clinics_v   (VIEW)                │
-  │  Plain view. Engine SHALL skip + audit log.          │
+  │              active_clinics_v / monthly_revenue_v     │
+  │  Invoker-rights views — replicated (created_object)  │
   │                                                      │
-  │              monthly_revenue_v  (VIEW)                │
-  │  Aggregating view. Engine SHALL skip + audit log.    │
+  │              elevated_orgs_v                          │
+  │  Elevated view — elevated_objects: skip              │
   │                                                      │
   │              tickets_open_mv    (MATERIALIZED VIEW)   │
-  │  Engine SHALL skip + audit log.                      │
+  │  Skipped until definition-only phase (Phase 3)       │
+  │                                                      │
+  │              clinic_label(bigint)                     │
+  │  Non-elevated SQL function — replicated              │
+  │                                                      │
+  │              elevated_org_name(bigint)                │
+  │  SECURITY DEFINER — elevated_objects: skip           │
+  │                                                      │
+  │  users_audit_noop (trigger), tickets_insert_also_noop│
+  │  (rule), privaci_demo_fixture_pub (publication)      │
+  │  Tier 3 — skipped_object with reason codes           │
   └──────────────────────────────────────────────────────┘
 
 ══════════════════════════════════════════════════════════════════════
@@ -343,8 +353,14 @@ audit_internal schema   (exclude-strategy test)
 | `clinical.patients.full_name` + UNIQUE on `(first_name, last_name, dob)` | **Composite UNIQUE** → faker uniqueness suffix |
 | `clinical.patient_documents.*_email` | **Implied (soft) FK** → warning + `seed_alias` mitigation |
 | `geo_locations.region_path ltree` | **Unsupported type** → text-mode COPY fallback |
-| `active_clinics_v`, `monthly_revenue_v` | **Plain views** — engine skips + audit-log entry |
-| `tickets_open_mv` | **Materialized view** — engine skips + audit-log entry |
+| `active_clinics_v`, `monthly_revenue_v` | **Invoker-rights views** — replicated (`created_object`) |
+| `elevated_orgs_v` | **Elevated view** — `elevated_objects: skip` in demo-corp.yaml |
+| `clinic_label(org_id bigint)` | **SQL function** — replicated (`created_object`) |
+| `elevated_org_name(org_id bigint)` | **SECURITY DEFINER function** — `elevated_objects: skip` |
+| `tickets_open_mv` | **Materialized view** — skipped until definition-only phase |
+| `users_audit_noop` trigger | **Trigger** — `skipped_object` / `unsafe_during_load` |
+| `tickets_insert_also_noop` rule | **Rule** — `skipped_object` / `customer_owned_semantics` |
+| `privaci_demo_fixture_pub` | **Publication** — `skipped_object` / `low_value_footgun` |
 | `raw_events.id` (SERIAL) + most others (IDENTITY) | Both **legacy `SERIAL`** and **modern `IDENTITY`** sequences |
 
 ### Edge-case fixtures (separate small SQL files)
@@ -557,9 +573,30 @@ assert (
     audit_count(target_conn, event_type="column.masked") > 0
 )
 
-# Skipped views recorded
-assert "active_clinics_v" in skipped_objects(target_conn)
+# Invoker views + clinic_label created; elevated / matview / tier-3 skipped
+assert "active_clinics_v" in created_objects(target_conn)
+assert "clinic_label" in created_objects(target_conn)
+assert "elevated_orgs_v" in skipped_objects(target_conn)
 assert "tickets_open_mv" in skipped_objects(target_conn)
+assert "users_audit_noop" in skipped_objects(target_conn)
+
+### Schema-modes matrix
+
+Likelihood-ranked operator combinations (not a full cartesian product) live in
+`scripts/capability_test/matrix.py`. Public P1–P2 cells:
+`tests/integration/test_schema_modes_matrix.py`. Plugin-package cells (JSONB /
+subset / roundtrip × `assume_existing`) use the sibling commercial repo’s
+`tests/integration/test_schema_modes_matrix.py` (capability
+`commercial-schema-modes-matrix`).
+
+Run focused:
+
+```bash
+./scripts/capability-test-suite.sh schema-modes-matrix --allow-heavy
+```
+
+P0 baselines remain the existing Demo Corp / assume_existing / JSONB / subset
+capabilities. P3 (resume/determinism/autodetect × assume) is deferred.
 
 # Polymorphic + implied FKs warned
 assert (

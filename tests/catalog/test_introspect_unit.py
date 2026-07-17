@@ -69,8 +69,12 @@ async def test_introspect_catalog_builds_table_metadata(mocker: Any) -> None:
         [],
         [],  # partitioned parents
         [],  # partition children
+        [],  # view dependencies
         [],  # views
         [],  # materialized views
+        [],  # functions
+        [],  # function→function deps
+        [],  # function→table deps
         [],  # triggers
         [],  # rules
         [],  # publications

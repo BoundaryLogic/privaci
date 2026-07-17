@@ -31,6 +31,10 @@ def test_ddl_sections_include_all_schemas() -> None:
     assert "CREATE SCHEMA auth" in combined
     assert "PARTITION BY RANGE" in combined
     assert "PARTITION BY LIST" in combined
+    assert "CREATE OR REPLACE FUNCTION public.clinic_label" in combined
+    assert "elevated_orgs_v" in combined
+    assert "CREATE PUBLICATION privaci_demo_fixture_pub" in combined
+    assert "CREATE TRIGGER users_audit_noop" in combined
 
 
 def test_build_data_sql_is_deterministic() -> None:

@@ -55,6 +55,9 @@ class ViewInfo:
     schema_name: str
     view_name: str
     kind: str
+    definition: str | None = None
+    is_elevated: bool = False
+    depends_on: tuple[str, ...] = ()
 
     @property
     def identifier(self) -> str:
@@ -62,7 +65,39 @@ class ViewInfo:
         return table_id(self.schema_name, self.view_name)
 
     def __repr__(self) -> str:
-        return f"ViewInfo({self.identifier!r}, kind={self.kind!r})"
+        return (
+            f"ViewInfo({self.identifier!r}, kind={self.kind!r}, "
+            f"elevated={self.is_elevated})"
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class FunctionInfo:
+    """A user-defined function or procedure discovered during introspection."""
+
+    schema_name: str
+    function_name: str
+    identity_args: str
+    create_sql: str
+    language: str
+    is_elevated: bool
+    depends_on_functions: tuple[str, ...] = ()
+    depends_on_tables: tuple[str, ...] = ()
+
+    @property
+    def identifier(self) -> str:
+        """Schema-qualified name; appends args when present."""
+        base = table_id(self.schema_name, self.function_name)
+        args = self.identity_args.strip()
+        if args:
+            return f"{base}({args})"
+        return base
+
+    def __repr__(self) -> str:
+        return (
+            f"FunctionInfo({self.identifier!r}, elevated={self.is_elevated}, "
+            f"lang={self.language!r})"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -233,6 +268,7 @@ class CatalogResult:
     load_plan: LoadPlan
     warnings: tuple[CatalogWarning, ...] = ()
     views: tuple[ViewInfo, ...] = ()
+    functions: tuple[FunctionInfo, ...] = ()
     skipped_objects: tuple[SkippedObjectInfo, ...] = ()
 
     def to_snapshot_dict(self) -> dict[str, Any]:
