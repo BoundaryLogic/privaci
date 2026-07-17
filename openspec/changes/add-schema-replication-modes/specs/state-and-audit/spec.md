@@ -18,3 +18,23 @@ column SHALL carry `kind`, and when applicable `contents_copied`, `reason`, and
 - **WHEN** a materialized view shell is created
 - **THEN** one audit row SHALL be written with `event_type = 'definition_only_object'`
   and `payload.contents_copied = false`.
+
+### Requirement: Schema validation audit rows
+
+`_privaci.audit_log` SHALL accept `event_type` values `schema.validated` and
+`schema.validation_failed`. These rows are the durable paper trail for
+`assume_existing` preflight. Failure rows SHALL be written on the target connection
+before the process exits when `audit_log` is enabled.
+
+#### Scenario: schema.validated row on success
+
+- **WHEN** assume_existing validation succeeds
+- **THEN** one audit row SHALL be written with `event_type = 'schema.validated'`
+  and a payload that includes the number of tables checked.
+
+#### Scenario: schema.validation_failed row on refusal
+
+- **WHEN** assume_existing validation fails because a column type mismatches
+- **THEN** one audit row SHALL be written with `event_type = 'schema.validation_failed'`
+  naming the table, column, and declared types
+- **AND** the payload SHALL NOT contain cell values or other PII.

@@ -69,7 +69,9 @@ privaci validate --config mask-rules.yaml
 | `version` | string | _required_ | Config schema version. The v1.x engine accepts `"1.0"` only. |
 | `global_salt` | string \| secret URI | _none_ | Salt literal or secret URI; resolved at run time. Never logged. |
 | `pseudonym_key` | string \| secret URI | _none_ | HMAC key for `hmac_hash` / `pseudonym` (required when the `keyed_actions` capability is granted). Distinct from `global_salt`. |
-| `on_existing_data` | enum | `fail` | Target collision policy: `fail`, `truncate`, `drop_create`. `append` is rejected in the MVP. |
+| `on_existing_data` | enum | `fail` | Target collision policy: `fail`, `truncate`, `drop_create`. Under `assume_existing`, `fail` allows empty prebuilt tables but refuses rows; see [assume_existing](#schema_mode-assume_existing). `append` is rejected in the MVP. |
+| `schema_mode` | enum | `replicate` | Who owns target DDL: `replicate` (engine clones schema) or `assume_existing` (validate prebuilt target, then load). |
+| `passthrough_copy` | enum | `auto` | Binary COPY for unmasked tables: `auto` (binary when column order matches, else named batch), `require_binary` (fail if ineligible), `batch` (always named batch). |
 | `strict_autodetect` | bool | `false` | Fail the run when auto-detect finds uncovered PII columns. |
 | `replicate_all_indexes` | bool | `false` | Replicate every source index, not just unique/PK indexes. |
 | `batch_size` | int | `10000` | Default streaming batch size in rows (must be ≥ 1). |
@@ -129,12 +131,63 @@ Each entry under `tables` accepts:
 table checkpoint `done`. `truncate` does the same after `TRUNCATE` on an
 existing target table — useful when you need the schema but not the data.
 
+### Idempotent replicated DDL
+
+In `schema_mode: replicate`, index creation uses `IF NOT EXISTS` and foreign
+keys are checked by constraint name before creation. PostgreSQL's
+`CREATE INDEX IF NOT EXISTS` compares the object name only, and the FK guard
+also compares constraint names. PrivaCI does not silently replace a same-name
+index or constraint whose definition differs. Use schema drift review or
+remove/rename the conflicting target object before retrying.
+
 ### Objects not replicated
 
 Views, materialized views, triggers, rules, and logical-replication publications
 are never copied to the target. Each skipped object is recorded in
 `_privaci.audit_log` as `skipped_object` with a `kind` payload (`view`,
 `materialized_view`, `trigger`, `rule`, or `publication`).
+
+### `schema_mode: assume_existing`
+
+Use when DBAs (or Flyway/Liquibase) already own the target schema and PrivaCI
+should validate-and-load only:
+
+```yaml
+version: "1.0"
+schema_mode: assume_existing
+on_existing_data: truncate   # typical for prebuilt staging
+passthrough_copy: auto       # auto | require_binary | batch
+```
+
+Preflight checks every in-scope table exists on the target with compatible
+column **names and types** (physical order is not required). Extra target
+columns are allowed. On success the engine writes `schema.validated` to
+`_privaci.audit_log`; on refusal it writes `schema.validation_failed` (identifiers
+and declared types only — never cell values) and exits **2**.
+
+`passthrough_copy` controls whole-table binary COPY for unmasked tables:
+
+| Value | Behaviour |
+|-------|-----------|
+| `auto` (default) | Prefer binary when source and target column names, types, and order match; otherwise use the named batch path. |
+| `require_binary` | Fail preflight if any passthrough table is not binary-eligible. |
+| `batch` | Never use binary COPY; always use the named batch path. |
+
+`on_existing_data: drop_create` is rejected with `assume_existing`: deleting
+customer-managed DDL would leave no schema for PrivaCI to load. Use `truncate`
+or `fail`.
+
+Loads are **full reloads of source values**, including primary keys and
+identity/`SERIAL` columns (explicit insert + post-load `setval`). That means:
+
+| Target state | `on_existing_data: fail` | `on_existing_data: truncate` |
+|--------------|--------------------------|------------------------------|
+| In-scope tables empty | Allowed | Truncate (no-op) then load |
+| In-scope tables have rows | Preflight exit **2** | Truncate then load |
+
+Missing identity/`SERIAL` columns does **not** make a populated target safe without
+truncate — source keys still collide on unique constraints. Use `truncate` for
+re-runs into staging; `append` / upsert is not supported in this version.
 
 ## Actions
 

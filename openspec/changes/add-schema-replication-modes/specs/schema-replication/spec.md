@@ -3,10 +3,11 @@
 ### Requirement: Views, materialized views, triggers, rules are NOT replicated
 
 In `schema_mode: replicate`, the system SHALL replicate **plain views** and
-**functions/procedures** by default (see `schema-replication-modes`). Materialized
-views SHALL be replicated definition-only when `replicate_materialized_views: true`.
-Triggers, rules, publications, subscriptions, foreign-data-wrappers, event triggers,
-and permission grants SHALL remain skipped.
+**functions/procedures** by default (see `schema-replication-modes`), except
+**elevated** objects which require an explicit `elevated_objects` disposition.
+Materialized views SHALL be replicated definition-only when
+`replicate_materialized_views: true`. Triggers, rules, publications, subscriptions,
+foreign-data-wrappers, event triggers, and permission grants SHALL remain skipped.
 
 In `schema_mode: assume_existing`, the system SHALL NOT replicate any non-table object;
 validation and load only.
@@ -25,7 +26,7 @@ sequence object is not a skipped category.
 
 #### Scenario: Source has a plain view in replicate mode
 
-- **WHEN** `schema_mode: replicate` and the source defines
+- **WHEN** `schema_mode: replicate` and the source defines a non-elevated
   `CREATE VIEW active_clinics_v AS ...`
 - **THEN** the engine SHALL create the view on the target after dependencies
 - **AND** SHALL emit `created_object` with `payload.kind = 'view'`.
@@ -45,13 +46,19 @@ sequence object is not a skipped category.
 - **WHEN** the source defines a `CREATE RULE` on any table
 - **THEN** the engine SHALL skip the rule with a `skipped_object` audit entry.
 
+#### Scenario: Elevated view without disposition is not replicated
+
+- **WHEN** the source has an elevated view with no `elevated_objects` entry
+- **THEN** the engine SHALL NOT create the view
+- **AND** preflight SHALL fail naming the object.
+
 ## ADDED Requirements
 
 ### Requirement: Idempotent index and foreign-key DDL
 
-When replicating table DDL in `replicate` mode, unique index and foreign-key
-creation SHALL be idempotent: re-applying the same replication on a target that
-already has the objects SHALL NOT fail.
+The engine SHALL make unique index and foreign-key creation idempotent when
+replicating table DDL in `replicate` mode: re-applying the same replication on a
+target that already has the objects SHALL NOT fail.
 
 #### Scenario: Unique index already exists
 

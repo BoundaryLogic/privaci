@@ -5,42 +5,16 @@ from __future__ import annotations
 import asyncio
 import time
 import uuid
-from typing import Any
 
 import asyncpg
 
+from privaci.catalog.identifiers import quote_pg_identifier
 from privaci.catalog.models import TableInfo
-from privaci.config.actions import PassthroughAction
-from privaci.config.models import TableConfig
 from privaci.observability import Event, emit
+from privaci.schema.sequences import sequence_columns, sync_table_sequences
 from privaci.state.checkpoints import mark_table_done, write_checkpoint
-from privaci.stream.coerce import table_needs_text_fallback
 from privaci.stream.copy_pipe import CopyChunkPipe
 from privaci.stream.retry import with_source_retry
-
-
-def can_binary_copy_passthrough(
-    table: TableInfo,
-    table_cfg: TableConfig,
-    *,
-    last_pk_value: Any | None,
-    row_filter: str | None = None,
-) -> bool:
-    """Return whether a whole-table COPY-binary path is safe for this table."""
-    if row_filter is not None:
-        return False
-    if last_pk_value is not None:
-        return False
-    column_types = {column.name: column.data_type for column in table.columns}
-    if table_needs_text_fallback(column_types):
-        return False
-    if _requires_overriding_system_value(table):
-        return False
-    if not table_cfg.columns:
-        return True
-    return all(
-        isinstance(action, PassthroughAction) for action in table_cfg.columns.values()
-    )
 
 
 async def binary_copy_passthrough_table(
@@ -137,10 +111,28 @@ async def _pipe_binary_passthrough(
         rows_in_batch=row_count,
     )
     await mark_table_done(target, run_id, table.schema_name, table.table_name)
+    await _sync_sequences_after_binary_copy(target, table)
 
 
-def _requires_overriding_system_value(table: TableInfo) -> bool:
-    return any(
-        column.is_identity and column.identity_generation == "ALWAYS"
-        for column in table.columns
-    )
+async def _sync_sequences_after_binary_copy(
+    target: asyncpg.Connection,
+    table: TableInfo,
+) -> None:
+    """Advance identity/serial sequences to match values just copied."""
+    max_values = await _sequence_max_values(target, table)
+    await sync_table_sequences(target, table, max_values)
+
+
+async def _sequence_max_values(
+    target: asyncpg.Connection,
+    table: TableInfo,
+) -> dict[str, int | None]:
+    max_values: dict[str, int | None] = {}
+    for column in sequence_columns(table):
+        col = quote_pg_identifier(column.name)
+        # SECURITY: col and sql_ref are quote_pg_identifier-rendered.
+        value = await target.fetchval(
+            f"SELECT MAX({col}) FROM {table.sql_ref}"  # noqa: S608
+        )
+        max_values[column.name] = int(value) if value is not None else None
+    return max_values

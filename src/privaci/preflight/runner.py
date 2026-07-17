@@ -42,6 +42,7 @@ async def run_preflight(
     dry_run: bool = False,
     for_resume: bool = False,
     defer_strict: bool = False,
+    salt: str | None = None,
 ) -> PreflightReport:
     """Execute all pre-flight checks without writing masked data.
 
@@ -49,6 +50,8 @@ async def run_preflight(
         defer_strict: When ``True``, skip the strict auto-detect exit so callers
             can emit review artifacts (``privaci preview``, ``dry-run --report``)
             before enforcing ``strict_autodetect``.
+        salt: Optional anonymization salt retained for callers that already
+            resolve it before running pre-flight.
 
     Raises:
         CatalogError: When the source cannot be introspected.
@@ -92,7 +95,12 @@ async def _run_preflight_checks(
     if not defer_strict:
         verify_strict_autodetect(config, detection)
     warnings = await run_target_checks(
-        target, config, catalog, dry_run=dry_run, for_resume=for_resume
+        target,
+        config,
+        catalog,
+        dry_run=dry_run,
+        for_resume=for_resume,
+        detection=detection,
     )
     dry_run_rows = tuple(collect_dry_run_rows(config, catalog))
     emit(

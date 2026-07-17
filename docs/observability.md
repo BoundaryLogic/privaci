@@ -65,6 +65,14 @@ log lines are rendered as `{"event": "log", "message": "...", ...}`.
 | `error` | error | `message`, `exit_code` |
 | `run.end` | info | `status`, `duration_ms`, `tables_processed`, `rows_processed`, `errors` |
 
+Durable `_privaci.audit_log` event types for assume-existing validation (in
+addition to stdout `preflight.ok` / `preflight.fail`):
+
+| Audit `event_type` | When |
+|--------------------|------|
+| `schema.validated` | `schema_mode: assume_existing` validation succeeded |
+| `schema.validation_failed` | Validation refused the load (before exit 2) |
+
 ### `table.progress` throttling
 
 For long-running tables, `table.progress` is emitted **at most once every two

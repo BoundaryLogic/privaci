@@ -18,6 +18,8 @@ def test_config_applies_documented_defaults(valid_config_dict: dict[str, Any]) -
 
     # Assert
     assert config.on_existing_data == "fail"
+    assert config.schema_mode == "replicate"
+    assert config.passthrough_copy == "auto"
     assert config.batch_size == DEFAULT_BATCH_SIZE
     assert config.audit_log is True
     assert config.auto_detect is True
@@ -64,6 +66,18 @@ def test_append_strategy_is_rejected_in_mvp() -> None:
     with pytest.raises(ValidationError, match="append strategy is not supported"):
         Config.model_validate(
             {"version": SUPPORTED_CONFIG_VERSION, "on_existing_data": "append"}
+        )
+
+
+def test_assume_existing_rejects_drop_create() -> None:
+    # Act & Assert
+    with pytest.raises(ValidationError, match="cannot use.*drop_create"):
+        Config.model_validate(
+            {
+                "version": SUPPORTED_CONFIG_VERSION,
+                "schema_mode": "assume_existing",
+                "on_existing_data": "drop_create",
+            }
         )
 
 

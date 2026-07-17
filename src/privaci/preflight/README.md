@@ -17,6 +17,10 @@ policy, FK strategy validation, and connectivity probes.
 `on_existing_data`, table `strategy`, and `null_orphan_fks` in
 `mask-rules.yaml`. Salt from `ANONYMIZATION_SALT` or `global_salt`.
 
+Under `schema_mode: assume_existing` + `on_existing_data: fail`, collision checks
+look for **rows in in-scope tables** (empty prebuilt schemas are fine). Under
+`replicate` + `fail`, any user table outside `_privaci` refuses the run.
+
 ## Example
 
 ```bash

@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 import time
 import uuid
 
 import asyncpg
 
 from privaci import __version__
+from privaci.autodetect import build_detection
 from privaci.catalog.audit_skipped import iter_skipped_object_audits
 from privaci.catalog.models import CatalogResult
 from privaci.catalog.snapshot import (
@@ -16,9 +18,19 @@ from privaci.catalog.snapshot import (
     persist_source_schema_snapshot,
 )
 from privaci.config.models import Config
+from privaci.errors import StateError
 from privaci.observability import Event, emit
 from privaci.pipeline.table_plan import table_strategy
+from privaci.preflight.passthrough_copy import verify_passthrough_copy_policy
+from privaci.preflight.target import ensure_target_ready
 from privaci.schema import replicate_schema
+from privaci.schema.assume_existing import (
+    AssumeExistingValidation,
+    raise_validation_failed,
+    validate_assume_existing,
+    validation_failed_payload,
+    validation_ok_payload,
+)
 from privaci.state import (
     AuditWriter,
     RunIdentity,
@@ -26,7 +38,9 @@ from privaci.state import (
     salt_fingerprint,
     source_db_hash,
 )
-from privaci.state.models import EventType
+from privaci.state.models import AuditLevel, EventType
+
+logger = logging.getLogger(__name__)
 
 
 def streamable_table_count(catalog: CatalogResult, config: Config) -> int:
@@ -92,12 +106,14 @@ async def initialize_fresh_run(
         salt_fingerprint=salt_fingerprint(salt),
         source_db_hash=source_db_hash(source_dsn),
     )
-    previous_snapshot = await _replicate_and_emit_start(
-        target, catalog, config, run_id, identity
-    )
     audit = AuditWriter(run_id, enabled=audit_enabled)
+    previous_snapshot = await _replicate_and_emit_start(
+        target, catalog, config, run_id, identity, audit
+    )
     emit_catalog_warning_events(catalog)
-    await _audit_catalog_objects(target, audit, catalog, previous_snapshot)
+    await _audit_catalog_objects(
+        target, audit, catalog, previous_snapshot, config=config
+    )
     await persist_source_schema_snapshot(target, run_id, catalog)
     return audit
 
@@ -108,6 +124,7 @@ async def _replicate_and_emit_start(
     config: Config,
     run_id: uuid.UUID,
     identity: RunIdentity,
+    audit: AuditWriter,
 ) -> dict[str, object] | None:
     emit(
         Event.RUN_START,
@@ -123,6 +140,10 @@ async def _replicate_and_emit_start(
         source_db_hash=identity.source_db_hash,
         exclude_run_id=run_id,
     )
+    if config.schema_mode == "assume_existing":
+        await _prepare_assume_existing(target, audit, catalog, config)
+        return previous_snapshot
+    await ensure_target_ready(target, config, catalog)
     await replicate_schema(target, catalog, config)
     emit(
         Event.SCHEMA_CLONED,
@@ -133,12 +154,62 @@ async def _replicate_and_emit_start(
     return previous_snapshot
 
 
+async def _prepare_assume_existing(
+    target: asyncpg.Connection,
+    audit: AuditWriter,
+    catalog: CatalogResult,
+    config: Config,
+) -> None:
+    """Validate, audit, and prepare a customer-managed target before streaming."""
+    validation = await validate_assume_existing(target, catalog, config)
+    if not validation.is_ok:
+        await _write_validation_failure(target, audit, validation, config)
+        raise_validation_failed(validation)
+    await audit.write(
+        target,
+        EventType.SCHEMA_VALIDATED,
+        payload=validation_ok_payload(
+            validation, passthrough_copy=config.passthrough_copy
+        ),
+    )
+    detection = build_detection(config, catalog)
+    await verify_passthrough_copy_policy(target, catalog, config, detection)
+    await ensure_target_ready(target, config, catalog)
+
+
+async def _write_validation_failure(
+    target: asyncpg.Connection,
+    audit: AuditWriter,
+    validation: AssumeExistingValidation,
+    config: Config,
+) -> None:
+    """Best-effort audit a refusal without hiding the schema mismatch."""
+    try:
+        await audit.write(
+            target,
+            EventType.SCHEMA_VALIDATION_FAILED,
+            level=AuditLevel.ERROR,
+            payload=validation_failed_payload(
+                validation, passthrough_copy=config.passthrough_copy
+            ),
+        )
+    except StateError:
+        logger.exception(
+            "Could not persist schema validation failure audit",
+            extra={"mismatch_count": len(validation.mismatches)},
+        )
+
+
 async def _audit_catalog_objects(
     target: asyncpg.Connection,
     audit: AuditWriter,
     catalog: CatalogResult,
     previous_snapshot: dict[str, object] | None,
+    *,
+    config: Config,
 ) -> None:
+    if config.schema_mode == "assume_existing":
+        return
     for child in find_new_partition_children(previous_snapshot, catalog):
         await audit.write(
             target,

@@ -85,6 +85,16 @@ def test_emit_unique_indexes_honors_replicate_all_flag() -> None:
     # Assert
     assert len(unique_only) == 1
     assert len(all_indexes) == 2
+    assert "IF NOT EXISTS" in unique_only[0]
+    assert "IF NOT EXISTS" in all_indexes[0]
+
+
+def test_emit_unique_indexes_is_idempotent_sql() -> None:
+    table = _sample_table()
+
+    sql = emit_unique_indexes(table, replicate_all=False)[0]
+
+    assert sql.startswith("CREATE UNIQUE INDEX IF NOT EXISTS")
 
 
 def test_emit_create_sequence_embeds_regclass_ready_name() -> None:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncpg
+
 from privaci.catalog.identifiers import qualify, quote_pg_identifier
 from privaci.catalog.models import ColumnInfo, ForeignKeyInfo, TableInfo
 
@@ -55,12 +57,48 @@ def _table_body(table: TableInfo) -> str:
 
 
 def emit_unique_indexes(table: TableInfo, *, replicate_all: bool) -> list[str]:
-    """Return ``CREATE UNIQUE INDEX`` statements for a table."""
+    """Return idempotent ``CREATE [UNIQUE] INDEX IF NOT EXISTS`` statements."""
     statements: list[str] = []
     for index in table.indexes:
         if replicate_all or index.is_unique:
-            statements.append(index.definition)
+            statements.append(_with_if_not_exists(index.definition))
     return statements
+
+
+def _with_if_not_exists(definition: str) -> str:
+    """Inject ``IF NOT EXISTS`` into a ``pg_get_indexdef`` CREATE INDEX statement."""
+    upper = definition.upper()
+    if " IF NOT EXISTS " in upper:
+        return definition
+    marker = " INDEX "
+    idx = upper.find(marker)
+    if idx < 0:
+        return definition
+    insert_at = idx + len(marker)
+    return f"{definition[:insert_at]}IF NOT EXISTS {definition[insert_at:]}"
+
+
+async def foreign_key_exists(
+    conn: asyncpg.Connection,
+    table: TableInfo,
+    constraint_name: str,
+) -> bool:
+    """Return True when ``constraint_name`` already exists on ``table``."""
+    found = await conn.fetchval(
+        """
+        SELECT 1
+        FROM pg_catalog.pg_constraint c
+        JOIN pg_catalog.pg_class rel ON rel.oid = c.conrelid
+        JOIN pg_catalog.pg_namespace n ON n.oid = rel.relnamespace
+        WHERE n.nspname = $1
+          AND rel.relname = $2
+          AND c.conname = $3
+        """,
+        table.schema_name,
+        table.table_name,
+        constraint_name,
+    )
+    return found is not None
 
 
 def emit_foreign_key(table: TableInfo, fk: ForeignKeyInfo) -> str:

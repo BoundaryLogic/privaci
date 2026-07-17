@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `schema_mode: assume_existing` — validate a prebuilt target schema (name + type)
+  and load without DDL replication; emits durable `schema.validated` /
+  `schema.validation_failed` audit events.
+- `passthrough_copy: auto | require_binary | batch` — control whole-table binary
+  COPY vs named batch for unmasked tables when column order may differ.
+- Idempotent unique-index and foreign-key DDL during `schema_mode: replicate`
+  (`IF NOT EXISTS` / existing-constraint guard).
 - `privaci init` — scaffold a starter `mask-rules.yaml` from the source database
   schema (high-confidence auto-detect columns, `${ANONYMIZATION_SALT}` placeholder).
 - `privaci plan` — source-only masking preview with human text or `--format json`
@@ -23,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `schema_mode: assume_existing` with `on_existing_data: fail` now refuses only
+  when in-scope target tables have rows (empty prebuilt schemas are allowed).
+  Populated targets still hard-fail regardless of identity/`SERIAL` columns;
+  loads remain full reloads of source key values.
 - `privaci dry-run` plan output shares the same rendering as `privaci plan`.
 - `LicenseStatus` gains an additive `capabilities: frozenset[str]` field. Keyed
   masking actions (`hmac_hash`, `pseudonym`) are now gated on the `keyed_actions`

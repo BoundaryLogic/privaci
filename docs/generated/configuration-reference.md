@@ -21,8 +21,10 @@ Regenerate with ``make docs-generate``.
 | `global_salt` | string \| null | no |  |
 | `implied_fk_ignore` | array[string] | no |  |
 | `on_existing_data` | enum: `fail`, `truncate`, `drop_create`, `append` | no |  Default: `fail`. |
+| `passthrough_copy` | enum: `auto`, `require_binary`, `batch` | no |  Default: `auto`. |
 | `pseudonym_key` | string \| null | no |  |
 | `replicate_all_indexes` | boolean | no |  Default: `False`. |
+| `schema_mode` | enum: `replicate`, `assume_existing` | no |  Default: `replicate`. |
 | `strict_autodetect` | boolean | no |  Default: `False`. |
 | `tables` | object | no |  |
 | `version` | string | yes |  |
