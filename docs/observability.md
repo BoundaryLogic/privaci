@@ -84,9 +84,11 @@ seconds per table** so the stream stays readable on multi-million-row loads.
 ## PII redaction
 
 No event payload ever contains a raw column value. Any value-bearing field is
-collapsed to a non-reversible marker: `***` followed by at most the first eight
-characters of the value (e.g. `john@acme.com` → `***john@acm`). Empty or null
-values render as `***`. A captured stdout file is therefore safe to share for
+collapsed to a non-reversible marker of the form `***len={n}:{hex}` (length plus
+a salted hash prefix). Example: `john@acme.com` becomes something like
+`***len=13:a1b2c3d4` — never a plaintext character preview. Empty or null values
+render as `***`. Free-text fields such as `message`, `detail`, and `cause` are
+redacted by default. A captured stdout file is therefore safe to share for
 debugging or audit.
 
 ## Log level

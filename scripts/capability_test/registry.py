@@ -251,6 +251,21 @@ CAPABILITIES: dict[str, Capability] = {
         metrics_scope="demo-corp",
         tags=frozenset({"integration", "public", "schema", "matrix"}),
     ),
+    "public-harden-nuclear-findings": Capability(
+        id="public-harden-nuclear-findings",
+        label="Nuclear harden findings (CHECK, orphan FK, force-restart)",
+        description=(
+            "CHECK constraint round-trip, exclude-parent + null_orphan_fks, "
+            "require_binary conflict, and --force-restart under fail policy."
+        ),
+        repo="public",
+        test_paths=("tests/integration/test_harden_nuclear_findings.py",),
+        requires_postgres=True,
+        requires_nlp=False,
+        metrics_kind="unit",
+        metrics_scope="none",
+        tags=frozenset({"integration", "public", "schema", "harden"}),
+    ),
     "public-partitions": Capability(
         id="public-partitions",
         label="Partitioned tables",

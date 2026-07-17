@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncpg
 import typer
 
-from privaci.catalog.snapshot import validate_resume_schema_snapshot
 from privaci.cli.context import prepare_cli_run, run_with_signal_handlers
 from privaci.config.models import Config
 from privaci.pipeline import run_masking_pipeline
@@ -20,6 +19,7 @@ from privaci.state import (
     salt_fingerprint,
     source_db_hash,
 )
+from privaci.state.schema_snapshot import validate_resume_schema_snapshot
 
 
 def execute_resume(
@@ -74,7 +74,12 @@ async def _resume_async(
         # Resolve and validate (read-only) before re-opening the run, so a drift
         # abort never flips the run back to in_progress. See P2 review finding.
         run_id = await resolve_resumable_run(target, identity)
-        await validate_resume_schema_snapshot(target, run_id, report.catalog)
+        await validate_resume_schema_snapshot(
+            target,
+            run_id,
+            report.catalog,
+            schema_mode=config.schema_mode,
+        )
         checkpoints = await reopen_resumable_run(target, run_id)
     finally:
         await target.close()

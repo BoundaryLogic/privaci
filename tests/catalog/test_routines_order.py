@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from privaci.catalog.audit_skipped import iter_skipped_object_audits
 from privaci.catalog.models import (
     CatalogResult,
     FunctionInfo,
@@ -16,6 +15,7 @@ from privaci.schema.elevated import (
     disposition_for_function,
     disposition_for_view,
 )
+from privaci.schema.skipped_audits import iter_skipped_object_audits
 
 
 def test_functions_in_dependency_order_puts_callee_first() -> None:
@@ -113,7 +113,11 @@ def test_iter_skipped_respects_elevated_skip_disposition() -> None:
         "elev_v",
         {"kind": "view", "reason": "elevated_object_skipped"},
     ) in entries
-    assert ("public", "mv", {"kind": "materialized_view"}) in entries
+    assert (
+        "public",
+        "mv",
+        {"kind": "materialized_view", "reason": "not_supported"},
+    ) in entries
 
 
 def test_iter_skipped_marks_views_with_excluded_dependencies() -> None:

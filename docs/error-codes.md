@@ -84,8 +84,8 @@ raise ConfigError(
 | `2` | Pre-flight failure | Target not empty, schema mismatch, missing privileges, catalog error | **No** |
 | `3` | Config validation failure | `mask-rules.yaml` invalid or commercial-only action requested | No |
 | `4` | Missing or invalid salt | Salt unresolved or shorter than 32 chars | No |
-| `5` | License / entitlement failure | Marketplace entitlement check failed (commercial) | No |
-| `6` | Drift detected | Schema/config drift detected (commercial) | No |
+| `5` | License / entitlement failure | License Manager entitlement check failed (plugin-installed) | No |
+| `6` | Drift detected | Schema/config drift detected (plugin-installed) | No |
 | `130` | Interrupted | SIGINT/SIGTERM; checkpoints flushed | Partial (checkpointed) |
 
 CI scripts SHOULD treat `2`, `3`, and `4` as "operator must fix input" and `1`
@@ -149,7 +149,15 @@ and `CatalogError`.
 - `privaci resume` found no resumable run, or the config, source database, or
   salt changed since the interrupted run. The error names which one drifted; a
   run is resumable while its status is `in_progress`, `interrupted`, or
-  `failed`. Restore the original input or start a fresh run with `privaci run`.
+  `failed`. Restore the original input or start a fresh run with
+  `privaci run --force-restart` (requires `on_existing_data: truncate` or
+  `drop_create`).
+- `privaci resume` in `schema_mode: replicate` when the incomplete run has no
+  persisted `source_schema_snapshot` (schema cloning did not finish).
+- `privaci run --force-restart` with `on_existing_data: fail` (unsupported
+  collision policy for force-restart).
+- `passthrough_copy: require_binary` together with `null_orphan_fks` on a table
+  that references an excluded parent.
 
 **Remediation**
 
@@ -159,6 +167,9 @@ privaci dry-run --config mask-rules.yaml
 
 # If the target legitimately has data, choose an explicit policy:
 #   on_existing_data: truncate   # wipe in-scope target tables first
+#   on_existing_data: drop_create
+# then abandon incomplete runs and start clean:
+privaci run --force-restart --config mask-rules.yaml
 # (append is rejected in the MVP — see docs/configuration.md)
 ```
 
@@ -224,13 +235,15 @@ See [`configuration.md`](configuration.md) (`global_salt`, database URLs) for
 
 ## Exit code 5: License / entitlement failure (commercial)
 
-The commercial layer could not validate a Marketplace entitlement.
+The commercial layer could not validate an active License Manager entitlement
+(or equivalent subscription check).
 
 **Remediation**
 
-- Confirm the container can reach the AWS Marketplace metering endpoint.
-- Verify the subscription is active in AWS Marketplace.
-- Community mode (no commercial layer) never returns this code.
+- Confirm the container can reach AWS License Manager (or your configured
+  entitlement endpoint).
+- Verify the License Manager entitlement / license is active.
+- Community mode (no plugin package installed) never returns this code.
 
 ---
 

@@ -35,6 +35,7 @@ class MaskingEngine:
 
     __slots__ = (
         "_cell_post_processor",
+        "_null_columns",
         "_pseudonym_key",
         "_salt",
         "_table_config",
@@ -52,6 +53,7 @@ class MaskingEngine:
         *,
         cell_post_processor: CellPostProcessor | None = None,
         pseudonym_key: str | None = None,
+        null_columns: frozenset[str] | None = None,
     ) -> None:
         self._salt = salt
         self._pseudonym_key = pseudonym_key
@@ -59,6 +61,7 @@ class MaskingEngine:
         self._table_info = table_info
         self._table_config = table_config
         self._cell_post_processor = cell_post_processor
+        self._null_columns = null_columns or frozenset()
         # Uniqueness is fixed per table, so resolve it once here for O(1) lookup
         # in the per-cell hot path instead of re-scanning tuples for every row.
         unique_idx = tuple(idx.columns for idx in table_info.indexes if idx.is_unique)
@@ -76,13 +79,22 @@ class MaskingEngine:
         """Return whether a commercial cell hook may mutate values after masking."""
         return self._cell_post_processor is not None
 
+    @property
+    def requires_row_mutation(self) -> bool:
+        """Return True when binary whole-table COPY cannot preserve semantics."""
+        return self.uses_cell_post_processing or bool(self._null_columns)
+
     def mask_row(self, row: dict[str, Any]) -> dict[str, Any]:
         """Return a masked copy of ``row``.
 
         Columns without an explicit config action are passed through unchanged.
+        Orphan FK columns configured for nulling are set to ``None``.
         """
         masked: dict[str, Any] = {}
         for column_name, value in row.items():
+            if column_name in self._null_columns:
+                masked[column_name] = None
+                continue
             masked[column_name] = self._mask_cell(column_name, value)
         return masked
 

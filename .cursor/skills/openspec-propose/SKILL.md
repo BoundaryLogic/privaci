@@ -16,7 +16,9 @@ I'll create a change with artifacts:
 - design.md (how)
 - tasks.md (implementation steps)
 
-When ready to implement, run /opsx:apply
+When the artifacts look complete, **`nuclear-openspec` is required** before
+coding (rule: `nuclear-openspec-before-implement.mdc`). When ready to implement
+after that gate, run /opsx:apply.
 
 ---
 

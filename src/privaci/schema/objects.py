@@ -13,6 +13,7 @@ from privaci.catalog.views_meta import plain_views_in_dependency_order
 from privaci.config.models import Config
 from privaci.errors import PreflightError
 from privaci.schema.elevated import disposition_for_function, disposition_for_view
+from privaci.schema.table_policy import excluded_table_ids
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,21 +73,13 @@ def _function_audit_name(function: FunctionInfo) -> str:
     return function.function_name
 
 
-def _excluded_table_ids(config: Config) -> frozenset[str]:
-    return frozenset(
-        table_id
-        for table_id, table_cfg in config.tables.items()
-        if table_cfg.strategy == "exclude"
-    )
-
-
 async def _replicate_views(
     conn: asyncpg.Connection,
     catalog: CatalogResult,
     config: Config,
 ) -> list[ReplicatedObject]:
     created: list[ReplicatedObject] = []
-    excluded = _excluded_table_ids(config)
+    excluded = excluded_table_ids(config)
     for view in plain_views_in_dependency_order(catalog.views):
         if disposition_for_view(view, config) != "replicate":
             continue

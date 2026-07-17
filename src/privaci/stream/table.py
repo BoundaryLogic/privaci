@@ -51,7 +51,7 @@ async def stream_table(
     row_filter: str | None = None,
 ) -> int:
     effective_cfg = table_config or TableConfig()
-    use_binary = not engine.uses_cell_post_processing and await is_binary_copy_eligible(
+    use_binary = not engine.requires_row_mutation and await is_binary_copy_eligible(
         target,
         table,
         effective_cfg,

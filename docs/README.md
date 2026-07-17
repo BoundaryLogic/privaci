@@ -82,6 +82,7 @@ Auto-generated reference pages (regenerate with `make docs-generate`):
 
 ## Source of truth for the MVP
 
-The OpenSpec change `openspec/changes/init-privaci-engine/` (proposal,
-design, specs, tasks) defines what the MVP must do and tracks implementation
-progress.
+The archived OpenSpec change
+`openspec/changes/archive/2026-06-11-init-privaci-engine/` (proposal, design,
+specs, tasks) defined the MVP. Active work lives under `openspec/changes/` and
+`openspec/post-v1-roadmap.md`.

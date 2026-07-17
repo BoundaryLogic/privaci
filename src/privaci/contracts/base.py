@@ -99,7 +99,11 @@ class UsageMeter(abc.ABC):
 
     @abc.abstractmethod
     def final_meter(self, *, source_db_hash: str, run_id: UUID) -> None:
-        """Called at run end."""
+        """Called once when a run reaches a terminal status (success or failure).
+
+        Not called for ``interrupted`` runs that remain resumable under the same
+        ``run_id``; those finalize on a later terminal close.
+        """
 
 
 class LLMConnector(abc.ABC):

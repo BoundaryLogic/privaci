@@ -5,23 +5,22 @@ from __future__ import annotations
 import logging
 import time
 import uuid
+from typing import Any
 
 import asyncpg
 
 from privaci import __version__
 from privaci.autodetect import build_detection
-from privaci.catalog.audit_skipped import iter_skipped_object_audits
 from privaci.catalog.models import CatalogResult
-from privaci.catalog.snapshot import (
-    find_new_partition_children,
-    load_latest_schema_snapshot,
-    persist_source_schema_snapshot,
-)
+from privaci.catalog.snapshot import find_new_partition_children
+from privaci.config.loader import is_commercial_installed
 from privaci.config.models import Config
 from privaci.errors import StateError
 from privaci.observability import Event, emit
-from privaci.pipeline.table_plan import table_strategy
-from privaci.preflight.passthrough_copy import verify_passthrough_copy_policy
+from privaci.preflight.passthrough_copy import (
+    assert_require_binary_allows_orphan_nulling,
+    verify_passthrough_copy_policy,
+)
 from privaci.preflight.target import ensure_target_ready
 from privaci.schema import replicate_schema
 from privaci.schema.assume_existing import (
@@ -36,6 +35,8 @@ from privaci.schema.elevated import (
     validate_function_excluded_deps,
 )
 from privaci.schema.objects import ReplicatedObject
+from privaci.schema.skipped_audits import iter_skipped_object_audits
+from privaci.schema.table_policy import table_strategy
 from privaci.state import (
     AuditWriter,
     RunIdentity,
@@ -44,6 +45,10 @@ from privaci.state import (
     source_db_hash,
 )
 from privaci.state.models import AuditLevel, EventType
+from privaci.state.schema_snapshot import (
+    load_latest_schema_snapshot,
+    persist_source_schema_snapshot,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +117,7 @@ async def initialize_fresh_run(
         source_db_hash=source_db_hash(source_dsn),
     )
     audit = AuditWriter(run_id, enabled=audit_enabled)
+    assert_require_binary_allows_orphan_nulling(catalog, config)
     previous_snapshot, created = await _replicate_and_emit_start(
         target, catalog, config, run_id, identity, audit
     )
@@ -126,6 +132,43 @@ async def initialize_fresh_run(
     )
     await persist_source_schema_snapshot(target, run_id, catalog)
     return audit
+
+
+async def prepare_target_schema(
+    target: asyncpg.Connection,
+    catalog: CatalogResult,
+    config: Config,
+    run_id: uuid.UUID,
+    audit: AuditWriter,
+) -> None:
+    """Idempotent schema prepare used on resume after a persisted snapshot.
+
+    Re-runs ``replicate_schema`` (or assume-existing validation) so a target
+    interrupted mid-DDL can recover without streaming into a broken schema.
+    """
+    assert_require_binary_allows_orphan_nulling(catalog, config)
+    if config.schema_mode == "assume_existing":
+        await _prepare_assume_existing(target, audit, catalog, config)
+        return
+    created = await _replicate_schema_objects(target, catalog, config)
+    emit(
+        Event.SCHEMA_CLONED,
+        run_id=run_id,
+        tables_created=streamable_table_count(catalog, config),
+        schemas_created=len({t.schema_name for t in catalog.tables.values()}),
+        resumed=True,
+        objects_created=len(created),
+    )
+
+
+async def _replicate_schema_objects(
+    target: asyncpg.Connection,
+    catalog: CatalogResult,
+    config: Config,
+) -> tuple[ReplicatedObject, ...]:
+    validate_elevated_dispositions(catalog, config)
+    validate_function_excluded_deps(catalog, config)
+    return await replicate_schema(target, catalog, config)
 
 
 async def _replicate_and_emit_start(
@@ -143,7 +186,7 @@ async def _replicate_and_emit_start(
         config_hash=identity.config_hash,
         salt_fingerprint=identity.salt_fingerprint,
         source_db_hash=identity.source_db_hash,
-        commercial_layer_present=False,
+        commercial_layer_present=is_commercial_installed(),
     )
     previous_snapshot = await load_latest_schema_snapshot(
         target,
@@ -153,9 +196,7 @@ async def _replicate_and_emit_start(
     if config.schema_mode == "assume_existing":
         await _prepare_assume_existing(target, audit, catalog, config)
         return previous_snapshot, ()
-    validate_elevated_dispositions(catalog, config)
-    validate_function_excluded_deps(catalog, config)
-    created = await replicate_schema(target, catalog, config)
+    created = await _replicate_schema_objects(target, catalog, config)
     emit(
         Event.SCHEMA_CLONED,
         run_id=run_id,
@@ -211,6 +252,30 @@ async def _write_validation_failure(
         )
 
 
+async def record_event(
+    target: asyncpg.Connection,
+    audit: AuditWriter,
+    event_type: EventType,
+    observability_event: Event,
+    *,
+    schema_name: str | None = None,
+    table_name: str | None = None,
+    level: AuditLevel = AuditLevel.INFO,
+    payload: dict[str, Any] | None = None,
+    emit_fields: dict[str, Any] | None = None,
+) -> None:
+    """Write one audit row and emit the matching observability event."""
+    await audit.write(
+        target,
+        event_type,
+        schema_name=schema_name,
+        table_name=table_name,
+        level=level,
+        payload=payload or {},
+    )
+    emit(observability_event, **(emit_fields or {}))
+
+
 async def _audit_catalog_objects(
     target: asyncpg.Connection,
     audit: AuditWriter,
@@ -223,18 +288,19 @@ async def _audit_catalog_objects(
     if config.schema_mode == "assume_existing":
         return
     for child in find_new_partition_children(previous_snapshot, catalog):
-        await audit.write(
+        await record_event(
             target,
+            audit,
             EventType.NEW_TABLE,
-            schema_name=child.schema_name,
-            table_name=child.table_name,
-            payload={"reason": "new_partition"},
-        )
-        emit(
             Event.NEW_TABLE,
             schema_name=child.schema_name,
             table_name=child.table_name,
-            reason="new_partition",
+            payload={"reason": "new_partition"},
+            emit_fields={
+                "schema_name": child.schema_name,
+                "table_name": child.table_name,
+                "reason": "new_partition",
+            },
         )
     for obj in created:
         payload: dict[str, object] = {
@@ -243,34 +309,36 @@ async def _audit_catalog_objects(
         }
         if obj.is_elevated:
             payload["elevated"] = True
-        await audit.write(
+        await record_event(
             target,
+            audit,
             EventType.CREATED_OBJECT,
+            Event.CREATED_OBJECT,
             schema_name=obj.schema_name,
             table_name=obj.object_name,
             payload=payload,
-        )
-        emit(
-            Event.CREATED_OBJECT,
-            schema_name=obj.schema_name,
-            object_name=obj.object_name,
-            kind=obj.kind,
-            elevated=obj.is_elevated,
+            emit_fields={
+                "schema_name": obj.schema_name,
+                "object_name": obj.object_name,
+                "kind": obj.kind,
+                "elevated": obj.is_elevated,
+            },
         )
     for schema_name, table_name, skip_payload in iter_skipped_object_audits(
         catalog, config
     ):
-        await audit.write(
+        await record_event(
             target,
+            audit,
             EventType.SKIPPED_OBJECT,
-            schema_name=schema_name,
-            table_name=table_name,
-            payload=skip_payload,
-        )
-        emit(
             Event.SKIPPED_OBJECT,
             schema_name=schema_name,
-            object_name=table_name,
-            kind=skip_payload.get("kind"),
-            reason=skip_payload.get("reason"),
+            table_name=table_name,
+            payload=dict(skip_payload),
+            emit_fields={
+                "schema_name": schema_name,
+                "object_name": table_name,
+                "kind": skip_payload.get("kind"),
+                "reason": skip_payload.get("reason"),
+            },
         )

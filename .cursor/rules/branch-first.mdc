@@ -36,11 +36,15 @@ substitute. See ``.cursor/rules/integration-before-push.mdc``.
 
 ```bash
 git push -u origin HEAD
+# Required before PR: nuclear-branch (see nuclear-branch-before-pr.mdc)
 gh pr create   # when the user asks for a PR — then STOP; do not merge
 ```
 
 Do not use ``--no-verify``. If the integration pre-push gate fails or refuses,
 fix locally and retry — never push past it.
+
+Before ``gh pr create``, run ``nuclear-branch`` and resolve High findings (or
+record an explicit user waiver). See ``.cursor/rules/nuclear-branch-before-pr.mdc``.
 
 ## Release tags
 

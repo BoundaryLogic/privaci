@@ -19,13 +19,14 @@ In-VPC PostgreSQL masking and anonymization engine.
 | Option | Env var | Default | Description |
 |--------|---------|---------|-------------|
 | `--log-level` | `PRIVACI_LOG_LEVEL` | `info` | Logging level. |
-| `--contract-version` | — | `False` | Print the commercial-tier contract version and exit. |
+| `--contract-version` | — | `False` | Print the plugin contract ABI version and exit. |
 | `--config` | — | `/config/mask-rules.yaml` | Path to mask-rules.yaml. |
 | `--source` | `SOURCE_DB_URL` | — | Source database URL or secret URI. |
 | `--target` | `TARGET_DB_URL` | — | Target database URL or secret URI. |
 | `--dry-run` | — | `False` | Run pre-flight checks only; do not write rows. |
 | `--no-audit-table` | — | `False` | Disable writes to _privaci.audit_log for this run. |
 | `--prometheus-port` | — | — | Serve Prometheus metrics on this port (off by default). |
+| `--force-restart` | — | `False` | Abandon incomplete target runs and start fresh. Requires on_existing_data: truncate or drop_create. |
 
 ## `privaci catalog inspect`
 
@@ -157,6 +158,7 @@ Execute a masking run against the configured source and target.
 | `--dry-run` | — | `False` | Run pre-flight checks only; do not write rows. |
 | `--no-audit-table` | — | `False` | Disable writes to _privaci.audit_log for this run. |
 | `--prometheus-port` | — | — | Serve Prometheus metrics on this port (off by default). |
+| `--force-restart` | — | `False` | Abandon incomplete target runs and start fresh. Requires on_existing_data: truncate or drop_create. |
 
 ## `privaci schema config`
 

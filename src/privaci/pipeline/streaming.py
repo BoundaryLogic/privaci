@@ -9,14 +9,17 @@ from dataclasses import dataclass
 import asyncpg
 
 from privaci.autodetect import DetectionResult, resolve_effective_table_config
-from privaci.catalog.models import CatalogResult, TableInfo
+from privaci.catalog.graph import deferred_edge_components
+from privaci.catalog.models import CatalogResult, DeferredEdge, TableInfo
 from privaci.catalog.partitions import config_table_id
 from privaci.config.models import Config
 from privaci.contracts import load_plugins
 from privaci.contracts.base import RunEnhancements
 from privaci.mask.engine import MaskingEngine
-from privaci.pipeline.table_plan import TableAction, plan_table, table_strategy
+from privaci.pipeline.table_plan import TableAction, plan_table
+from privaci.schema.orphan_fks import orphan_fk_columns_to_null
 from privaci.schema.strategies import finalize_empty_strategy_table
+from privaci.schema.table_policy import table_strategy
 from privaci.state import (
     AuditWriter,
     TableCheckpoint,
@@ -84,19 +87,54 @@ async def stream_all_tables(
     total_rows = 0
     total_bytes = 0
     tables_done = 0
+    cycle_components = _multi_table_cycle_components(catalog.load_plan.deferred_edges)
     for layer in catalog.load_plan.layers:
-        async with target.transaction():
-            await target.execute("SET CONSTRAINTS ALL DEFERRED")
-            for layer_table_id in layer.table_ids:
-                done, rows, batch_bytes = await _process_layer_table(
-                    ctx, layer_table_id
-                )
-                if done:
-                    tables_done += 1
-                    counts[layer_table_id] = rows
-                    total_rows += rows
-                    total_bytes += batch_bytes
+        for batch in _commit_batches(layer.table_ids, cycle_components):
+            async with target.transaction():
+                await target.execute("SET CONSTRAINTS ALL DEFERRED")
+                for layer_table_id in batch:
+                    done, rows, batch_bytes = await _process_layer_table(
+                        ctx, layer_table_id
+                    )
+                    if done:
+                        tables_done += 1
+                        counts[layer_table_id] = rows
+                        total_rows += rows
+                        total_bytes += batch_bytes
     return tables_done, total_rows, counts, total_bytes
+
+
+def _multi_table_cycle_components(
+    deferred_edges: tuple[DeferredEdge, ...],
+) -> tuple[frozenset[str], ...]:
+    """Return deferred-edge SCCs that require a shared transaction."""
+    return tuple(
+        frozenset(component)
+        for component in deferred_edge_components(deferred_edges)
+        if len(component) > 1
+    )
+
+
+def _commit_batches(
+    table_ids: tuple[str, ...],
+    cycle_components: tuple[frozenset[str], ...],
+) -> list[tuple[str, ...]]:
+    """Group layer tables into commit units (one table, or one cycle SCC)."""
+    remaining = list(table_ids)
+    batches: list[tuple[str, ...]] = []
+    while remaining:
+        table_id = remaining[0]
+        mates = next(
+            (component for component in cycle_components if table_id in component),
+            None,
+        )
+        if mates is None:
+            batches.append((remaining.pop(0),))
+            continue
+        batch = tuple(tid for tid in remaining if tid in mates)
+        remaining = [tid for tid in remaining if tid not in mates]
+        batches.append(batch)
+    return batches
 
 
 async def _process_layer_table(
@@ -209,6 +247,7 @@ async def stream_one_table(
         table_cfg,
         cell_post_processor=ctx.enhancements.cell_post_processor,
         pseudonym_key=ctx.pseudonym_key,
+        null_columns=orphan_fk_columns_to_null(table, ctx.catalog, ctx.config),
     )
     batch_size = resolve_batch_size(
         table,

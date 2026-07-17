@@ -67,10 +67,38 @@ write**, so progress can never run ahead of committed rows.
 
 Key columns: `audit_id` (UUIDv7 PK), `run_id`, `event_at`, `level`
 (`info`/`warning`/`error`), `event_type`, `schema_name`, `table_name`,
-`column_name`, `payload` (jsonb). Built-in `event_type` values include
-`column.masked`, `column.passed_through`, `column.pii_detected`, `cycle_break`,
-`polymorphic_fk_warning`, `binary_fallback`, `strict_mode_violation`,
-`schema.validated`, and `schema.validation_failed`.
+`column_name`, `payload` (jsonb). Built-in `event_type` values:
+
+| `event_type` | Meaning |
+|--------------|---------|
+| `column.masked` | Column action applied |
+| `column.passed_through` | Column copied without masking |
+| `column.pii_detected` | Detection note for a column |
+| `cycle_break` | FK cycle deferred for load |
+| `polymorphic_fk_warning` | Polymorphic FK risk |
+| `implied_fk_warning` | Implied FK risk |
+| `binary_fallback` | Binary COPY unavailable; used batch |
+| `strict_mode_violation` | Strict autodetect refusal context |
+| `new_table` | Partition child discovered vs prior snapshot |
+| `skipped_object` | Object not replicated (`kind` + `reason`) |
+| `created_object` | View/function (or shell) created on target |
+| `schema.validated` | `assume_existing` validation passed |
+| `schema.validation_failed` | `assume_existing` validation refused |
+
+Commercial layers may add their own `event_type` strings. Definition-only
+matview shells (when a future engine build enables them) use `created_object`
+audits with `contents_copied: false` — not a separate operator flag in this
+release.
+
+## Force-restart and resume
+
+Incomplete runs (`in_progress`, `interrupted`, `failed`) are resumed with
+`privaci resume` when identity fingerprints match and, in `schema_mode:
+replicate`, a `source_schema_snapshot` is present. Missing snapshots refuse
+resume (exit **2**).
+
+`privaci run --force-restart` abandons incomplete runs and starts fresh. It
+requires `on_existing_data: truncate` or `drop_create` (not `fail`).
 
 ## Disabling the audit log
 

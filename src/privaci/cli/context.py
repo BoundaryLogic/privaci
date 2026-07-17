@@ -69,7 +69,7 @@ def _validate_license() -> None:
     raise LicenseError(
         "Validating license",
         cause=license_status.message or "License validation failed.",
-        remediation="Install a valid license or use the community tier.",
+        remediation="Install a valid license or use community mode.",
     )
 
 

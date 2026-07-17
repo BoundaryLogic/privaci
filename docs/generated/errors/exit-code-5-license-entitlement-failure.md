@@ -8,12 +8,14 @@ description: "PrivaCI exit code 5: operator causes, remediation steps, and CI br
 
 # Exit code 5: License / entitlement failure (commercial)
 
-The commercial layer could not validate a Marketplace entitlement.
+The commercial layer could not validate an active License Manager entitlement
+(or equivalent subscription check).
 
 **Remediation**
 
-- Confirm the container can reach the AWS Marketplace metering endpoint.
-- Verify the subscription is active in AWS Marketplace.
-- Community mode (no commercial layer) never returns this code.
+- Confirm the container can reach AWS License Manager (or your configured
+  entitlement endpoint).
+- Verify the License Manager entitlement / license is active.
+- Community mode (no plugin package installed) never returns this code.
 
 ---

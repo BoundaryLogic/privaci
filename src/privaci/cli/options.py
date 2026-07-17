@@ -66,6 +66,17 @@ LogLevelOption = Annotated[
     ),
 ]
 
+ForceRestartOption = Annotated[
+    bool,
+    typer.Option(
+        "--force-restart",
+        help=(
+            "Abandon incomplete target runs and start fresh. "
+            "Requires on_existing_data: truncate or drop_create."
+        ),
+    ),
+]
+
 InitOutputOption = Annotated[
     Path,
     typer.Option(

@@ -25,6 +25,7 @@ from privaci.state.models import (
 )
 from privaci.state.resume import (
     TableCheckpoint,
+    abandon_incomplete_runs,
     ensure_table_resumable,
     find_resumable_run,
     load_checkpoints,
@@ -35,6 +36,11 @@ from privaci.state.resume import (
 )
 from privaci.state.runs import finish_run, start_run
 from privaci.state.schema import ensure_state_schema
+from privaci.state.schema_snapshot import (
+    load_latest_schema_snapshot,
+    persist_source_schema_snapshot,
+    validate_resume_schema_snapshot,
+)
 
 __all__ = [
     "STATE_SCHEMA_NAME",
@@ -46,13 +52,16 @@ __all__ = [
     "RunIdentity",
     "RunStatus",
     "TableCheckpoint",
+    "abandon_incomplete_runs",
     "config_hash",
     "ensure_state_schema",
     "ensure_table_resumable",
     "find_resumable_run",
     "finish_run",
     "load_checkpoints",
+    "load_latest_schema_snapshot",
     "parse_checkpoint_cursor",
+    "persist_source_schema_snapshot",
     "reopen_resumable_run",
     "require_resumable_run",
     "resolve_resumable_run",
@@ -61,5 +70,6 @@ __all__ = [
     "salt_fingerprint",
     "source_db_hash",
     "start_run",
+    "validate_resume_schema_snapshot",
     "write_checkpoint",
 ]

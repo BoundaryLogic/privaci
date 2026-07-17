@@ -14,8 +14,37 @@ from privaci.schema.assume_existing import (
     binary_copy_columns_match,
     fetch_target_columns,
 )
+from privaci.schema.orphan_fks import table_requires_orphan_nulling
 from privaci.schema.replicate import tables_in_load_order
 from privaci.stream.passthrough_eligibility import table_is_passthrough_candidate
+
+
+def assert_require_binary_allows_orphan_nulling(
+    catalog: CatalogResult,
+    config: Config,
+) -> None:
+    """Fail when ``require_binary`` collides with orphan-FK nulling (any mode)."""
+    if config.passthrough_copy != "require_binary":
+        return
+    orphan_null_tables = [
+        table.identifier
+        for table in tables_in_load_order(catalog)
+        if not is_partition_child(table)
+        and table_requires_orphan_nulling(table, catalog, config)
+    ]
+    if not orphan_null_tables:
+        return
+    raise PreflightError(
+        "Checking passthrough_copy: require_binary eligibility",
+        cause=(
+            "null_orphan_fks requires row mutation (batch path) for: "
+            + ", ".join(sorted(orphan_null_tables))
+        ),
+        remediation=(
+            "Set passthrough_copy: auto or batch when null_orphan_fks is "
+            "enabled on tables that reference excluded parents."
+        ),
+    )
 
 
 async def verify_passthrough_copy_policy(
@@ -27,6 +56,7 @@ async def verify_passthrough_copy_policy(
     """Enforce ``passthrough_copy: require_binary`` against the target schema."""
     if config.passthrough_copy != "require_binary":
         return
+    assert_require_binary_allows_orphan_nulling(catalog, config)
     ineligible: list[str] = []
     for table in tables_in_load_order(catalog):
         if is_partition_child(table):

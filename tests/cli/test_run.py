@@ -68,6 +68,7 @@ def test_run_delegates_to_execute_run(tmp_path: Path, mocker: MockerFixture) -> 
         dry_run=False,
         audit_enabled=None,
         report_path=None,
+        force_restart=False,
     )
 
 
@@ -102,6 +103,7 @@ def test_dry_run_delegates_with_dry_run_flag(
         dry_run=True,
         audit_enabled=None,
         report_path=None,
+        force_restart=False,
     )
 
 

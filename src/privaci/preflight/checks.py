@@ -7,12 +7,15 @@ import logging
 import asyncpg
 
 from privaci.autodetect import DetectionResult, uncovered_strict_columns
-from privaci.catalog.models import CatalogResult, TableInfo
-from privaci.catalog.partitions import config_table_id, validate_no_subpartitioning
+from privaci.catalog.models import CatalogResult
+from privaci.catalog.partitions import validate_no_subpartitioning
 from privaci.config.loader import check_null_actions
 from privaci.config.models import Config
 from privaci.errors import CatalogError, ConfigError, PreflightError
-from privaci.preflight.passthrough_copy import verify_passthrough_copy_policy
+from privaci.preflight.passthrough_copy import (
+    assert_require_binary_allows_orphan_nulling,
+    verify_passthrough_copy_policy,
+)
 from privaci.preflight.target import (
     collision_warning_for_dry_run,
     ensure_target_ready,
@@ -27,6 +30,7 @@ from privaci.schema.elevated import (
     validate_function_excluded_deps,
 )
 from privaci.schema.replicate import validate_exclude_fks
+from privaci.schema.table_policy import table_strategy
 
 logger = logging.getLogger(__name__)
 
@@ -162,6 +166,7 @@ async def run_target_checks(
     """Verify target permissions and prepare greenfield replication targets."""
     await verify_target_writable(conn)
     warnings = warn_disk_capacity(catalog)
+    assert_require_binary_allows_orphan_nulling(catalog, config)
     if for_resume:
         return warnings
     if config.schema_mode == "replicate":
@@ -235,14 +240,7 @@ def collect_dry_run_rows(
         table = catalog.tables[table_id]
         if table.is_partitioned:
             continue
-        strategy = _table_strategy(table, config)
+        strategy = table_strategy(table, config)
         estimate = max(int(table.estimated_rows), 0)
         rows.append((table_id, strategy, estimate))
     return rows
-
-
-def _table_strategy(table: TableInfo, config: Config) -> str:
-    table_cfg = config.tables.get(config_table_id(table))
-    if table_cfg is None:
-        return "transform"
-    return table_cfg.strategy

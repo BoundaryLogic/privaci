@@ -71,4 +71,5 @@ def test_emit_drops_reserved_envelope_keys() -> None:
     # Assert
     fields = records[0].event_fields  # type: ignore[attr-defined]
     assert "timestamp" not in fields
-    assert fields["message"] == "real"
+    assert fields["message"].startswith("***len=")
+    assert "real" not in fields["message"]

@@ -1,4 +1,4 @@
-"""Helpers for emitting skipped-object audit events from catalog introspection."""
+"""Skipped-object audit payloads for schema replication policy."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ from collections.abc import Iterator
 from privaci.catalog.models import CatalogResult, SkippedObjectInfo, ViewInfo
 from privaci.config.models import Config
 from privaci.schema.elevated import disposition_for_function, disposition_for_view
+from privaci.schema.table_policy import excluded_table_ids
 
 
 def iter_skipped_object_audits(
@@ -21,7 +22,11 @@ def iter_skipped_object_audits(
     """
     if config is None:
         for view in catalog.views:
-            yield view.schema_name, view.view_name, {"kind": view.kind}
+            yield (
+                view.schema_name,
+                view.view_name,
+                {"kind": view.kind, "reason": "not_replicated"},
+            )
     else:
         yield from _skipped_views(catalog, config)
         yield from _skipped_functions(catalog, config)
@@ -33,14 +38,14 @@ def _skipped_views(
     catalog: CatalogResult,
     config: Config,
 ) -> Iterator[tuple[str | None, str | None, dict[str, str]]]:
-    excluded = {
-        table_id
-        for table_id, table_cfg in config.tables.items()
-        if table_cfg.strategy == "exclude"
-    }
+    excluded = excluded_table_ids(config)
     for view in catalog.views:
         if view.kind == "materialized_view":
-            yield view.schema_name, view.view_name, {"kind": view.kind}
+            yield (
+                view.schema_name,
+                view.view_name,
+                {"kind": view.kind, "reason": "not_supported"},
+            )
             continue
         disposition = disposition_for_view(view, config)
         if disposition == "replicate":
@@ -54,6 +59,10 @@ def _skipped_views(
         payload: dict[str, str] = {"kind": view.kind}
         if disposition == "skip" and view.is_elevated:
             payload["reason"] = "elevated_object_skipped"
+        elif not config.replicate_views:
+            payload["reason"] = "flag_disabled"
+        else:
+            payload["reason"] = "not_replicated"
         yield view.schema_name, view.view_name, payload
 
 
@@ -68,6 +77,10 @@ def _skipped_functions(
         payload: dict[str, str] = {"kind": "function"}
         if disposition == "skip" and function.is_elevated:
             payload["reason"] = "elevated_object_skipped"
+        elif not config.replicate_functions:
+            payload["reason"] = "flag_disabled"
+        else:
+            payload["reason"] = "not_replicated"
         name = function.function_name
         if function.identity_args.strip():
             name = f"{function.function_name}({function.identity_args})"
@@ -100,4 +113,6 @@ def _audit_payload(obj: SkippedObjectInfo) -> dict[str, str]:
         payload["reason"] = "customer_owned_semantics"
     elif obj.kind == "publication":
         payload["reason"] = "low_value_footgun"
+    else:
+        payload["reason"] = "not_replicated"
     return payload

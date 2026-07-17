@@ -47,6 +47,26 @@ def test_redact_fields_redacts_unknown_string_fields() -> None:
     assert result["sample_value"].startswith("***len=")
 
 
+def test_redact_fields_redacts_free_text_message_detail_cause() -> None:
+    # Arrange
+    fields = {
+        "message": "user john@acme.com failed",
+        "detail": "ssn 123-45-6789",
+        "cause": "lookup miss for jane@acme.com",
+        "reason": "flag_disabled",
+    }
+
+    # Act
+    result = redact_fields(fields)
+
+    # Assert
+    assert "john" not in result["message"]
+    assert "123" not in result["detail"]
+    assert "jane" not in result["cause"]
+    assert result["reason"] == "flag_disabled"
+    assert result["message"].startswith("***len=")
+
+
 def test_redact_fields_returns_new_mapping() -> None:
     # Arrange
     fields = {"notes": "abc"}

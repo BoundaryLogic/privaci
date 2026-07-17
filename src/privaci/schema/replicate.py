@@ -6,7 +6,7 @@ import logging
 
 import asyncpg
 
-from privaci.catalog.models import CatalogResult, TableInfo
+from privaci.catalog.models import CatalogResult, ForeignKeyInfo, TableInfo
 from privaci.catalog.partitions import config_table_id, is_partition_child
 from privaci.config.models import Config, TableConfig
 from privaci.errors import ConfigError, PreflightError
@@ -21,7 +21,9 @@ from privaci.schema.ddl import (
 )
 from privaci.schema.extensions import emit_create_extension, required_extensions
 from privaci.schema.objects import ReplicatedObject, replicate_functions_and_views
+from privaci.schema.orphan_fks import assert_orphan_nulling_allowed
 from privaci.schema.sequences import sequence_columns
+from privaci.schema.table_policy import is_excluded_table
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +111,13 @@ async def _create_foreign_keys(
         if _resolve_strategy(table, config) == _STRATEGY_EXCLUDE:
             continue
         for fk in table.foreign_keys:
+            if _fk_references_excluded_or_missing(fk, catalog, config):
+                logger.debug(
+                    "Skipping FK %s on %s (referent excluded or not created)",
+                    fk.name,
+                    table.identifier,
+                )
+                continue
             if await foreign_key_exists(conn, table, fk.name):
                 logger.debug(
                     "Skipping existing foreign key %s on %s",
@@ -117,6 +126,18 @@ async def _create_foreign_keys(
                 )
                 continue
             await _execute(conn, emit_foreign_key(table, fk))
+
+
+def _fk_references_excluded_or_missing(
+    fk: ForeignKeyInfo,
+    catalog: CatalogResult,
+    config: Config,
+) -> bool:
+    """Return True when the FK parent is excluded or absent from the catalog."""
+    referenced = catalog.tables.get(fk.referenced_id)
+    if referenced is None:
+        return True
+    return _resolve_strategy(referenced, config) == _STRATEGY_EXCLUDE
 
 
 def _resolve_strategy(table: TableInfo, config: Config) -> str:
@@ -139,6 +160,7 @@ def tables_in_load_order(catalog: CatalogResult) -> list[TableInfo]:
 
 
 def validate_exclude_fks(catalog: CatalogResult, config: Config) -> None:
+    assert_orphan_nulling_allowed(catalog, config)
     offenders = _collect_exclude_fk_offenders(catalog, config)
     if not offenders:
         return
@@ -156,8 +178,7 @@ def _collect_exclude_fk_offenders(
 ) -> list[str]:
     offenders: list[str] = []
     for table in catalog.tables.values():
-        cfg = config.tables.get(table.identifier)
-        if cfg is None or cfg.strategy != _STRATEGY_EXCLUDE:
+        if not is_excluded_table(table, config):
             continue
         offenders.extend(
             _offenders_for_excluded_table(catalog, config, table.identifier)
@@ -172,8 +193,11 @@ def _offenders_for_excluded_table(
 ) -> list[str]:
     offenders: list[str] = []
     for other in catalog.tables.values():
-        other_cfg = config.tables.get(other.identifier) or TableConfig()
-        if other_cfg.strategy == _STRATEGY_EXCLUDE or other_cfg.null_orphan_fks:
+        if is_excluded_table(other, config):
+            continue
+        other_cfg = config.tables.get(config_table_id(other)) or TableConfig()
+        # null_orphan_fks tables are validated by assert_orphan_nulling_allowed
+        if other_cfg.null_orphan_fks:
             continue
         for fk in other.foreign_keys:
             if fk.referenced_id != excluded_id:

@@ -216,6 +216,19 @@ MATRIX_CELLS: tuple[MatrixCell, ...] = (
         triage_note="Prebuilt target + load path",
     ),
     MatrixCell(
+        id="harden-check-orphan-force-restart",
+        rank="P1",
+        repo="public",
+        label="CHECK round-trip, null_orphan_fks, force-restart×fail",
+        axes={
+            "schema_mode": "replicate",
+            "null_orphan_fks": "true",
+            "force_restart": "true",
+        },
+        capability_ids=("public-harden-nuclear-findings",),
+        triage_note="Nuclear codebase harden cells",
+    ),
+    MatrixCell(
         id="resume-x-replicate-objects-on",
         rank="P3",
         repo="public",

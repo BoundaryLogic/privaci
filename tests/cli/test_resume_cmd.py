@@ -35,9 +35,9 @@ def test_report_writes_output_file(mocker: MockerFixture, tmp_path: Path) -> Non
     import uuid
 
     run_id = uuid.uuid4()
-    bundle = mocker.patch("privaci.cli.app.load_plugins").return_value
+    bundle = mocker.patch("privaci.cli._report.load_plugins").return_value
     bundle.report_renderer.render.return_value = b'{"run_id": "x"}'
-    write = mocker.patch("privaci.cli.app.write_object")
+    write = mocker.patch("privaci.cli._report.write_object")
     out = tmp_path / "report.json"
 
     result = runner.invoke(
@@ -55,7 +55,7 @@ def test_report_emits_pdf_bytes_to_stdout(mocker: MockerFixture) -> None:
     import uuid
 
     run_id = uuid.uuid4()
-    bundle = mocker.patch("privaci.cli.app.load_plugins").return_value
+    bundle = mocker.patch("privaci.cli._report.load_plugins").return_value
     bundle.report_renderer.render.return_value = b"%PDF-1.4 test"
 
     # Act
@@ -74,7 +74,7 @@ def test_report_emits_json(mocker: MockerFixture) -> None:
     import uuid
 
     run_id = uuid.uuid4()
-    bundle = mocker.patch("privaci.cli.app.load_plugins").return_value
+    bundle = mocker.patch("privaci.cli._report.load_plugins").return_value
     bundle.report_renderer.render.return_value = b'{"run_id": "x"}'
 
     # Act

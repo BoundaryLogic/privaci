@@ -186,7 +186,9 @@ def _merge_deferred_tables(
     return [LoadLayer(table_ids=tuple(sorted(layer))) for layer in layer_sets if layer]
 
 
-def _deferred_components(deferred: list[DeferredEdge]) -> list[set[str]]:
+def deferred_edge_components(
+    deferred: list[DeferredEdge] | tuple[DeferredEdge, ...],
+) -> list[set[str]]:
     """Group tables connected (transitively) by deferred edges."""
     components: list[set[str]] = []
     for edge in deferred:
@@ -201,3 +203,8 @@ def _deferred_components(deferred: list[DeferredEdge]) -> list[set[str]]:
             components.remove(component)
         components.append(merged)
     return components
+
+
+def _deferred_components(deferred: list[DeferredEdge]) -> list[set[str]]:
+    """Compatibility alias for :func:`deferred_edge_components`."""
+    return deferred_edge_components(deferred)
