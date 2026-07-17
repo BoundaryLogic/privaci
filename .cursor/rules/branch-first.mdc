@@ -24,18 +24,23 @@ Run the full CI mirror **before every commit** — same gates as GitHub
 
 Do not commit until it exits 0. See ``.cursor/rules/ci-before-commit.mdc``.
 
-Optional extras (not substitutes): ``./scripts/ci-local.sh --integration``,
-``--docs``, ``--helm``; ``./scripts/capability-test-suite.sh quick``.
-
 ``pre-commit install`` runs ``ci-local.sh`` on commit when ``src/``,
 ``tests/``, or ``scripts/`` change (and again on pre-push as a safety net).
 
 ## Before push
 
+For high-risk engine/integration paths, pre-push runs GitHub ``integration``
+parity (``./scripts/ci-local.sh --integration`` — one
+``pytest -m "integration and not slow"`` session). Capability suites are not a
+substitute. See ``.cursor/rules/integration-before-push.mdc``.
+
 ```bash
 git push -u origin HEAD
 gh pr create   # when the user asks for a PR — then STOP; do not merge
 ```
+
+Do not use ``--no-verify``. If the integration pre-push gate fails or refuses,
+fix locally and retry — never push past it.
 
 ## Release tags
 

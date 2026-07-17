@@ -12,7 +12,16 @@ from privaci.catalog.partitions import config_table_id, validate_no_subpartition
 from privaci.config.loader import check_null_actions
 from privaci.config.models import Config
 from privaci.errors import CatalogError, ConfigError, PreflightError
-from privaci.preflight.target import count_user_tables, ensure_target_ready
+from privaci.preflight.passthrough_copy import verify_passthrough_copy_policy
+from privaci.preflight.target import (
+    collision_warning_for_dry_run,
+    ensure_target_ready,
+    validate_target_policy,
+)
+from privaci.schema.assume_existing import (
+    raise_validation_failed,
+    validate_assume_existing,
+)
 from privaci.schema.replicate import validate_exclude_fks
 
 logger = logging.getLogger(__name__)
@@ -144,35 +153,53 @@ async def run_target_checks(
     *,
     dry_run: bool = False,
     for_resume: bool = False,
+    detection: DetectionResult | None = None,
 ) -> list[str]:
-    """Verify target permissions and apply ``on_existing_data`` policy."""
+    """Verify target permissions and prepare greenfield replication targets."""
     await verify_target_writable(conn)
     warnings = warn_disk_capacity(catalog)
-    if dry_run or for_resume:
-        if dry_run:
-            warnings.extend(await _dry_run_target_warnings(conn, config))
+    if for_resume:
+        return warnings
+    if dry_run:
+        if config.schema_mode == "assume_existing":
+            await _run_assume_existing_dry_run_checks(
+                conn,
+                config,
+                catalog,
+                detection=detection,
+            )
+        warnings.extend(await _dry_run_target_warnings(conn, config, catalog))
+        return warnings
+    if config.schema_mode == "assume_existing":
+        await validate_target_policy(conn, config, catalog)
         return warnings
     await ensure_target_ready(conn, config, catalog)
     return warnings
 
 
+async def _run_assume_existing_dry_run_checks(
+    conn: asyncpg.Connection,
+    config: Config,
+    catalog: CatalogResult,
+    *,
+    detection: DetectionResult | None,
+) -> None:
+    """Validate prebuilt schema for dry-run without writing audit rows."""
+    validation = await validate_assume_existing(conn, catalog, config)
+    if not validation.is_ok:
+        raise_validation_failed(validation)
+    if detection is not None:
+        await verify_passthrough_copy_policy(conn, catalog, config, detection)
+
+
 async def _dry_run_target_warnings(
     conn: asyncpg.Connection,
     config: Config,
+    catalog: CatalogResult,
 ) -> list[str]:
     """Warn when a real run would fail on target collision without blocking dry-run."""
-    if config.on_existing_data != "fail":
-        return []
-    user_tables = await count_user_tables(conn)
-    if user_tables <= 0:
-        return []
-    return [
-        (
-            f"Target has {user_tables} user table(s) outside _privaci; "
-            "a real run will fail with on_existing_data: fail unless the "
-            "target is emptied or the policy is changed."
-        )
-    ]
+    warning = await collision_warning_for_dry_run(conn, config, catalog)
+    return [] if warning is None else [warning]
 
 
 def warn_disk_capacity(catalog: CatalogResult) -> list[str]:

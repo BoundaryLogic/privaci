@@ -10,11 +10,12 @@ import pytest
 
 from privaci.catalog.models import ColumnInfo, TableInfo
 from privaci.config.actions import FakeAction, PassthroughAction
-from privaci.config.models import TableConfig
-from privaci.stream.copy_binary import (
-    binary_copy_passthrough_table,
-    can_binary_copy_passthrough,
-)
+from privaci.config.models import Config, TableConfig
+from privaci.mask.engine import MaskingEngine
+from privaci.stream import table as stream_table_mod
+from privaci.stream.copy_binary import binary_copy_passthrough_table
+from privaci.stream.passthrough_eligibility import table_is_passthrough_candidate
+from tests.fixtures.constants import SUPPORTED_CONFIG_VERSION
 
 
 async def _stream_binary_payload(
@@ -37,28 +38,28 @@ def _users_table() -> TableInfo:
     )
 
 
-def test_can_binary_copy_passthrough_when_no_column_config() -> None:
+def test_passthrough_candidate_when_no_column_config() -> None:
     # Arrange
     table = _users_table()
 
     # Assert
-    assert can_binary_copy_passthrough(table, TableConfig(), last_pk_value=None)
+    assert table_is_passthrough_candidate(table, TableConfig(), last_pk_value=None)
 
 
-def test_can_binary_copy_passthrough_rejects_resume_cursor() -> None:
+def test_passthrough_candidate_rejects_resume_cursor() -> None:
     # Arrange
     table = _users_table()
 
     # Assert
-    assert not can_binary_copy_passthrough(table, TableConfig(), last_pk_value=5)
+    assert not table_is_passthrough_candidate(table, TableConfig(), last_pk_value=5)
 
 
-def test_can_binary_copy_passthrough_rejects_row_filter() -> None:
+def test_passthrough_candidate_rejects_row_filter() -> None:
     # Arrange
     table = _users_table()
 
     # Assert
-    assert not can_binary_copy_passthrough(
+    assert not table_is_passthrough_candidate(
         table,
         TableConfig(),
         last_pk_value=None,
@@ -71,16 +72,13 @@ async def test_stream_table_skips_binary_copy_when_cell_post_processor_set(
     mocker: pytest.MockFixture,
 ) -> None:
     """Commercial JSON hooks must not use whole-table COPY passthrough."""
-    from privaci.config.models import TableConfig
-    from privaci.mask.engine import MaskingEngine
-    from privaci.stream import table as stream_table_mod
-
     table = _users_table()
     engine = mocker.Mock(spec=MaskingEngine)
     engine.uses_cell_post_processing = True
     mocker.patch.object(
         stream_table_mod,
-        "can_binary_copy_passthrough",
+        "is_binary_copy_eligible",
+        new_callable=AsyncMock,
         return_value=True,
     )
     mocker.patch.object(
@@ -118,13 +116,14 @@ async def test_stream_table_skips_binary_copy_when_cell_post_processor_set(
         engine,
         run_id=__import__("uuid").uuid4(),
         batch_size=10,
+        config=Config(version=SUPPORTED_CONFIG_VERSION),
         table_config=TableConfig(),
     )
 
     stream_table_mod.binary_copy_passthrough_table.assert_not_called()
 
 
-def test_can_binary_copy_passthrough_rejects_masked_columns() -> None:
+def test_passthrough_candidate_rejects_masked_columns() -> None:
     # Arrange
     table = _users_table()
     table_cfg = TableConfig(
@@ -132,10 +131,10 @@ def test_can_binary_copy_passthrough_rejects_masked_columns() -> None:
     )
 
     # Assert
-    assert not can_binary_copy_passthrough(table, table_cfg, last_pk_value=None)
+    assert not table_is_passthrough_candidate(table, table_cfg, last_pk_value=None)
 
 
-def test_can_binary_copy_passthrough_accepts_explicit_passthrough() -> None:
+def test_passthrough_candidate_accepts_explicit_passthrough() -> None:
     # Arrange
     table = _users_table()
     table_cfg = TableConfig(
@@ -143,7 +142,7 @@ def test_can_binary_copy_passthrough_accepts_explicit_passthrough() -> None:
     )
 
     # Assert
-    assert can_binary_copy_passthrough(table, table_cfg, last_pk_value=None)
+    assert table_is_passthrough_candidate(table, table_cfg, last_pk_value=None)
 
 
 class _FakeTransaction:
@@ -168,6 +167,10 @@ async def test_binary_copy_passthrough_table_streams_whole_table(
     target.copy_to_table = AsyncMock()
     mocker.patch("privaci.stream.copy_binary.write_checkpoint", new_callable=AsyncMock)
     mocker.patch("privaci.stream.copy_binary.mark_table_done", new_callable=AsyncMock)
+    sync_sequences = mocker.patch(
+        "privaci.stream.copy_binary.sync_table_sequences",
+        new_callable=AsyncMock,
+    )
 
     # Act
     rows = await binary_copy_passthrough_table(
@@ -180,3 +183,45 @@ async def test_binary_copy_passthrough_table_streams_whole_table(
     # Assert
     assert rows == 2
     target.copy_to_table.assert_awaited_once()
+    sync_sequences.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_binary_copy_syncs_serial_sequence_from_target_max(
+    mocker: pytest.MockFixture,
+) -> None:
+    # Arrange
+    table = TableInfo(
+        schema_name="public",
+        table_name="users",
+        columns=(
+            ColumnInfo(
+                name="id",
+                data_type="integer",
+                not_null=True,
+                uses_serial=True,
+                sequence_name="public.users_id_seq",
+            ),
+            ColumnInfo(name="email", data_type="text", not_null=True),
+        ),
+        primary_key=("id",),
+    )
+    source = AsyncMock()
+    source.fetchval = AsyncMock(return_value=2)
+    source.copy_from_table = AsyncMock(side_effect=_stream_binary_payload)
+    target = AsyncMock()
+    target.transaction = MagicMock(return_value=_FakeTransaction())
+    target.copy_to_table = AsyncMock()
+    target.fetchval = AsyncMock(return_value=42)
+    mocker.patch("privaci.stream.copy_binary.write_checkpoint", new_callable=AsyncMock)
+    mocker.patch("privaci.stream.copy_binary.mark_table_done", new_callable=AsyncMock)
+    sync_sequences = mocker.patch(
+        "privaci.stream.copy_binary.sync_table_sequences",
+        new_callable=AsyncMock,
+    )
+
+    # Act
+    await binary_copy_passthrough_table(source, target, table, uuid.uuid4())
+
+    # Assert
+    sync_sequences.assert_awaited_once_with(target, table, {"id": 42})

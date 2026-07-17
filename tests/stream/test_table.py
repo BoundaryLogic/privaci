@@ -9,10 +9,10 @@ import pytest
 
 from privaci.catalog.models import ColumnInfo, TableInfo
 from privaci.config.actions import FakeAction
-from privaci.config.models import TableConfig
+from privaci.config.models import Config, TableConfig
 from privaci.mask.engine import MaskingEngine
 from privaci.stream.table import stream_table
-from tests.fixtures.constants import TEST_SALT
+from tests.fixtures.constants import SUPPORTED_CONFIG_VERSION, TEST_SALT
 
 
 class _FakeTransaction:
@@ -41,6 +41,10 @@ def _users_table() -> TableInfo:
         ),
         primary_key=("id",),
     )
+
+
+def _config() -> Config:
+    return Config(version=SUPPORTED_CONFIG_VERSION)
 
 
 @pytest.fixture
@@ -93,6 +97,7 @@ async def test_stream_table_masks_and_checkpoints_batches(
         engine,
         run_id=run_id,
         batch_size=100,
+        config=_config(),
         table_config=table_cfg,
     )
 
@@ -130,6 +135,7 @@ async def test_stream_table_empty_masked_table_seeds_checkpoint(
         engine,
         run_id=uuid.uuid4(),
         batch_size=100,
+        config=_config(),
         table_config=table_cfg,
     )
 
@@ -162,6 +168,7 @@ async def test_stream_table_outer_transaction_skips_nested_txn(
         engine,
         run_id=uuid.uuid4(),
         batch_size=100,
+        config=_config(),
         outer_transaction=True,
         table_config=table_cfg,
     )
@@ -207,6 +214,7 @@ async def test_stream_table_emits_binary_fallback_audit_for_ltree(
         engine,
         run_id=uuid.uuid4(),
         batch_size=100,
+        config=_config(),
         audit=audit,
     )
 
@@ -249,6 +257,7 @@ async def test_stream_table_uses_text_insert_for_ltree_columns(
         engine,
         run_id=uuid.uuid4(),
         batch_size=100,
+        config=_config(),
     )
 
     # Assert
@@ -296,6 +305,7 @@ async def test_stream_table_overrides_generated_always_identity(
         engine,
         run_id=uuid.uuid4(),
         batch_size=100,
+        config=_config(),
     )
 
     # Assert

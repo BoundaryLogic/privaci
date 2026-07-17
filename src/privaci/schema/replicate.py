@@ -17,6 +17,7 @@ from privaci.schema.ddl import (
     emit_create_table,
     emit_foreign_key,
     emit_unique_indexes,
+    foreign_key_exists,
 )
 from privaci.schema.extensions import emit_create_extension, required_extensions
 from privaci.schema.sequences import sequence_columns
@@ -105,6 +106,13 @@ async def _create_foreign_keys(
         if _resolve_strategy(table, config) == _STRATEGY_EXCLUDE:
             continue
         for fk in table.foreign_keys:
+            if await foreign_key_exists(conn, table, fk.name):
+                logger.debug(
+                    "Skipping existing foreign key %s on %s",
+                    fk.name,
+                    table.identifier,
+                )
+                continue
             await _execute(conn, emit_foreign_key(table, fk))
 
 

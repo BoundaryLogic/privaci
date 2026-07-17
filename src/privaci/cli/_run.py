@@ -71,6 +71,7 @@ async def _execute_async(
         target_dsn=target_dsn,
         dry_run=dry_run,
         defer_strict=dry_run and report_path is not None,
+        salt=salt,
     )
     _echo_preflight_warnings(report)
     if dry_run:

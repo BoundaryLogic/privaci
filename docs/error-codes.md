@@ -134,7 +134,15 @@ and `CatalogError`.
 
 **Common causes**
 
-- Target database contains user tables and `on_existing_data: fail` (default).
+- Target database contains user tables and `on_existing_data: fail` (default) in
+  `schema_mode: replicate`.
+- `schema_mode: assume_existing` with `on_existing_data: fail` and an in-scope
+  target table that already has rows (empty prebuilt tables are allowed; absence
+  of identity/`SERIAL` columns does not change this).
+- `schema_mode: assume_existing` found a missing table or incompatible column
+  type on the target (see `schema.validation_failed` in `_privaci.audit_log`).
+- `passthrough_copy: require_binary` and a passthrough table is not binary-COPY
+  eligible (column order/type mismatch).
 - Source or target unreachable, or insufficient privileges.
 - Missing `CREATE SCHEMA` privilege for `_privaci`.
 - A table referenced in config does not exist in the source.
@@ -150,7 +158,7 @@ and `CatalogError`.
 privaci dry-run --config mask-rules.yaml
 
 # If the target legitimately has data, choose an explicit policy:
-#   on_existing_data: truncate   # wipe target user tables first
+#   on_existing_data: truncate   # wipe in-scope target tables first
 # (append is rejected in the MVP — see docs/configuration.md)
 ```
 

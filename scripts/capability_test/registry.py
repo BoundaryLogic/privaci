@@ -183,6 +183,37 @@ CAPABILITIES: dict[str, Capability] = {
         metrics_scope="infra",
         tags=frozenset({"integration", "streaming", "public", "infra"}),
     ),
+    "public-schema-modes": Capability(
+        id="public-schema-modes",
+        label="Schema replication modes",
+        description=(
+            "assume_existing validation, passthrough_copy policy, and "
+            "idempotent DDL helpers."
+        ),
+        repo="public",
+        test_paths=(
+            "tests/preflight/test_assume_existing.py",
+            "tests/preflight/test_assume_existing_validate.py",
+            "tests/preflight/test_passthrough_copy.py",
+            "tests/preflight/test_target_collision.py",
+            "tests/pipeline/test_schema_modes_lifecycle.py",
+        ),
+        tags=frozenset({"unit", "public", "schema"}),
+    ),
+    "public-schema-modes-integration": Capability(
+        id="public-schema-modes-integration",
+        label="Prebuilt target schema mode",
+        description=(
+            "assume_existing loads and audits validation outcomes against Postgres."
+        ),
+        repo="public",
+        test_paths=("tests/integration/test_assume_existing.py",),
+        requires_postgres=True,
+        requires_nlp=True,
+        metrics_kind="unit",
+        metrics_scope="demo-corp",
+        tags=frozenset({"integration", "public", "schema"}),
+    ),
     "public-partitions": Capability(
         id="public-partitions",
         label="Partitioned tables",
@@ -324,7 +355,9 @@ CAPABILITIES: dict[str, Capability] = {
     "commercial-jsonb-postgres": Capability(
         id="commercial-jsonb-postgres",
         label="JSONB path masking (integration)",
-        description="Commercial json_mask paths fake/hash/remove/null on Postgres JSONB.",
+        description=(
+            "Commercial json_mask paths fake/hash/remove/null on Postgres JSONB."
+        ),
         repo="commercial",
         test_paths=("tests/integration/test_json_mask_postgres.py",),
         requires_postgres=True,

@@ -70,8 +70,12 @@ run_lint_and_test() {
 }
 
 run_integration() {
+  # Exact parity with .github/workflows/ci.yml job ``integration``.
+  # Single pytest session — required to catch cross-file session fixture bugs.
   pip install -e ".[dev,nlp]"
   python -m spacy download en_core_web_sm
+  # Fresh volumes match a clean GitHub runner (stale local DBs hide failures).
+  docker compose -f compose.dev.yml down -v
   docker compose -f compose.dev.yml up -d --wait
   trap 'docker compose -f compose.dev.yml down -v' EXIT
   pytest -m "integration and not slow" -q

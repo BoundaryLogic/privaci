@@ -69,7 +69,8 @@ Key columns: `audit_id` (UUIDv7 PK), `run_id`, `event_at`, `level`
 (`info`/`warning`/`error`), `event_type`, `schema_name`, `table_name`,
 `column_name`, `payload` (jsonb). Built-in `event_type` values include
 `column.masked`, `column.passed_through`, `column.pii_detected`, `cycle_break`,
-`polymorphic_fk_warning`, `binary_fallback`, and `strict_mode_violation`.
+`polymorphic_fk_warning`, `binary_fallback`, `strict_mode_violation`,
+`schema.validated`, and `schema.validation_failed`.
 
 ## Disabling the audit log
 

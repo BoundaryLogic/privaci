@@ -229,6 +229,7 @@ async def stream_one_table(
         table_config=table_cfg,
         audit=ctx.audit,
         row_filter=row_filter,
+        config=ctx.config,
     )
     return rows, _estimate_row_bytes(table, rows)
 

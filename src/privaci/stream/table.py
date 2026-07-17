@@ -11,7 +11,7 @@ from typing import Any
 import asyncpg
 
 from privaci.catalog.models import TableInfo
-from privaci.config.models import TableConfig
+from privaci.config.models import Config, TableConfig
 from privaci.mask.engine import MaskingEngine
 from privaci.observability import Event, ProgressThrottle, emit
 from privaci.schema.sequences import sync_table_sequences
@@ -20,10 +20,7 @@ from privaci.state.checkpoints import mark_table_done, write_checkpoint
 from privaci.state.models import EventType
 from privaci.stream.batch_write import write_masked_batch
 from privaci.stream.coerce import table_needs_text_fallback
-from privaci.stream.copy_binary import (
-    binary_copy_passthrough_table,
-    can_binary_copy_passthrough,
-)
+from privaci.stream.copy_binary import binary_copy_passthrough_table
 from privaci.stream.fetch import next_stream_batch
 from privaci.stream.models import (
     StreamContext,
@@ -33,6 +30,7 @@ from privaci.stream.models import (
     single_pk_column,
     update_max_values,
 )
+from privaci.stream.passthrough_eligibility import is_binary_copy_eligible
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +43,7 @@ async def stream_table(
     *,
     run_id: uuid.UUID,
     batch_size: int,
+    config: Config,
     last_pk_value: Any | None = None,
     outer_transaction: bool = False,
     table_config: TableConfig | None = None,
@@ -52,15 +51,15 @@ async def stream_table(
     row_filter: str | None = None,
 ) -> int:
     effective_cfg = table_config or TableConfig()
-    if (
-        can_binary_copy_passthrough(
-            table,
-            effective_cfg,
-            last_pk_value=last_pk_value,
-            row_filter=row_filter,
-        )
-        and not engine.uses_cell_post_processing
-    ):
+    use_binary = not engine.uses_cell_post_processing and await is_binary_copy_eligible(
+        target,
+        table,
+        effective_cfg,
+        config,
+        last_pk_value=last_pk_value,
+        row_filter=row_filter,
+    )
+    if use_binary:
         return await binary_copy_passthrough_table(
             source,
             target,

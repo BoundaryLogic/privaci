@@ -1,0 +1,48 @@
+---
+description: Require GitHub-identical integration before pushing high-risk engine changes
+alwaysApply: true
+---
+
+# Integration Before Push (no exceptions)
+
+Before pushing changes that touch any of these paths, run the **exact** GitHub
+``integration`` job — not capability ``quick``, not capability ``public``, and
+not a single integration file:
+
+- `src/privaci/cli/`
+- `src/privaci/config/`
+- `src/privaci/pipeline/`
+- `src/privaci/preflight/`
+- `src/privaci/schema/`
+- `src/privaci/stream/`
+- `tests/integration/`
+- related `tests/{pipeline,preflight,schema,stream}/`
+- `scripts/capability_test/`
+- `scripts/ci-local.sh` / `scripts/capability-test-prepush.sh`
+
+## Required command
+
+```bash
+./scripts/ci-local.sh --integration
+```
+
+That runs (same as `.github/workflows/ci.yml`):
+
+```bash
+pytest -m "integration and not slow" -q
+```
+
+in **one** pytest process after a fresh `compose.dev.yml` volume reset.
+
+## Why capability suites are not enough
+
+`./scripts/capability-test-suite.sh public` runs pytest **per capability /
+per file**. That cannot catch session-fixture ordering bugs across files (the
+class of failure that reached GitHub on PR #32). Do not treat capability
+``public`` as integration CI parity.
+
+## Pre-push hook
+
+`scripts/capability-test-prepush.sh` enforces `./scripts/ci-local.sh --integration`
+for the paths above. If it refuses (compose/memory), **stop** — do not push
+with `--no-verify` and do not substitute a narrower suite.

@@ -24,6 +24,8 @@ from privaci.secrets.types import SecretStr
 DEFAULT_BATCH_SIZE = 10_000
 
 OnExistingData = Literal["fail", "truncate", "drop_create", "append"]
+SchemaMode = Literal["replicate", "assume_existing"]
+PassthroughCopy = Literal["auto", "require_binary", "batch"]
 TableStrategy = Literal["transform", "exclude", "empty", "truncate"]
 
 # ``SecretStr`` is a plain dataclass, so without this override pydantic emits the
@@ -90,6 +92,11 @@ class Config(BaseModel):
             from ``global_salt``.
         on_existing_data: Target-table collision policy. ``append`` is rejected
             in the MVP.
+        schema_mode: Who owns target DDL. ``replicate`` (default) clones schema;
+            ``assume_existing`` validates a prebuilt target and loads only.
+        passthrough_copy: Whole-table binary COPY policy for unmasked tables.
+            ``auto`` prefers binary when column order matches; ``require_binary``
+            fails preflight when ineligible; ``batch`` always uses the named path.
         strict_autodetect: Fail the run when auto-detect finds uncovered PII.
         replicate_all_indexes: Replicate every source index, not just unique
             and primary-key indexes.
@@ -107,6 +114,8 @@ class Config(BaseModel):
     global_salt: GlobalSalt = None
     pseudonym_key: PseudonymKey = None
     on_existing_data: OnExistingData = "fail"
+    schema_mode: SchemaMode = "replicate"
+    passthrough_copy: PassthroughCopy = "auto"
     strict_autodetect: bool = False
     replicate_all_indexes: bool = False
     batch_size: int = DEFAULT_BATCH_SIZE
@@ -136,12 +145,21 @@ class Config(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _reject_append_in_mvp(self) -> Config:
-        """Reject the unsupported ``append`` strategy in the MVP."""
+    def _validate_existing_data_policy(self) -> Config:
+        """Reject unsupported or destructive schema-mode combinations."""
         if self.on_existing_data == "append":
             raise ValueError(
                 "append strategy is not supported in this version. "
                 "Use truncate or drop_create."
+            )
+        if (
+            self.schema_mode == "assume_existing"
+            and self.on_existing_data == "drop_create"
+        ):
+            raise ValueError(
+                "schema_mode: assume_existing cannot use "
+                "on_existing_data: drop_create because PrivaCI will not recreate "
+                "customer-managed DDL. Use truncate or fail."
             )
         return self
 

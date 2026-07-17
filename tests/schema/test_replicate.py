@@ -29,6 +29,8 @@ def _catalog(*tables: TableInfo) -> CatalogResult:
 def target_conn() -> AsyncMock:
     conn = AsyncMock()
     conn.execute = AsyncMock()
+    # foreign_key_exists / other catalog probes: absent unless a test overrides.
+    conn.fetchval = AsyncMock(return_value=None)
     return conn
 
 

@@ -54,6 +54,8 @@ class EventType(StrEnum):
     STRICT_MODE_VIOLATION = "strict_mode_violation"
     NEW_TABLE = "new_table"
     SKIPPED_OBJECT = "skipped_object"
+    SCHEMA_VALIDATED = "schema.validated"
+    SCHEMA_VALIDATION_FAILED = "schema.validation_failed"
 
 
 @dataclass(frozen=True, slots=True)
