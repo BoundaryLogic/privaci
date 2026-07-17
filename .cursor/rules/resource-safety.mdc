@@ -8,11 +8,18 @@ alwaysApply: true
 **The user cannot message you while the machine is crashing.** Every heavy
 command must be safe *before* it starts.
 
-## Exception: CI before commit
+## Exception: CI before commit / integration before push
 
-**Before `git commit`**, you MUST run `./scripts/ci-local.sh` (full CI parity).
-This is the sanctioned full gate — not subject to the single-file test limit
-below. Run it once per commit batch; do not parallelize with other heavy jobs.
+**Before `git commit`**, you MUST run `./scripts/ci-local.sh` (full unit CI
+parity). This is a sanctioned full gate — not subject to the single-file test
+limit below. Run it once per commit batch; do not parallelize with other heavy
+jobs.
+
+**Before `git push`** when high-risk engine/integration paths changed, you MUST
+run `./scripts/ci-local.sh --integration` (exact GitHub ``integration`` job).
+The capability suite is **not** a substitute — see
+`.cursor/rules/integration-before-push.mdc`. This is also a sanctioned heavy
+gate.
 
 ## Non‑negotiable: use the guard scripts
 

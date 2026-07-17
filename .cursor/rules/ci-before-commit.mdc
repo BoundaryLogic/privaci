@@ -34,8 +34,22 @@ Uses `.engine-pin` to checkout the public engine (same as GitHub Actions).
 - `./scripts/capability-test-suite.sh quick` — capability smoke only
 - `./scripts/agent-safe-test.sh tests/one_file.py` — while iterating on one file
 
+## Before push (high-risk paths)
+
+When `cli|config|pipeline|preflight|schema|stream` or `tests/integration/`
+change, also run GitHub integration parity (enforced by pre-push):
+
+```bash
+./scripts/ci-local.sh --integration
+```
+
+Capability ``public`` is **not** integration CI parity (per-file pytest misses
+session-fixture bugs). See `.cursor/rules/integration-before-push.mdc`.
+
 ## Never
 
 - Commit after only running a single test file or the quick capability suite.
 - Assume pre-commit hooks ran (they may not be installed).
 - Push broken CI and "fix in a follow-up commit."
+- Push high-risk changes after only capability ``public`` or a single
+  integration file — use ``ci-local.sh --integration``.

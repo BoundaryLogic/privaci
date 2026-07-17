@@ -87,7 +87,7 @@ repos:
         stages: [pre-push]
 
       - id: capability-test-public-pre-push
-        name: public capability suite (integration-sensitive paths)
+        name: GitHub integration parity (pytest integration and not slow)
         entry: scripts/capability-test-prepush.sh
         language: system
         pass_filenames: false

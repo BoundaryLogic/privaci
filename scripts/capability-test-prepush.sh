@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-# Pre-push hook: run public integration capabilities for high-risk engine paths.
+# Pre-push hook: run the exact GitHub ``integration`` job for high-risk paths.
 #
-# The quick capability suite is intentionally unit-only. Changes to schema,
-# preflight, pipeline, stream, or config code can break live Postgres behavior,
-# so gate those pushes with the public capability suite (unit + integration).
+# IMPORTANT: do NOT substitute the capability suite here. Capabilities invoke
+# pytest per file/capability. That misses cross-file session-fixture bugs
+# (e.g. one loader wiping Demo Corp before later e2e tests). GitHub runs:
+#
+#   pytest -m "integration and not slow" -q
+#
+# in a single process — this hook must mirror that command via ci-local.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -22,23 +26,23 @@ fi
 
 changed_paths="$(git diff --name-only "${BASE}...HEAD")"
 if [[ -z "$changed_paths" ]]; then
-  echo "capability pre-push: no committed changes to inspect."
+  echo "integration pre-push: no committed changes to inspect."
   exit 0
 fi
 
-high_risk_regex='^(\.pre-commit-config\.yaml|\.cursor/rules/integration-before-push\.mdc|scripts/capability-test-prepush\.sh|scripts/capability_test/|src/privaci/(cli|config|pipeline|preflight|schema|stream)/|tests/(integration|pipeline|preflight|schema|stream)/)'
+# Any path that can change live Postgres behavior or shared integration fixtures.
+high_risk_regex='^(\.pre-commit-config\.yaml|\.cursor/rules/integration-before-push\.mdc|scripts/(capability-test-prepush|ci-local)\.sh|scripts/capability_test/|src/privaci/(cli|config|pipeline|preflight|schema|stream)/|tests/(integration|pipeline|preflight|schema|stream)/)'
 if ! printf '%s\n' "$changed_paths" | grep -Eq "$high_risk_regex"; then
-  echo "capability pre-push: no integration-sensitive paths changed."
+  echo "integration pre-push: no integration-sensitive paths changed."
   exit 0
 fi
 
-echo "capability pre-push: integration-sensitive paths changed:"
+echo "integration pre-push: integration-sensitive paths changed:"
 printf '%s\n' "$changed_paths" | grep -E "$high_risk_regex" | sed 's/^/  - /'
-echo "capability pre-push: resetting compose.dev.yml fixture volumes for a clean integration run."
+echo "integration pre-push: running GitHub-parity suite (ci-local --integration)."
 
-# Local workspaces often have the plugin package installed for commercial-unit
-# capability checks. The public integration suite is not testing licensing, so
-# use the documented local development bypass when that package is present.
+# Local workspaces often have the plugin package installed. Public integration
+# is not testing licensing; use the documented local development bypass.
 if python - <<'PY'
 import importlib.util
 raise SystemExit(0 if importlib.util.find_spec("privaci_commercial") else 1)
@@ -47,4 +51,4 @@ then
   export PRIVACI_COMMERCIAL_DEV_LICENSE="${PRIVACI_COMMERCIAL_DEV_LICENSE:-1}"
 fi
 
-exec ./scripts/capability-test-suite.sh public --allow-heavy --reset-volumes
+exec ./scripts/ci-local.sh --integration
