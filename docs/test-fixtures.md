@@ -357,7 +357,8 @@ audit_internal schema   (exclude-strategy test)
 | `elevated_orgs_v` | **Elevated view** — `elevated_objects: skip` in demo-corp.yaml |
 | `clinic_label(org_id bigint)` | **SQL function** — replicated (`created_object`) |
 | `elevated_org_name(org_id bigint)` | **SECURITY DEFINER function** — `elevated_objects: skip` |
-| `tickets_open_mv` | **Materialized view** — skipped until definition-only phase |
+| `tickets_open_mv` | **Materialized view** — Demo Corp enables `replicate_materialized_views` + `refresh_materialized_views` so e2e asserts `definition_only_object` (with `refreshed: true`) |
+
 | `users_audit_noop` trigger | **Trigger** — `skipped_object` / `unsafe_during_load` |
 | `tickets_insert_also_noop` rule | **Rule** — `skipped_object` / `customer_owned_semantics` |
 | `privaci_demo_fixture_pub` | **Publication** — `skipped_object` / `low_value_footgun` |
@@ -573,11 +574,11 @@ assert (
     audit_count(target_conn, event_type="column.masked") > 0
 )
 
-# Invoker views + clinic_label created; elevated / matview / tier-3 skipped
+# Invoker views + clinic_label created; matview definition-only; elevated / tier-3 skipped
 assert "active_clinics_v" in created_objects(target_conn)
 assert "clinic_label" in created_objects(target_conn)
+assert "tickets_open_mv" in definition_only_objects(target_conn)
 assert "elevated_orgs_v" in skipped_objects(target_conn)
-assert "tickets_open_mv" in skipped_objects(target_conn)
 assert "users_audit_noop" in skipped_objects(target_conn)
 
 ### Schema-modes matrix

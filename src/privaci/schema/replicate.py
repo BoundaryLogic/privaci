@@ -38,8 +38,8 @@ async def replicate_schema(
     """Clone in-scope source DDL into the target.
 
     Creates schemas and tables (honoring per-table strategy), then unique
-    indexes and foreign keys, then functions and plain views. Does not stream
-    rows.
+    indexes and foreign keys, then functions, plain views, and optional
+    materialized-view shells (``WITH NO DATA``). Does not stream rows.
 
     Raises:
         ConfigError: When ``exclude`` leaves a dangling NOT NULL FK.

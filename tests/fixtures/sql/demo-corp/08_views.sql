@@ -33,7 +33,8 @@ CREATE VIEW public.monthly_revenue_v
 CREATE VIEW public.elevated_orgs_v AS
     SELECT id, name, billing_email FROM public.organizations;
 
--- Tier 2: materialized view (definition-only in Phase 3; skipped until then)
+-- Tier 2: materialized view (definition-only; opt-in via
+-- replicate_materialized_views + optional refresh_materialized_views)
 CREATE MATERIALIZED VIEW public.tickets_open_mv AS
     SELECT id, subject, status FROM public.tickets WHERE status <> 'closed';
 

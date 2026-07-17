@@ -102,6 +102,13 @@ class Config(BaseModel):
             in ``schema_mode: replicate``.
         replicate_functions: When true (default), replicate non-elevated
             functions/procedures in ``schema_mode: replicate``.
+        replicate_materialized_views: When true, create materialized-view shells
+            with ``WITH NO DATA`` (never copy source storage). Default false.
+            Rejected under ``schema_mode: assume_existing``.
+        refresh_materialized_views: When true, ``REFRESH MATERIALIZED VIEW`` after
+            masked table loads (requires shells from
+            ``replicate_materialized_views``; ``schema_mode: replicate`` only).
+            Default false. Rejected under ``assume_existing``.
         elevated_objects: Explicit ``replicate`` or ``skip`` dispositions for
             elevated views/functions. Unresolved elevated objects fail preflight.
         strict_autodetect: Fail the run when auto-detect finds uncovered PII.
@@ -125,6 +132,8 @@ class Config(BaseModel):
     passthrough_copy: PassthroughCopy = "auto"
     replicate_views: bool = True
     replicate_functions: bool = True
+    replicate_materialized_views: bool = False
+    refresh_materialized_views: bool = False
     elevated_objects: dict[str, ElevatedDisposition] = Field(default_factory=dict)
     strict_autodetect: bool = False
     replicate_all_indexes: bool = False
@@ -170,6 +179,22 @@ class Config(BaseModel):
                 "schema_mode: assume_existing cannot use "
                 "on_existing_data: drop_create because PrivaCI will not recreate "
                 "customer-managed DDL. Use truncate or fail."
+            )
+        if self.refresh_materialized_views and not self.replicate_materialized_views:
+            raise ValueError(
+                "refresh_materialized_views requires "
+                "replicate_materialized_views: true (shells must exist before "
+                "REFRESH)."
+            )
+        if self.schema_mode == "assume_existing" and (
+            self.replicate_materialized_views or self.refresh_materialized_views
+        ):
+            raise ValueError(
+                "schema_mode: assume_existing cannot use "
+                "replicate_materialized_views or refresh_materialized_views; "
+                "matview shells are only created under schema_mode: replicate. "
+                "Pre-create and refresh shells on the target out of band, or "
+                "use schema_mode: replicate."
             )
         return self
 

@@ -188,8 +188,8 @@ CAPABILITIES: dict[str, Capability] = {
         label="Schema replication modes (unit)",
         description=(
             "Unit coverage for schema_mode replicate vs assume_existing: "
-            "validation, passthrough_copy, elevated dispositions, and "
-            "view/function ordering helpers."
+            "validation, passthrough_copy, elevated dispositions, "
+            "view/function ordering, and matview definition-only helpers."
         ),
         repo="public",
         test_paths=(
@@ -201,6 +201,7 @@ CAPABILITIES: dict[str, Capability] = {
             "tests/catalog/test_routines_order.py",
             "tests/schema/test_elevated.py",
             "tests/schema/test_objects.py",
+            "tests/schema/test_matviews.py",
         ),
         tags=frozenset({"unit", "public", "schema"}),
     ),
@@ -208,8 +209,9 @@ CAPABILITIES: dict[str, Capability] = {
         id="public-schema-modes-replicate-integration",
         label="Replicate mode object DDL",
         description=(
-            "schema_mode: replicate creates invoker views/functions, applies "
-            "elevated_objects skip, and audits Tier-3 skipped objects."
+            "schema_mode: replicate creates invoker views/functions, matview "
+            "shells when opted in, applies elevated_objects skip, and audits "
+            "Tier-3 skipped objects."
         ),
         repo="public",
         test_paths=("tests/integration/test_views_identity.py",),

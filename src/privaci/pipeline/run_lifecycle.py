@@ -15,6 +15,7 @@ from privaci.autodetect import build_detection
 from privaci.catalog.models import CatalogResult
 from privaci.config.models import Config
 from privaci.contracts import load_plugins
+from privaci.observability import Event, emit
 from privaci.pipeline.lifecycle import (
     emit_run_end,
     initialize_fresh_run,
@@ -22,6 +23,7 @@ from privaci.pipeline.lifecycle import (
     record_event,
 )
 from privaci.pipeline.streaming import stream_all_tables
+from privaci.schema.objects import refresh_materialized_views
 from privaci.state import (
     AuditWriter,
     RunIdentity,
@@ -127,6 +129,7 @@ async def stream_and_finish(
         checkpoints=checkpoints or {},
         pseudonym_key=pseudonym_key,
     )
+    await _refresh_matviews_and_audit(target, catalog, config, audit)
     duration_s = time.monotonic() - started_at
     await finish_run(
         target,
@@ -149,6 +152,28 @@ async def stream_and_finish(
         errors=0,
     )
     return tables_done, total_rows, counts, total_bytes
+
+
+async def _refresh_matviews_and_audit(
+    target: asyncpg.Connection,
+    catalog: CatalogResult,
+    config: Config,
+    audit: AuditWriter,
+) -> None:
+    """Refresh opt-in matview shells and mark definition_only audits refreshed."""
+    refreshed = await refresh_materialized_views(target, catalog, config)
+    if not refreshed:
+        return
+    await audit.mark_definition_only_refreshed(target, refreshed)
+    for schema_name, object_name in refreshed:
+        emit(
+            Event.DEFINITION_ONLY_OBJECT,
+            schema_name=schema_name,
+            object_name=object_name,
+            kind="materialized_view",
+            contents_copied=False,
+            refreshed=True,
+        )
 
 
 async def close_aborted_run(

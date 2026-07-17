@@ -53,19 +53,49 @@ async def _view_dependencies(conn: asyncpg.Connection) -> dict[str, set[str]]:
 
 def plain_views_in_dependency_order(views: tuple[ViewInfo, ...]) -> list[ViewInfo]:
     """Return plain views ordered so referenced views appear first."""
-    plain = {view.identifier: view for view in views if view.kind == "view"}
-    pending = set(plain)
+    return _topo_order({view.identifier: view for view in views if view.kind == "view"})
+
+
+def matviews_in_dependency_order(views: tuple[ViewInfo, ...]) -> list[ViewInfo]:
+    """Return materialized views ordered so referenced matviews appear first."""
+    return _topo_order(
+        {view.identifier: view for view in views if view.kind == "materialized_view"}
+    )
+
+
+def matviews_in_scope(
+    views: tuple[ViewInfo, ...],
+    *,
+    replicate: bool,
+    excluded_table_ids: frozenset[str],
+) -> list[ViewInfo]:
+    """Return in-scope matviews in dependency order for create, refresh, or skip.
+
+    Excludes matviews whose ``depends_on`` intersects ``excluded_table_ids``.
+    When ``replicate`` is false, returns an empty list (caller handles skip audits).
+    """
+    if not replicate:
+        return []
+    return [
+        view
+        for view in matviews_in_dependency_order(views)
+        if not excluded_table_ids.intersection(view.depends_on)
+    ]
+
+
+def _topo_order(nodes: dict[str, ViewInfo]) -> list[ViewInfo]:
+    pending = set(nodes)
     ordered: list[ViewInfo] = []
     while pending:
         ready = [
             vid
             for vid in sorted(pending)
-            if all(dep not in pending for dep in plain[vid].depends_on if dep in plain)
+            if all(dep not in pending for dep in nodes[vid].depends_on if dep in nodes)
         ]
         if not ready:
-            ordered.extend(plain[vid] for vid in sorted(pending))
+            ordered.extend(nodes[vid] for vid in sorted(pending))
             break
         for vid in ready:
             pending.remove(vid)
-            ordered.append(plain[vid])
+            ordered.append(nodes[vid])
     return ordered

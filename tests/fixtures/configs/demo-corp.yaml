@@ -3,6 +3,8 @@ global_salt: env://PRIVACI_TEST_SALT
 on_existing_data: fail
 strict_autodetect: false
 batch_size: 500
+replicate_materialized_views: true
+refresh_materialized_views: true
 
 # Demo Corp ships one elevated view + one SECURITY DEFINER function.
 # Keys must match catalog identifiers (pg_get_function_identity_arguments).

@@ -81,14 +81,15 @@ Key columns: `audit_id` (UUIDv7 PK), `run_id`, `event_at`, `level`
 | `strict_mode_violation` | Strict autodetect refusal context |
 | `new_table` | Partition child discovered vs prior snapshot |
 | `skipped_object` | Object not replicated (`kind` + `reason`) |
-| `created_object` | View/function (or shell) created on target |
+| `created_object` | View/function created on target |
+| `definition_only_object` | Matview shell created without copying source bytes |
 | `schema.validated` | `assume_existing` validation passed |
 | `schema.validation_failed` | `assume_existing` validation refused |
 
-Commercial layers may add their own `event_type` strings. Definition-only
-matview shells (when a future engine build enables them) use `created_object`
-audits with `contents_copied: false` — not a separate operator flag in this
-release.
+Commercial layers may add their own `event_type` strings. When
+`replicate_materialized_views` is enabled, matview shells emit
+`definition_only_object` with `contents_copied: false`; optional refresh sets
+`refreshed: true` on that audit row.
 
 ## Force-restart and resume
 

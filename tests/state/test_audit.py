@@ -49,6 +49,37 @@ async def test_enabled_writer_inserts_event(fake_conn: AsyncMock) -> None:
     assert json.loads(args[8]) == {"action": "fake", "rows_affected": 100}
 
 
+async def test_mark_definition_only_refreshed_matches_schema_and_name(
+    fake_conn: AsyncMock,
+) -> None:
+    run_id = uuid.uuid4()
+    writer = AuditWriter(run_id, enabled=True)
+
+    await writer.mark_definition_only_refreshed(
+        fake_conn,
+        (("analytics", "summary_mv"), ("public", "tickets_open_mv")),
+    )
+
+    args = fake_conn.execute.await_args.args
+    assert args[1] == run_id
+    assert args[2] == ["analytics", "public"]
+    assert args[3] == ["summary_mv", "tickets_open_mv"]
+    assert "schema_name = t.schema_name" in args[0]
+    assert "table_name = t.table_name" in args[0]
+
+
+async def test_mark_definition_only_refreshed_noop_when_disabled(
+    fake_conn: AsyncMock,
+) -> None:
+    writer = AuditWriter(uuid.uuid4(), enabled=False)
+
+    await writer.mark_definition_only_refreshed(
+        fake_conn, (("public", "tickets_open_mv"),)
+    )
+
+    fake_conn.execute.assert_not_awaited()
+
+
 async def test_writer_defaults_empty_payload(fake_conn: AsyncMock) -> None:
     # Arrange
     writer = AuditWriter(uuid.uuid4(), enabled=True)

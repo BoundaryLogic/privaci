@@ -30,8 +30,6 @@ lifecycle; resource-safe CI; no silent breaking of Demo Corp / capability matrix
 - Sanitizing or rewriting source function bodies / indexdefs / DEFAULTs beyond
   existing elevated dispositions — source DB remains a trust boundary
   (document only in this change).
-- Matview definition-only shells and `definition_only_object` audit/emit
-  semantics (`add-schema-replication-modes`).
 
 ## Decisions
 
