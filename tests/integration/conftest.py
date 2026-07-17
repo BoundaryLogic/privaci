@@ -65,8 +65,12 @@ def demo_corp_source_loaded(source_dsn: str, postgres_available: None) -> None:
 
 @pytest.fixture(scope="session")
 def autodetect_demo_source_loaded(source_dsn: str, postgres_available: None) -> None:
-    """Load the auto-detect demo schema (replaces prior source schemas)."""
-    asyncio.run(_reset_target(source_dsn))
+    """Load the auto-detect demo schema without wiping other source fixtures.
+
+    The SQL drops/recreates only ``autodetect_demo``. A full database reset here
+    would destroy session-scoped Demo Corp data when this fixture runs later
+    (for example after ``test_assume_existing`` loads Demo Corp first).
+    """
     sql_dir = (
         Path(__file__).resolve().parents[1] / "fixtures" / "sql" / "autodetect-demo"
     )
@@ -75,8 +79,11 @@ def autodetect_demo_source_loaded(source_dsn: str, postgres_available: None) -> 
 
 @pytest.fixture(scope="session")
 def json_mask_demo_source_loaded(source_dsn: str, postgres_available: None) -> None:
-    """Load the JSONB mask demo schema (replaces prior source schemas)."""
-    asyncio.run(_reset_target(source_dsn))
+    """Load the JSONB mask demo schema.
+
+    The SQL replaces ``public`` only. Do not call :func:`reset_database` here —
+    that would wipe sibling session fixtures such as Demo Corp.
+    """
     sql_dir = (
         Path(__file__).resolve().parents[1] / "fixtures" / "sql" / "json-mask-demo"
     )
