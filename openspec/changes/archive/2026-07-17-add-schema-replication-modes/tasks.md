@@ -67,6 +67,6 @@
 
 ## Phase 4 — release
 
-- [ ] 4.1 `./scripts/ci-local.sh` green on public repo
+- [x] 4.1 `./scripts/ci-local.sh` green on public repo
 - [ ] 4.2 Bump engine tag; commercial `.engine-pin` + image release (maintainer)
-- [ ] 4.3 Archive this change (`openspec archive add-schema-replication-modes`)
+- [x] 4.3 Archive this change (`openspec archive add-schema-replication-modes`)

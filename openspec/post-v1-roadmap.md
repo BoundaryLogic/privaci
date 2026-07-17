@@ -5,7 +5,7 @@ follow-ups live in the sibling commercial OpenSpec roadmap.
 
 ---
 
-## Shipped (v1 baseline + v1.1)
+## Shipped (v1 baseline + v1.1 + schema modes)
 
 | Change | Notes |
 | --- | --- |
@@ -14,6 +14,7 @@ follow-ups live in the sibling commercial OpenSpec roadmap.
 | [add-artifact-object-output](changes/archive/2026-07-07-add-artifact-object-output/) | `ObjectWriter` plugin |
 | [add-config-scaffold-and-plan](changes/archive/2026-07-07-add-config-scaffold-and-plan/) | `init`, `plan` |
 | [add-license-capabilities](changes/archive/2026-07-07-add-license-capabilities/) | Capability tokens |
+| [add-schema-replication-modes](changes/archive/2026-07-17-add-schema-replication-modes/) | `assume_existing`, views/functions/matviews, elevated objects |
 
 ---
 
@@ -21,16 +22,12 @@ follow-ups live in the sibling commercial OpenSpec roadmap.
 
 | # | Change | Phase / scope | Blocks |
 | --- | --- | --- | --- |
-| **1** | [add-schema-replication-modes](changes/add-schema-replication-modes/) | **Phase 1** — `assume_existing`, idempotent DDL | DBA-managed staging workflow |
-| **2** | [add-state-schema-abstraction](changes/add-state-schema-abstraction/) | Dialect-neutral `_privaci` DDL + connection ABCs | All connectors |
-| **3** | [add-schema-replication-modes](changes/add-schema-replication-modes/) | **Phases 2–3** — functions/views, matviews | Phase 1 |
-| **4** | `catalog import-db-comments` | Public half of plugin `add-pii-annotation-catalog` | Plugin PII catalog |
-| **5** | [add-conditional-masking-cel](changes/add-conditional-masking-cel/) | Optional `when:` CEL on column rules | — |
-| **6** | [add-export-sinks-parquet-jsonl](changes/add-export-sinks-parquet-jsonl/) → [add-s3-object-connectors](changes/add-s3-object-connectors/) | Parquet/JSONL + S3 lake export | — |
-| **7** | [add-mysql-source-target](changes/add-mysql-source-target/) → [add-sqlserver-source-target](changes/add-sqlserver-source-target/) | Same-engine connectors | **#2** |
-| **8** | Cross-engine deterministic consistency *(proposed)* | Keyed identity stable across engines | **#7** |
-
-**#1 and #2** may start in parallel. **#3** waits on Phase 1. **#7+** waits on **#2**.
+| **1** | [add-state-schema-abstraction](changes/add-state-schema-abstraction/) | Dialect-neutral `_privaci` DDL + connection ABCs | All connectors |
+| **2** | `catalog import-db-comments` | Public half of plugin `add-pii-annotation-catalog` | Plugin PII catalog |
+| **3** | [add-conditional-masking-cel](changes/add-conditional-masking-cel/) | Optional `when:` CEL on column rules | — |
+| **4** | [add-export-sinks-parquet-jsonl](changes/add-export-sinks-parquet-jsonl/) → [add-s3-object-connectors](changes/add-s3-object-connectors/) | Parquet/JSONL + S3 lake export | — |
+| **5** | [add-mysql-source-target](changes/add-mysql-source-target/) → [add-sqlserver-source-target](changes/add-sqlserver-source-target/) | Same-engine connectors | **#1** |
+| **6** | Cross-engine deterministic consistency *(proposed)* | Keyed identity stable across engines | **#5** |
 
 Plugin-package follow-up for schema modes: report collectors only
 (`add-schema-replication-report-evidence`) — no engine logic.
@@ -41,7 +38,7 @@ Plugin-package follow-up for schema modes: report collectors only
 
 | Change | Status |
 | --- | --- |
-| [add-schema-replication-modes](changes/add-schema-replication-modes/) | Proposed — prioritize Phase 1 |
+| [harden-nuclear-codebase-findings](changes/harden-nuclear-codebase-findings/) | Implemented — archive pending |
 | [add-state-schema-abstraction](changes/add-state-schema-abstraction/) | Proposed — critical path |
 | [add-mysql-source-target](changes/add-mysql-source-target/) | Proposed — blocked on state abstraction |
 | [add-sqlserver-source-target](changes/add-sqlserver-source-target/) | Proposed — blocked on MySQL |
