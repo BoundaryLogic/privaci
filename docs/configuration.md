@@ -324,10 +324,12 @@ tables:
 - Unsupported column types in the expression (e.g. `jsonb`, arrays) fail at
   preflight (exit **3**). Prefer bool/int/float/text/uuid/timestamp/bytea.
 - Unknown column identifiers in `when:` fail at catalog type-check (exit **3**).
-- Allowed forms: comparisons, logic, `has()`, `size()`, and string
-  `contains` / `startsWith` / `endsWith`. Regex (`matches`), comprehensions
-  (`map` / `filter`), field selection, and `timestamp`/`duration` are rejected
-  at compile (exit **3**).
+- Allowed forms: comparisons, logic, `size()`, and string
+  `contains` / `startsWith` / `endsWith`. Use `col != null` for null checks
+  (`has()` is rejected — activation always binds columns, so it would be
+  always-true). Regex (`matches`), comprehensions (`map` / `filter`), field
+  selection, indexing (`col[i]`), and `timestamp`/`duration` are rejected at
+  compile (exit **3**).
 - Audit rollup: one `column.conditional_skip` per guarded column with
   `expression_hash`, `skipped_rows`, and `evaluated_rows` (no cell values).
 - Expression length max 512 characters; evaluation enforces a cooperative

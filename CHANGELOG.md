@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - CEL ``when:`` sandbox now allowlists builtins (rejects ``matches``/``map``/
-  field selection/etc.), enforces AST depth/node limits, type-checks unknown
+  ``has``/field selection/indexing/etc.), enforces AST depth/node limits, type-checks unknown
   column references at catalog validation (exit **3**), and never chains
   celpy exceptions that can embed row values.
 - Exit code **5** docs acknowledge community/capability-gated failures (e.g.

@@ -85,6 +85,39 @@ def test_wrap_null_and_timestamp() -> None:
     assert isinstance(wrapped, celtypes.StringType)
 
 
+def test_has_builtin_rejected() -> None:
+    # Arrange / Act / Assert — has() would be always-true under full activation
+    with pytest.raises(ConfigError, match="disallowed"):
+        compile_when(
+            "has(status)",
+            column_path="tables.t.columns.c.when",
+            annotations={"status": celtypes.StringType},
+        )
+
+
+def test_member_index_rejected() -> None:
+    # Arrange / Act / Assert
+    with pytest.raises(ConfigError, match="index selection"):
+        compile_when(
+            "status[0] == 'c'",
+            column_path="tables.t.columns.c.when",
+            annotations={"status": celtypes.StringType},
+        )
+
+
+def test_null_check_via_inequality() -> None:
+    # Arrange
+    compiled = compile_when(
+        "status != null",
+        column_path="tables.t.columns.c.when",
+        annotations={"status": celtypes.StringType},
+    )
+
+    # Act / Assert
+    assert evaluate_when(compiled, {"status": "closed"})
+    assert not evaluate_when(compiled, {"status": None})
+
+
 def test_matches_builtin_rejected() -> None:
     # Arrange / Act / Assert
     with pytest.raises(ConfigError, match="disallowed"):

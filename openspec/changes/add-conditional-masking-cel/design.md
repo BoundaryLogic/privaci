@@ -30,7 +30,10 @@ guards with deterministic evaluation and no I/O.
 
 **Decision:** Use PyPI package `cel-python` (import `celpy`) with a restricted
 activation record built from the current row. Register only safe builtins:
-comparisons, logical ops, string methods exposed as CEL functions, `has(field)`.
+comparisons, logical ops, `size()`, and string `contains` / `startsWith` /
+`endsWith`. Do **not** expose `has()` — activations always bind annotated
+columns (including null), so `has(col)` would be always-true and `!has(col)`
+would silently under-mask; operators use `col != null` instead.
 
 **Alternatives:** Restricted Python `eval` (unsafe). Jinja2 (not typed).
 SQL fragments (injection risk). Rust-backed `common-expression-language`
@@ -63,9 +66,9 @@ unchanged. Auto-detect SHALL NOT apply to that cell for that row (configured
 **Decision:** Max expression length 512 chars; cooperative elapsed budget of
 5 ms per row per column after `evaluate` (document that pure-Python CEL cannot
 hard-preempt); max AST depth and node count enforced at compile. Allowed
-builtins: comparisons, logic, `has`, `size`, and string `contains` /
+builtins: comparisons, logic, `size`, and string `contains` /
 `startsWith` / `endsWith`. Regex (`matches`), comprehensions (`map` / `filter`),
-field selection, and `timestamp`/`duration` are rejected.
+`has()`, field selection, indexing, and `timestamp`/`duration` are rejected.
 
 ### D5. Capability gate (not tier-name matching)
 

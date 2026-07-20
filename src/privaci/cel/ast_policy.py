@@ -13,7 +13,9 @@ MAX_AST_DEPTH = 48
 MAX_AST_NODES = 400
 
 _ALLOWED_METHODS = frozenset({"contains", "startsWith", "endsWith"})
-_ALLOWED_FUNCTIONS = frozenset({"has", "size"})
+# has() is denied: activation always binds annotated columns (incl. null), so
+# has(col) is always true and !has(col) silently under-masks. Use col != null.
+_ALLOWED_FUNCTIONS = frozenset({"size"})
 
 
 def assert_expression_policy(ast: Tree[Any], *, column_path: str) -> None:
@@ -29,11 +31,12 @@ def assert_expression_policy(ast: Tree[Any], *, column_path: str) -> None:
     methods: set[str] = set()
     functions: set[str] = set()
     field_selects = 0
+    index_selects = 0
     node_count = 0
     max_depth = 0
 
     def walk(node: Tree[Any] | Token, depth: int) -> None:
-        nonlocal node_count, max_depth, field_selects
+        nonlocal node_count, max_depth, field_selects, index_selects
         node_count += 1
         max_depth = max(max_depth, depth)
         if not isinstance(node, Tree):
@@ -45,6 +48,8 @@ def assert_expression_policy(ast: Tree[Any], *, column_path: str) -> None:
             _collect_function(node, functions)
         elif rule == "member_dot":
             field_selects += 1
+        elif rule == "member_index":
+            index_selects += 1
         for child in node.children:
             if isinstance(child, Tree | Token):
                 walk(child, depth + 1)
@@ -52,6 +57,7 @@ def assert_expression_policy(ast: Tree[Any], *, column_path: str) -> None:
     walk(ast, 0)
     _raise_if_over_budget(column_path, max_depth, node_count)
     _raise_if_field_select(column_path, field_selects)
+    _raise_if_index_select(column_path, index_selects)
     _raise_if_denied(column_path, methods, functions)
 
 
@@ -124,6 +130,19 @@ def _raise_if_field_select(column_path: str, field_selects: int) -> None:
     )
 
 
+def _raise_if_index_select(column_path: str, index_selects: int) -> None:
+    if index_selects <= 0:
+        return
+    raise ConfigError(
+        f"Validating {column_path}",
+        cause="when: index selection (e.g. col[0]) is not allowed.",
+        remediation=(
+            "Compare whole columns only; see "
+            "docs/configuration.md#conditional-masking-when."
+        ),
+    )
+
+
 def _raise_if_denied(
     column_path: str,
     methods: set[str],
@@ -142,7 +161,7 @@ def _raise_if_denied(
         f"Validating {column_path}",
         cause="when: uses disallowed CEL " + " and ".join(parts) + ".",
         remediation=(
-            "Use comparisons, logic, has(), size(), contains/startsWith/"
+            "Use comparisons, logic, size(), and contains/startsWith/"
             "endsWith only; see docs/configuration.md#conditional-masking-when."
         ),
     )

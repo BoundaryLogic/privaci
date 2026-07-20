@@ -44,6 +44,7 @@ Tokens the engine reads today:
 | Token | Enables |
 |-------|---------|
 | `keyed_actions` | `hmac_hash` and `pseudonym` masking actions |
+| `conditional_masking` | Optional CEL `when:` guards on column actions |
 
 Grant a token by including it in the returned set:
 
@@ -56,13 +57,13 @@ class MyValidator(LicenseValidator):
         return LicenseStatus(
             tier="my-plan",
             is_valid=True,
-            capabilities=frozenset({"keyed_actions"}),
+            capabilities=frozenset({"keyed_actions", "conditional_masking"}),
         )
 ```
 
-Community mode returns an empty capability set, so keyed actions are fail-closed
-in the open-source engine. Additional tokens may be defined and enforced
-entirely by your plugin without any engine change.
+Community mode returns an empty capability set, so keyed actions and
+`when:` guards are fail-closed in the open-source engine. Additional tokens
+may be defined and enforced entirely by your plugin without any engine change.
 
 ## Contract version
 
