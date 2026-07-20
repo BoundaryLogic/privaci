@@ -1,0 +1,105 @@
+{
+  "$defs": {
+    "PiiColumnEntry": {
+      "additionalProperties": false,
+      "description": "One annotated column in a PII catalog table entry.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Owner"
+        },
+        "sensitivity": {
+          "enum": [
+            "pii_direct",
+            "pii_indirect",
+            "internal",
+            "public"
+          ],
+          "title": "Sensitivity",
+          "type": "string"
+        },
+        "source": {
+          "default": "manual",
+          "enum": [
+            "pg_comment",
+            "manual",
+            "import"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "sensitivity"
+      ],
+      "title": "PiiColumnEntry",
+      "type": "object"
+    },
+    "PiiTableEntry": {
+      "additionalProperties": false,
+      "description": "Annotated columns for one schema-qualified table.",
+      "properties": {
+        "columns": {
+          "items": {
+            "$ref": "#/$defs/PiiColumnEntry"
+          },
+          "title": "Columns",
+          "type": "array"
+        },
+        "table": {
+          "title": "Table",
+          "type": "string"
+        }
+      },
+      "required": [
+        "table"
+      ],
+      "title": "PiiTableEntry",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Root document for ``pii-catalog.yaml``.",
+  "properties": {
+    "catalog": {
+      "items": {
+        "$ref": "#/$defs/PiiTableEntry"
+      },
+      "title": "Catalog",
+      "type": "array"
+    },
+    "version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "title": "PiiCatalog",
+  "type": "object"
+}

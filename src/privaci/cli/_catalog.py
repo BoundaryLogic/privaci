@@ -1,21 +1,30 @@
-"""Implementation of the ``privaci catalog inspect`` command.
+"""Implementation of ``privaci catalog`` subcommands.
 
-Read-only: connects to the source database, introspects the schema, and prints
-a human-readable summary of tables, the FK load plan, and warnings. Useful for
-getting acquainted with a source before writing ``mask-rules.yaml``.
+``inspect`` — human-readable schema summary.
+``import-db-comments`` — bootstrap ``pii-catalog.yaml`` from column comments.
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
+from pathlib import Path
 
 import asyncpg
 import typer
 
-from privaci.catalog import CatalogResult, introspect_catalog
+from privaci.catalog import CatalogResult
 from privaci.cli.context import resolve_db_url
+from privaci.cli.source_catalog import (
+    introspect_source_catalog,
+    with_source_connection,
+)
 from privaci.errors import CatalogError
+from privaci.pii_catalog import (
+    catalog_from_comment_rows,
+    fetch_column_comments,
+    render_catalog_yaml,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -30,24 +39,50 @@ def inspect_source(source: str | None) -> None:
         CatalogError: When the source cannot be reached or introspected.
     """
     source_dsn = resolve_db_url(source, env_name="SOURCE_DB_URL", role="source")
-    catalog = asyncio.run(_introspect(source_dsn))
+    catalog = asyncio.run(introspect_source_catalog(source_dsn))
     _render_summary(catalog)
 
 
-async def _introspect(dsn: str) -> CatalogResult:
-    """Open a short-lived connection and introspect the catalog."""
-    try:
-        conn = await asyncpg.connect(dsn)
-    except (OSError, asyncpg.PostgresError) as exc:
-        raise CatalogError(
-            "Connecting to the source database",
-            cause="The source database is not reachable.",
-            remediation="Verify SOURCE_DB_URL and that the database is running.",
-        ) from exc
-    try:
-        return await introspect_catalog(conn)
-    finally:
-        await conn.close()
+def import_db_comments(
+    source: str | None,
+    *,
+    output: str | None = None,
+) -> None:
+    """Emit ``pii-catalog.yaml`` from PostgreSQL column comments.
+
+    Args:
+        source: Source database URL or secret URI.
+        output: Optional filesystem path; when omitted, write to stdout.
+
+    Raises:
+        CatalogError: When the source cannot be reached or queried.
+    """
+    source_dsn = resolve_db_url(source, env_name="SOURCE_DB_URL", role="source")
+    yaml_text = asyncio.run(_import_comments_yaml(source_dsn))
+    if output is None:
+        typer.echo(yaml_text, nl=False)
+        return
+    path = Path(output)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml_text, encoding="utf-8")
+    typer.echo(f"Wrote {path}", err=True)
+
+
+async def _import_comments_yaml(dsn: str) -> str:
+    """Fetch comments and render catalog YAML (no row data)."""
+
+    async def _work(conn: asyncpg.Connection) -> str:
+        try:
+            rows = await fetch_column_comments(conn)
+        except asyncpg.PostgresError as exc:
+            raise CatalogError(
+                "Reading PostgreSQL column comments",
+                cause="col_description query failed.",
+                remediation=("Grant USAGE on schemas and SELECT on system catalogs."),
+            ) from exc
+        return render_catalog_yaml(catalog_from_comment_rows(rows))
+
+    return await with_source_connection(dsn, _work)
 
 
 def _render_summary(catalog: CatalogResult) -> None:

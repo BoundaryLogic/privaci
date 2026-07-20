@@ -15,6 +15,7 @@ from privaci.observability import Event, emit
 from privaci.preflight.checks import (
     collect_dry_run_rows,
     run_target_checks,
+    verify_conditional_when,
     verify_config_tables_exist,
     verify_exclude_strategy,
     verify_null_actions,
@@ -90,6 +91,7 @@ async def _run_preflight_checks(
     verify_config_tables_exist(config, catalog)
     verify_partition_config(config, catalog)
     verify_null_actions(config, catalog)
+    verify_conditional_when(config, catalog)
     verify_exclude_strategy(config, catalog)
     detection = build_detection(config, catalog)
     if not defer_strict:

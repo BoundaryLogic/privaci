@@ -43,6 +43,7 @@ Regenerate with ``make docs-generate``.
 | `model` | string | yes |  |
 | `params` | object | no |  |
 | `provider` | string | yes |  |
+| `when` | string \| null | no |  |
 
 ## `FakeAction`
 
@@ -52,12 +53,14 @@ Regenerate with ``make docs-generate``.
 | `params` | object | no |  |
 | `provider` | string | yes |  |
 | `seed_alias` | string \| null | no |  |
+| `when` | string \| null | no |  |
 
 ## `HashAction`
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `action` | string | yes |  |
+| `when` | string \| null | no |  |
 
 ## `HmacHashAction`
 
@@ -65,6 +68,7 @@ Regenerate with ``make docs-generate``.
 |-------|------|----------|-------------|
 | `action` | string | yes |  |
 | `encoding` | enum: `hex`, `base64url` | no |  Default: `hex`. |
+| `when` | string \| null | no |  |
 
 ## `NerMaskAction`
 
@@ -72,18 +76,21 @@ Regenerate with ``make docs-generate``.
 |-------|------|----------|-------------|
 | `action` | string | yes |  |
 | `entities` | array[string] | no |  |
+| `when` | string \| null | no |  |
 
 ## `NullAction`
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `action` | string | yes |  |
+| `when` | string \| null | no |  |
 
 ## `PassthroughAction`
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `action` | string | yes |  |
+| `when` | string \| null | no |  |
 
 ## `PseudonymAction`
 
@@ -93,6 +100,7 @@ Regenerate with ``make docs-generate``.
 | `params` | object | no |  |
 | `provider` | string | yes |  |
 | `seed_alias` | string \| null | no |  |
+| `when` | string \| null | no |  |
 
 ## `RegexMaskAction`
 
@@ -102,6 +110,7 @@ Regenerate with ``make docs-generate``.
 | `flags` | array[string] | no |  |
 | `pattern` | string | yes |  |
 | `replace` | string | yes |  |
+| `when` | string \| null | no |  |
 
 ## `StaticAction`
 
@@ -109,6 +118,7 @@ Regenerate with ``make docs-generate``.
 |-------|------|----------|-------------|
 | `action` | string | yes |  |
 | `value` | string | yes |  |
+| `when` | string \| null | no |  |
 
 ## `TableConfig`
 

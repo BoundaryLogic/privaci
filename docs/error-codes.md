@@ -116,6 +116,8 @@ An unexpected error not covered by a specific code. Raised by
   not change, passthrough drift, row-count mismatch, duplicate unique values, or
   an orphaned foreign key). Failing checks are printed to stderr; warnings alone
   do not trigger this exit.
+- A `when:` CEL evaluation failed for a row (non-bool result, runtime error, or
+  elapsed budget overrun). Errors omit cell values.
 
 **Remediation**
 
@@ -162,6 +164,8 @@ succeeded) and is resumable once the fault is cleared.
   collision policy for force-restart).
 - `passthrough_copy: require_binary` together with `null_orphan_fks` on a table
   that references an excluded parent.
+- `passthrough_copy: require_binary` together with any column `when:` guard
+  (conditional masking requires the batch/row path).
 
 **Remediation**
 
@@ -197,6 +201,9 @@ GRANT CREATE ON DATABASE privaci_target TO privaci_role;
 - Unknown `action` type or missing required field for an action.
 - `action: ai_refine` without the commercial layer installed.
 - Engine v2 reading a `version: "1.0"` config without `migrate-config`.
+- `when:` references an unknown column, an unsupported type (`jsonb`, arrays,
+  `numeric`, composites), a disallowed CEL builtin (e.g. `matches`, `map`),
+  or exceeds size/AST limits.
 
 **Remediation**
 
@@ -237,17 +244,27 @@ See [`configuration.md`](configuration.md) (`global_salt`, database URLs) for
 
 ---
 
-## Exit code 5: License / entitlement failure (commercial)
+## Exit code 5: License / entitlement failure
 
-The commercial layer could not validate an active License Manager entitlement
-(or equivalent subscription check).
+A required license capability is missing, or a plugin LicenseValidator
+entitlement check failed. Raised by `LicenseError` (and plugin entitlement
+failures).
+
+**Common causes**
+
+- Config uses `when:` but capabilities omit `conditional_masking` (community
+  mode with an empty capability set, or a plugin that does not grant the token).
+- Config uses keyed actions (`hmac_hash` / `pseudonym`) without `keyed_actions`.
+- Plugin package cannot validate an active License Manager entitlement.
 
 **Remediation**
 
-- Confirm the container can reach AWS License Manager (or your configured
-  entitlement endpoint).
-- Verify the License Manager entitlement / license is active.
-- Community mode (no plugin package installed) never returns this code.
+- Install a plugin package whose `LicenseValidator` grants the required
+  capability tokens, or remove the gated fields from `mask-rules.yaml`.
+- For subscribed images: confirm the container can reach AWS License Manager
+  and that the entitlement is active.
+- See [Conditional masking](configuration.md#conditional-masking-when) and
+  [Keyed actions](configuration.md).
 
 ---
 

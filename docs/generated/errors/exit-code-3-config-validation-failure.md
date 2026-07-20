@@ -18,6 +18,9 @@ description: "PrivaCI exit code 3: operator causes, remediation steps, and CI br
 - Unknown `action` type or missing required field for an action.
 - `action: ai_refine` without the commercial layer installed.
 - Engine v2 reading a `version: "1.0"` config without `migrate-config`.
+- `when:` references an unknown column, an unsupported type (`jsonb`, arrays,
+  `numeric`, composites), a disallowed CEL builtin (e.g. `matches`, `map`),
+  or exceeds size/AST limits.
 
 **Remediation**
 

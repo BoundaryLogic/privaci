@@ -12,3 +12,4 @@ Part of the auto-generated configuration schema. Narrative examples:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `action` | string | yes |  |
+| `when` | string \| null | no |  |

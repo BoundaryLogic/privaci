@@ -106,6 +106,38 @@ CAPABILITIES: dict[str, Capability] = {
         test_paths=("tests/mask/test_keyed.py",),
         tags=frozenset({"unit", "masking", "public", "keyed"}),
     ),
+    "public-conditional-masking-cel": Capability(
+        id="public-conditional-masking-cel",
+        label="Conditional masking (CEL when:)",
+        description=(
+            "Optional CEL ``when:`` guards, capability gate, type-check, and "
+            "MaskingEngine passthrough when false."
+        ),
+        repo="public",
+        test_paths=(
+            "tests/cel/test_sandbox.py",
+            "tests/config/test_conditional.py",
+            "tests/mask/test_conditional_when.py",
+        ),
+        tags=frozenset({"unit", "masking", "public", "cel"}),
+    ),
+    "public-conditional-masking-cel-pg": Capability(
+        id="public-conditional-masking-cel-pg",
+        label="Conditional masking CEL (Postgres)",
+        description="Integration: when: masks only matching rows; rollup audit.",
+        repo="public",
+        test_paths=("tests/integration/test_conditional_when.py",),
+        requires_postgres=True,
+        tags=frozenset({"integration", "masking", "public", "cel"}),
+    ),
+    "public-pii-catalog-import": Capability(
+        id="public-pii-catalog-import",
+        label="PII catalog import from DB comments",
+        description="pii-catalog.yaml models + comment heuristics for import-db-comments.",
+        repo="public",
+        test_paths=("tests/pii_catalog/test_import_comments.py",),
+        tags=frozenset({"unit", "public", "pii-catalog"}),
+    ),
     # --- Public engine (integration / Postgres) ---
     "public-spacy-ner": Capability(
         id="public-spacy-ner",

@@ -9,7 +9,7 @@ from typing import Annotated
 
 import typer
 
-from privaci.cli._catalog import inspect_source
+from privaci.cli._catalog import import_db_comments, inspect_source
 from privaci.cli._detect_drift import execute_detect_drift
 from privaci.cli._errors import run_cli
 from privaci.cli._init import execute_init
@@ -276,6 +276,22 @@ def schema_config() -> None:
 def catalog_inspect(source: SourceDbOption = None) -> None:
     """Introspect the source schema and print tables, load order, warnings."""
     inspect_source(source)
+
+
+@catalog_app.command("import-db-comments")
+def catalog_import_db_comments(
+    source: SourceDbOption = None,
+    output: Annotated[
+        str | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Write pii-catalog.yaml to this path (default: stdout).",
+        ),
+    ] = None,
+) -> None:
+    """Bootstrap pii-catalog.yaml from PostgreSQL column comments."""
+    run_cli(lambda: import_db_comments(source, output=output))
 
 
 @app.command("migrate-config")

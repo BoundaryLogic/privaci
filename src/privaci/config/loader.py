@@ -18,6 +18,7 @@ import yaml
 from pydantic import ValidationError
 
 from privaci.config.actions import ACTION_TAGS
+from privaci.config.conditional import validate_conditional_masking
 from privaci.config.keyed import validate_keyed_actions
 from privaci.config.models import Config
 from privaci.errors import ConfigError
@@ -58,6 +59,7 @@ def load_config(
         commercial_installed = is_commercial_installed()
     _reject_ai_refine_without_commercial(config, commercial_installed)
     validate_keyed_actions(config)
+    validate_conditional_masking(config)
     validate_fake_providers(config)
     return config
 

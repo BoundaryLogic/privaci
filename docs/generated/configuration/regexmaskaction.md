@@ -15,3 +15,4 @@ Part of the auto-generated configuration schema. Narrative examples:
 | `flags` | array[string] | no |  |
 | `pattern` | string | yes |  |
 | `replace` | string | yes |  |
+| `when` | string \| null | no |  |

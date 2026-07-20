@@ -50,9 +50,16 @@ ACTION_TAGS: frozenset[str] = frozenset(
 
 
 class _ActionBase(BaseModel):
-    """Base for all column actions; forbids unknown keys."""
+    """Base for all column actions; forbids unknown keys.
+
+    Attributes:
+        when: Optional CEL expression; when set, the action runs only for rows
+            where the expression evaluates to true (requires
+            ``conditional_masking`` capability).
+    """
 
     model_config = ConfigDict(extra="forbid")
+    when: str | None = None
 
 
 class FakeAction(_ActionBase):

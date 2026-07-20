@@ -13,3 +13,4 @@ Part of the auto-generated configuration schema. Narrative examples:
 |-------|------|----------|-------------|
 | `action` | string | yes |  |
 | `encoding` | enum: `hex`, `base64url` | no |  Default: `hex`. |
+| `when` | string \| null | no |  |

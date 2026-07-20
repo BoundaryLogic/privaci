@@ -5,7 +5,7 @@ follow-ups live in the sibling commercial OpenSpec roadmap.
 
 ---
 
-## Shipped (v1 baseline + v1.1 + schema modes)
+## Shipped (v1 baseline + v1.1 + schema modes + DDL phases)
 
 | Change | Notes |
 | --- | --- |
@@ -15,6 +15,8 @@ follow-ups live in the sibling commercial OpenSpec roadmap.
 | [add-config-scaffold-and-plan](changes/archive/2026-07-07-add-config-scaffold-and-plan/) | `init`, `plan` |
 | [add-license-capabilities](changes/archive/2026-07-07-add-license-capabilities/) | Capability tokens |
 | [add-schema-replication-modes](changes/archive/2026-07-17-add-schema-replication-modes/) | `assume_existing`, views/functions/matviews, elevated objects |
+| [add-pg-dump-style-ddl-phases](changes/archive/2026-07-20-add-pg-dump-style-ddl-phases/) | pre-data / data / post-data; secondary indexes + triggers post-load |
+| [harden-nuclear-codebase-findings](changes/archive/2026-07-20-harden-nuclear-codebase-findings/) | Schema/resume/observability hardening |
 
 ---
 
@@ -23,15 +25,17 @@ follow-ups live in the sibling commercial OpenSpec roadmap.
 | # | Change | Phase / scope | Blocks |
 | --- | --- | --- | --- |
 | **1** | [add-state-schema-abstraction](changes/add-state-schema-abstraction/) | Dialect-neutral `_privaci` DDL + connection ABCs | All connectors |
-| **2** | [add-pg-dump-style-ddl-phases](changes/add-pg-dump-style-ddl-phases/) | pre-data / data / post-data; secondary indexes + triggers post-load | — |
-| **3** | `catalog import-db-comments` | Public half of plugin `add-pii-annotation-catalog` | Plugin PII catalog |
-| **4** | [add-conditional-masking-cel](changes/add-conditional-masking-cel/) | Optional `when:` CEL on column rules | — |
-| **5** | [add-export-sinks-parquet-jsonl](changes/add-export-sinks-parquet-jsonl/) → [add-s3-object-connectors](changes/add-s3-object-connectors/) | Parquet/JSONL + S3 lake export | — |
-| **6** | [add-mysql-source-target](changes/add-mysql-source-target/) → [add-sqlserver-source-target](changes/add-sqlserver-source-target/) | Same-engine connectors | **#1** |
-| **7** | Cross-engine deterministic consistency *(proposed)* | Keyed identity stable across engines | **#6** |
+| **2** | [add-conditional-masking-cel](changes/add-conditional-masking-cel/) | Optional `when:` CEL (`conditional_masking`; Standard + Compliance grant in commercial) | — |
+| **3** | [add-pii-catalog-import](changes/add-pii-catalog-import/) | Public `catalog import-db-comments` + sidecar schema | Commercial validate/drift |
+| **4** | [add-export-sinks-parquet-jsonl](changes/add-export-sinks-parquet-jsonl/) → [add-s3-object-connectors](changes/add-s3-object-connectors/) | Parquet/JSONL + S3 lake export | — |
+| **5** | [add-mysql-source-target](changes/add-mysql-source-target/) → [add-sqlserver-source-target](changes/add-sqlserver-source-target/) | Same-engine connectors | **#1** |
+| **6** | Cross-engine deterministic consistency *(proposed)* | Keyed identity stable across engines | **#5** |
 
-Plugin-package follow-up for schema modes: report collectors only
-(`add-schema-replication-report-evidence`) — no engine logic.
+**Current public batch (single tag when done):** CEL (#2) + PII catalog import (#3).
+DDL phases already on `main` — do **not** cut a `v*` tag until this batch lands.
+
+Plugin-package follow-ups (commercial, later): grant `conditional_masking`,
+report `ddl_phase` evidence, PII catalog validate/drift (**Compliance**), tenant GTM.
 
 ---
 
@@ -39,12 +43,11 @@ Plugin-package follow-up for schema modes: report collectors only
 
 | Change | Status |
 | --- | --- |
-| [add-pg-dump-style-ddl-phases](changes/add-pg-dump-style-ddl-phases/) | Implementing — nuclear Highs addressed |
-| [harden-nuclear-codebase-findings](changes/harden-nuclear-codebase-findings/) | Implemented — archive pending |
-| [add-state-schema-abstraction](changes/add-state-schema-abstraction/) | Proposed — critical path |
+| [add-conditional-masking-cel](changes/add-conditional-masking-cel/) | Implementing — public engine complete; commercial grant deferred |
+| [add-pii-catalog-import](changes/add-pii-catalog-import/) | Implementing — import CLI + sidecar schema |
+| [add-state-schema-abstraction](changes/add-state-schema-abstraction/) | Proposed — critical path for connectors |
 | [add-mysql-source-target](changes/add-mysql-source-target/) | Proposed — blocked on state abstraction |
 | [add-sqlserver-source-target](changes/add-sqlserver-source-target/) | Proposed — blocked on MySQL |
-| [add-conditional-masking-cel](changes/add-conditional-masking-cel/) | Proposed |
 | [add-export-sinks-parquet-jsonl](changes/add-export-sinks-parquet-jsonl/) | Proposed |
 | [add-s3-object-connectors](changes/add-s3-object-connectors/) | Proposed |
 

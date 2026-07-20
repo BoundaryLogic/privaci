@@ -9,6 +9,10 @@ import asyncpg
 from privaci.autodetect import DetectionResult, uncovered_strict_columns
 from privaci.catalog.models import CatalogResult
 from privaci.catalog.partitions import validate_no_subpartitioning
+from privaci.config.conditional import (
+    assert_require_binary_allows_when,
+    validate_when_against_catalog,
+)
 from privaci.config.loader import check_null_actions
 from privaci.config.models import Config
 from privaci.errors import CatalogError, ConfigError, PreflightError
@@ -129,6 +133,11 @@ def verify_null_actions(config: Config, catalog: CatalogResult) -> None:
     check_null_actions(config, not_null_columns)
 
 
+def verify_conditional_when(config: Config, catalog: CatalogResult) -> None:
+    """Type-check ``when:`` CEL guards against the source catalog."""
+    validate_when_against_catalog(config, catalog)
+
+
 def verify_exclude_strategy(config: Config, catalog: CatalogResult) -> None:
     """Run the exclude + dangling FK validation from schema replication."""
     validate_exclude_fks(catalog, config)
@@ -167,6 +176,7 @@ async def run_target_checks(
     await verify_target_writable(conn)
     warnings = warn_disk_capacity(catalog)
     assert_require_binary_allows_orphan_nulling(catalog, config)
+    assert_require_binary_allows_when(config)
     if for_resume:
         return warnings
     if config.schema_mode == "replicate":

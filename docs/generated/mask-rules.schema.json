@@ -23,6 +23,18 @@
         "provider": {
           "title": "Provider",
           "type": "string"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "When"
         }
       },
       "required": [
@@ -64,6 +76,18 @@
           ],
           "default": null,
           "title": "Seed Alias"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "When"
         }
       },
       "required": [
@@ -81,6 +105,18 @@
           "const": "hash",
           "title": "Action",
           "type": "string"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "When"
         }
       },
       "required": [
@@ -106,6 +142,18 @@
           ],
           "title": "Encoding",
           "type": "string"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "When"
         }
       },
       "required": [
@@ -129,6 +177,18 @@
           },
           "title": "Entities",
           "type": "array"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "When"
         }
       },
       "required": [
@@ -145,6 +205,18 @@
           "const": "null",
           "title": "Action",
           "type": "string"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "When"
         }
       },
       "required": [
@@ -161,6 +233,18 @@
           "const": "passthrough",
           "title": "Action",
           "type": "string"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "When"
         }
       },
       "required": [
@@ -200,6 +284,18 @@
           ],
           "default": null,
           "title": "Seed Alias"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "When"
         }
       },
       "required": [
@@ -232,6 +328,18 @@
         "replace": {
           "title": "Replace",
           "type": "string"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "When"
         }
       },
       "required": [
@@ -254,6 +362,18 @@
         "value": {
           "title": "Value",
           "type": "string"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "When"
         }
       },
       "required": [

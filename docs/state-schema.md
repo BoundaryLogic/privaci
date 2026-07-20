@@ -74,6 +74,7 @@ Key columns: `audit_id` (UUIDv7 PK), `run_id`, `event_at`, `level`
 | `column.masked` | Column action applied |
 | `column.passed_through` | Column copied without masking |
 | `column.pii_detected` | Detection note for a column |
+| `column.conditional_skip` | CEL `when:` skipped masking for some rows (`expression_hash`, counts) |
 | `cycle_break` | FK cycle deferred for load |
 | `polymorphic_fk_warning` | Polymorphic FK risk |
 | `implied_fk_warning` | Implied FK risk |

@@ -38,6 +38,7 @@ Auto-generated reference pages (regenerate with `make docs-generate`):
 | [`generated/cli-reference.md`](generated/cli-reference.md) | Typer CLI in `src/privaci/cli/app.py` |
 | [`generated/configuration-reference.md`](generated/configuration-reference.md) | pydantic `Config` JSON Schema |
 | [`generated/mask-rules.schema.json`](generated/mask-rules.schema.json) | Raw JSON Schema |
+| [`generated/pii-catalog.schema.json`](generated/pii-catalog.schema.json) | PII catalog sidecar JSON Schema |
 
 ## Operating PrivaCI
 
@@ -46,6 +47,7 @@ Auto-generated reference pages (regenerate with `make docs-generate`):
 | [`cli-reference.md`](cli-reference.md) | Every `privaci` subcommand, its options, and copy-pasteable examples |
 | [`detect-drift` / `preview`](cli-reference.md) | Commercial drift gate (`privaci detect-drift`, exit 6) and CI preview (`privaci preview`) — require commercial layer |
 | [`configuration.md`](configuration.md) | The `mask-rules.yaml` reference: top-level options, table strategies, and every masking action |
+| [`pii-catalog.md`](pii-catalog.md) | `pii-catalog.yaml` sidecar + `privaci catalog import-db-comments` bootstrap |
 | [`state-schema.md`](state-schema.md) | The `_privaci` run-state & audit schema: required grant, tables, fingerprints, audit opt-out |
 | [`observability.md`](observability.md) | The JSON-lines stdout event stream, event catalog, PII redaction, log levels, and optional Prometheus metrics |
 | [`deployment.md`](deployment.md) | Container image, evaluation `docker compose`, Helm chart, and release publishing |

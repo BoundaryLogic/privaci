@@ -121,12 +121,15 @@ The top-level config SHALL accept:
   `append` (`append` SHALL fail validation in MVP).
 - `replicate_views`: bool (default `true`; only in `replicate` mode)
 - `replicate_functions`: bool (default `true`; only in `replicate` mode)
+- `replicate_triggers`: bool (default `true`; only in `replicate` mode;
+  when true, triggers are created in the **post-data** phase)
 - `elevated_objects`: mapping of schema-qualified object name → `replicate` | `skip`
   (default empty; only meaningful in `replicate` mode when views/functions are enabled)
 - `replicate_materialized_views`: bool (default `false`)
 - `refresh_materialized_views`: bool (default `false`)
 - `strict_autodetect`: bool (default `false`).
-- `replicate_all_indexes`: bool (default `false`).
+- `replicate_all_indexes`: bool (default `false`; non-unique indexes created in
+  **post-data** when true).
 - `batch_size`: int (default `10000`).
 - `audit_log`: bool (default `true`).
 - `auto_detect`: bool (default `true`).
@@ -147,32 +150,24 @@ The top-level config SHALL accept:
 #### Scenario: assume_existing fail allows empty prebuilt tables
 
 - **WHEN** `schema_mode: assume_existing` and `on_existing_data: fail` and in-scope
-  target tables exist with zero rows
-- **THEN** config and preflight SHALL allow the run to proceed past collision checks.
+  target tables exist and are empty
+- **THEN** preflight SHALL succeed without refusing the run solely for emptiness.
 
-#### Scenario: assume_existing fail refuses populated in-scope tables
+#### Scenario: assume_existing fail refuses populated tables
 
 - **WHEN** `schema_mode: assume_existing` and `on_existing_data: fail` and any in-scope
-  target table has rows
-- **THEN** preflight SHALL exit `2`
-- **AND** SHALL NOT treat missing identity/`SERIAL` columns as an exception.
+  target table contains at least one row
+- **THEN** preflight SHALL exit `2`.
 
 #### Scenario: assume_existing rejects drop_create
 
 - **WHEN** `schema_mode: assume_existing` and `on_existing_data: drop_create`
-- **THEN** config validation SHALL exit `3`
-- **AND** SHALL explain that customer-managed DDL would not be recreated.
+- **THEN** config validation SHALL exit `3`.
 
-#### Scenario: passthrough_copy default is auto
+#### Scenario: replicate_triggers default is true
 
-- **WHEN** `passthrough_copy` is omitted from config
-- **THEN** the engine SHALL behave as `passthrough_copy: auto`.
-
-#### Scenario: elevated_objects disposition values
-
-- **WHEN** `elevated_objects` contains an entry whose value is neither `replicate` nor
-  `skip`
-- **THEN** config validation SHALL exit `3` naming the invalid disposition.
+- **WHEN** `replicate_triggers` is omitted from config
+- **THEN** the engine SHALL treat it as `true` in `schema_mode: replicate`.
 
 ### Requirement: Validation errors are actionable
 

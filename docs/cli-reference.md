@@ -30,6 +30,7 @@ exit codes see [`error-codes.md`](error-codes.md).
 | [`report`](#privaci-report) | Render a compliance report for a run |
 | [`schema config`](#privaci-schema-config) | Print the `mask-rules.yaml` JSON Schema |
 | [`catalog inspect`](#privaci-catalog-inspect) | Introspect the source schema |
+| [`catalog import-db-comments`](#privaci-catalog-import-db-comments) | Bootstrap `pii-catalog.yaml` from column comments |
 
 ## Global options
 
@@ -367,6 +368,23 @@ privaci catalog inspect --source "$SOURCE_DB_URL"
 # public.users (~200 rows)
 # public.orders (~540 rows)
 # Load plan: [public.users] -> [public.orders]
+```
+
+---
+
+## `privaci catalog import-db-comments`
+
+Bootstrap a reviewable `pii-catalog.yaml` from PostgreSQL column comments
+(`col_description` only — no application row `SELECT`). See
+[pii-catalog.md](pii-catalog.md).
+
+| Option | Env var | Description |
+|--------|---------|-------------|
+| `--source` | `SOURCE_DB_URL` | Source DB URL or secret URI. |
+| `--output` / `-o` | — | Write YAML to this path (default: stdout). |
+
+```bash
+privaci catalog import-db-comments --output /config/pii-catalog.yaml
 ```
 
 ---
