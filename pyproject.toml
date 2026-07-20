@@ -21,6 +21,8 @@ classifiers = [
 ]
 dependencies = [
     "asyncpg==0.30.0",
+    # CEL sandbox for optional column ``when:`` guards.
+    "cel-python==0.5.0",
     # Pinned alongside typer: Click 8.4 broke Typer 0.15 (make_metavar(ctx)).
     # Keep this range until a Typer release is validated against newer Click.
     "click>=8.1.7,<8.5",
@@ -124,6 +126,10 @@ module = [
     "spacy.*",
     "asyncpg",
     "asyncpg.*",
+    "celpy",
+    "celpy.*",
+    "lark",
+    "lark.*",
     "boto3",
     "botocore",
     "botocore.*",
