@@ -81,6 +81,7 @@ async def stream_table(
         outer_transaction,
         ctx,
     )
+    await _write_conditional_skip_audits(target, table, engine, audit)
     await _finalize_table_stream(
         target, table, run_id, ctx, total, outer_transaction=outer_transaction
     )
@@ -206,6 +207,30 @@ async def _finalize_table_stream(
         duration_ms=round((time.monotonic() - ctx.table_started_at) * 1000, 3),
         status="done",
     )
+
+
+async def _write_conditional_skip_audits(
+    conn: asyncpg.Connection,
+    table: TableInfo,
+    engine: MaskingEngine,
+    audit: AuditWriter | None,
+) -> None:
+    """Emit rollup ``column.conditional_skip`` audits (no cell values)."""
+    if audit is None or not audit.enabled:
+        return
+    for skip in engine.drain_conditional_skip_audits():
+        await audit.write(
+            conn,
+            EventType.COLUMN_CONDITIONAL_SKIP,
+            schema_name=table.schema_name,
+            table_name=table.table_name,
+            column_name=skip.column_name,
+            payload={
+                "expression_hash": skip.expression_hash,
+                "skipped_rows": skip.skipped_rows,
+                "evaluated_rows": skip.evaluated_rows,
+            },
+        )
 
 
 async def _write_binary_fallback_audit(

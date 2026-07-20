@@ -15,3 +15,4 @@ Part of the auto-generated configuration schema. Narrative examples:
 | `params` | object | no |  |
 | `provider` | string | yes |  |
 | `seed_alias` | string \| null | no |  |
+| `when` | string \| null | no |  |

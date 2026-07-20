@@ -41,6 +41,8 @@ succeeded) and is resumable once the fault is cleared.
   collision policy for force-restart).
 - `passthrough_copy: require_binary` together with `null_orphan_fks` on a table
   that references an excluded parent.
+- `passthrough_copy: require_binary` together with any column `when:` guard
+  (conditional masking requires the batch/row path).
 
 **Remediation**
 

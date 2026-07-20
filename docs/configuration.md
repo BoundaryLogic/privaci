@@ -300,6 +300,42 @@ names and extra keys are rejected with the offending YAML path.
 | `ner_mask` | — | `entities` | Level-2 SpaCy NER. `entities` defaults to `PERSON, ORG, GPE, LOC`. |
 | `ai_refine` | `provider`, `model` | `params` | **Level-3.** Requires an LLM connector plugin; rejected in community mode. |
 
+### Conditional masking (`when:`)
+
+Every column action may include an optional CEL expression:
+
+```yaml
+tables:
+  public.tickets:
+    columns:
+      notes:
+        action: fake
+        provider: company
+        when: "status == 'closed'"
+```
+
+- When `when` is omitted or empty, the action runs for every row (unchanged).
+- When present, the action runs only if the expression evaluates to **true**;
+  otherwise the cell is left unchanged (auto-detect does not override).
+- Requires the `conditional_masking` license capability (plugin package).
+  Without it, config validation exits **5**.
+- Tables with any `when` use the batch/row path (not whole-table binary COPY).
+  `passthrough_copy: require_binary` plus `when` fails preflight (exit **2**).
+- Unsupported column types in the expression (e.g. `jsonb`, arrays) fail at
+  preflight (exit **3**). Prefer bool/int/float/text/uuid/timestamp/bytea.
+- Unknown column identifiers in `when:` fail at catalog type-check (exit **3**).
+- Allowed forms: comparisons, logic, `size()`, and string
+  `contains` / `startsWith` / `endsWith`. Use `col != null` for null checks
+  (`has()` is rejected — activation always binds columns, so it would be
+  always-true). Regex (`matches`), comprehensions (`map` / `filter`), field
+  selection, indexing (`col[i]`), and `timestamp`/`duration` are rejected at
+  compile (exit **3**).
+- Audit rollup: one `column.conditional_skip` per guarded column with
+  `expression_hash`, `skipped_rows`, and `evaluated_rows` (no cell values).
+- Expression length max 512 characters; evaluation enforces a cooperative
+  **5 ms elapsed budget** per row per guarded column (celpy cannot hard-preempt;
+  overrun fails the run with exit **1**). AST depth/node limits also apply.
+
 ### Built-in `fake` providers
 
 | Provider | Output shape |

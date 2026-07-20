@@ -47,6 +47,7 @@ class EventType(StrEnum):
     COLUMN_MASKED = "column.masked"
     COLUMN_PASSED_THROUGH = "column.passed_through"
     COLUMN_PII_DETECTED = "column.pii_detected"
+    COLUMN_CONDITIONAL_SKIP = "column.conditional_skip"
     CYCLE_BREAK = "cycle_break"
     POLYMORPHIC_FK_WARNING = "polymorphic_fk_warning"
     IMPLIED_FK_WARNING = "implied_fk_warning"

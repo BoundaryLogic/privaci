@@ -8,6 +8,7 @@ import asyncpg
 
 from privaci.catalog.models import TableInfo
 from privaci.config.actions import PassthroughAction
+from privaci.config.conditional import table_has_when
 from privaci.config.models import Config, TableConfig
 from privaci.schema.assume_existing import (
     binary_copy_columns_match,
@@ -25,6 +26,8 @@ def table_is_passthrough_candidate(
 ) -> bool:
     """Return whether the table would use whole-table binary COPY if eligible."""
     if row_filter is not None or last_pk_value is not None:
+        return False
+    if table_has_when(table_cfg.columns):
         return False
     column_types = {column.name: column.data_type for column in table.columns}
     if table_needs_text_fallback(column_types):

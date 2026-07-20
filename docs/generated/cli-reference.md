@@ -28,6 +28,15 @@ In-VPC PostgreSQL masking and anonymization engine.
 | `--prometheus-port` | — | — | Serve Prometheus metrics on this port (off by default). |
 | `--force-restart` | — | `False` | Abandon incomplete target runs and start fresh. Requires on_existing_data: truncate or drop_create. |
 
+## `privaci catalog import-db-comments`
+
+Bootstrap pii-catalog.yaml from PostgreSQL column comments.
+
+| Option | Env var | Default | Description |
+|--------|---------|---------|-------------|
+| `--source` | `SOURCE_DB_URL` | — | Source database URL or secret URI. |
+| `--output`, `-o` | — | — | Write pii-catalog.yaml to this path (default: stdout). |
+
 ## `privaci catalog inspect`
 
 Introspect the source schema and print tables, load order, warnings.

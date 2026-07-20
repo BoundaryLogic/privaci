@@ -68,6 +68,7 @@ _SCAN_ROOTS: tuple[Path, ...] = (
     ROOT / "docs" / "object-output.md",
     ROOT / "docs" / "configuration.md",
     ROOT / "docs" / "cli-reference.md",
+    ROOT / "docs" / "pii-catalog.md",
     ROOT / ".github" / "release-notes",
 )
 

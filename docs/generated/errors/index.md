@@ -16,6 +16,6 @@ with message format rules lives in
 | `2` | [Exit code 2: Pre-flight failure](exit-code-2-pre-flight-failure.md) |
 | `3` | [Exit code 3: Config validation failure](exit-code-3-config-validation-failure.md) |
 | `4` | [Exit code 4: Missing or invalid salt](exit-code-4-missing-or-invalid-salt.md) |
-| `5` | [Exit code 5: License / entitlement failure (commercial)](exit-code-5-license-entitlement-failure.md) |
+| `5` | [Exit code 5: License / entitlement failure](exit-code-5-license-entitlement-failure.md) |
 | `6` | [Exit code 6: Drift detected (commercial)](exit-code-6-drift-detected.md) |
 | `130` | [Exit code 130: Interrupted by signal](exit-code-130-interrupted-by-signal.md) |

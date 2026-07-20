@@ -13,3 +13,4 @@ Part of the auto-generated configuration schema. Narrative examples:
 |-------|------|----------|-------------|
 | `action` | string | yes |  |
 | `entities` | array[string] | no |  |
+| `when` | string \| null | no |  |

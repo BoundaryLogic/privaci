@@ -19,6 +19,8 @@ An unexpected error not covered by a specific code. Raised by
   not change, passthrough drift, row-count mismatch, duplicate unique values, or
   an orphaned foreign key). Failing checks are printed to stderr; warnings alone
   do not trigger this exit.
+- A `when:` CEL evaluation failed for a row (non-bool result, runtime error, or
+  elapsed budget overrun). Errors omit cell values.
 
 **Remediation**
 

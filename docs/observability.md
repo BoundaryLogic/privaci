@@ -77,6 +77,7 @@ disposition (in addition to stdout `preflight.ok` / `preflight.fail`):
 | `created_object` | View, function, trigger, or index DDL replicated to the target (`ddl_phase`: `pre-data` or `post-data`; triggers also carry `object_name` in the audit payload) |
 | `definition_only_object` | Materialized-view shell created with `WITH NO DATA` (`contents_copied: false`; `refreshed` set after optional post-load refresh; `ddl_phase: post-data`) |
 | `skipped_object` | Object intentionally not replicated (`kind` / `reason`) |
+| `column.conditional_skip` | CEL `when:` skipped masking for some rows (`expression_hash`, `skipped_rows`, `evaluated_rows`; no cell values). Segment-local per stream pass (resume may emit another rollup for remaining rows). |
 
 ### `table.progress` throttling
 
