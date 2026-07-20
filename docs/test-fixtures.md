@@ -226,7 +226,7 @@ public schema   (the SaaS-product side)
   │                                                      │
   │  users_audit_noop (trigger), tickets_insert_also_noop│
   │  (rule), privaci_demo_fixture_pub (publication)      │
-  │  Tier 3 — skipped_object with reason codes           │
+  │  Trigger → post-data create; rule/pub → skipped_object│
   └──────────────────────────────────────────────────────┘
 
 ══════════════════════════════════════════════════════════════════════
@@ -358,8 +358,7 @@ audit_internal schema   (exclude-strategy test)
 | `clinic_label(org_id bigint)` | **SQL function** — replicated (`created_object`) |
 | `elevated_org_name(org_id bigint)` | **SECURITY DEFINER function** — `elevated_objects: skip` |
 | `tickets_open_mv` | **Materialized view** — Demo Corp enables `replicate_materialized_views` + `refresh_materialized_views` so e2e asserts `definition_only_object` (with `refreshed: true`) |
-
-| `users_audit_noop` trigger | **Trigger** — `skipped_object` / `unsafe_during_load` |
+| `users_audit_noop` trigger | **Trigger** — created in **post-data** by default (`created_object`, `kind: trigger`); skipped with `flag_disabled` when `replicate_triggers: false` |
 | `tickets_insert_also_noop` rule | **Rule** — `skipped_object` / `customer_owned_semantics` |
 | `privaci_demo_fixture_pub` | **Publication** — `skipped_object` / `low_value_footgun` |
 | `raw_events.id` (SERIAL) + most others (IDENTITY) | Both **legacy `SERIAL`** and **modern `IDENTITY`** sequences |
@@ -574,12 +573,13 @@ assert (
     audit_count(target_conn, event_type="column.masked") > 0
 )
 
-# Invoker views + clinic_label created; matview definition-only; elevated / tier-3 skipped
+# Invoker views + clinic_label + users_audit_noop trigger created;
+# matview definition-only; elevated / rules / publications skipped
 assert "active_clinics_v" in created_objects(target_conn)
 assert "clinic_label" in created_objects(target_conn)
+assert "users_audit_noop" in created_objects(target_conn)
 assert "tickets_open_mv" in definition_only_objects(target_conn)
 assert "elevated_orgs_v" in skipped_objects(target_conn)
-assert "users_audit_noop" in skipped_objects(target_conn)
 
 ### Schema-modes matrix
 

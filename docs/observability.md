@@ -59,8 +59,8 @@ log lines are rendered as `{"event": "log", "message": "...", ...}`.
 | `polymorphic_fk_warning` | warning | `table_id`, `message` |
 | `implied_fk_warning` | warning | `source_column_path`, `message` |
 | `skipped_object` | info | `schema_name`, `object_name`, `kind`, `reason` (optional) |
-| `created_object` | info | `schema_name`, `object_name`, `kind`, `elevated` |
-| `definition_only_object` | info | `schema_name`, `object_name`, `kind`, `contents_copied`, `refreshed` |
+| `created_object` | info | `schema_name`, `object_name`, `kind`, `elevated`, `ddl_phase` |
+| `definition_only_object` | info | `schema_name`, `object_name`, `kind`, `contents_copied`, `refreshed`, `ddl_phase` |
 | `new_table` | info | `schema_name`, `table_name`, `reason` |
 | `binary_fallback` | warning | `schema_name`, `table_name`, `unsupported_types` |
 | `warning` | warning | `message` |
@@ -74,8 +74,8 @@ disposition (in addition to stdout `preflight.ok` / `preflight.fail`):
 |--------------------|------|
 | `schema.validated` | `schema_mode: assume_existing` validation succeeded |
 | `schema.validation_failed` | Validation refused the load (before exit 2) |
-| `created_object` | View or function DDL replicated to the target |
-| `definition_only_object` | Materialized-view shell created with `WITH NO DATA` (`contents_copied: false`; `refreshed` set after optional post-load refresh) |
+| `created_object` | View, function, trigger, or index DDL replicated to the target (`ddl_phase`: `pre-data` or `post-data`; triggers also carry `object_name` in the audit payload) |
+| `definition_only_object` | Materialized-view shell created with `WITH NO DATA` (`contents_copied: false`; `refreshed` set after optional post-load refresh; `ddl_phase: post-data`) |
 | `skipped_object` | Object intentionally not replicated (`kind` / `reason`) |
 
 ### `table.progress` throttling

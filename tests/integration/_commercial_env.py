@@ -9,12 +9,12 @@ _PLUGIN_GROUP = "privaci.plugins"
 
 
 def commercial_plugin_installed() -> bool:
-    """Return True when ``privaci-commercial`` registered a usage meter plugin."""
+    """Return True when a commercial license or metering plugin is registered."""
     try:
         eps = importlib.metadata.entry_points(group=_PLUGIN_GROUP)
     except (ImportError, AttributeError, TypeError):
         return False
-    return any(ep.name == "usage_meter" for ep in eps)
+    return any(ep.name in {"usage_meter", "license_validator"} for ep in eps)
 
 
 def ensure_commercial_dev_license() -> None:

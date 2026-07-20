@@ -243,7 +243,8 @@ CREATE VIEW public.elevated_orgs_v AS
 CREATE MATERIALIZED VIEW public.tickets_open_mv AS
     SELECT id, subject, status FROM public.tickets WHERE status <> 'closed';
 
--- Tier 3: trigger function + trigger (skipped_object / unsafe_during_load)
+-- Tier 3: trigger function + trigger (post-data when replicate_triggers true)
+
 CREATE OR REPLACE FUNCTION public.users_audit_noop()
 RETURNS trigger
 LANGUAGE plpgsql

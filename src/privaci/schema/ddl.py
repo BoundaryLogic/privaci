@@ -68,12 +68,25 @@ def _check_constraint_line(name: str, definition: str) -> str:
     return f"CONSTRAINT {constraint} CHECK ({body})"
 
 
-def emit_unique_indexes(table: TableInfo, *, replicate_all: bool) -> list[str]:
-    """Return idempotent ``CREATE [UNIQUE] INDEX IF NOT EXISTS`` statements."""
-    statements: list[str] = []
+def emit_unique_indexes(table: TableInfo) -> list[str]:
+    """Return idempotent UNIQUE index DDL (pre-data)."""
+    return [sql for _name, sql in emit_indexes(table, unique_only=True)]
+
+
+def emit_nonunique_indexes(table: TableInfo) -> list[tuple[str, str]]:
+    """Return ``(index_name, DDL)`` pairs for non-unique indexes (post-data)."""
+    return emit_indexes(table, unique_only=False)
+
+
+def emit_indexes(table: TableInfo, *, unique_only: bool) -> list[tuple[str, str]]:
+    """Return ``(index_name, CREATE … IF NOT EXISTS)`` pairs."""
+    statements: list[tuple[str, str]] = []
     for index in table.indexes:
-        if replicate_all or index.is_unique:
-            statements.append(_with_if_not_exists(index.definition))
+        if unique_only and not index.is_unique:
+            continue
+        if not unique_only and index.is_unique:
+            continue
+        statements.append((index.name, _with_if_not_exists(index.definition)))
     return statements
 
 

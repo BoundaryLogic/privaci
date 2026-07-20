@@ -25,6 +25,7 @@ from privaci.catalog.models import (
     IndexInfo,
     SkippedObjectInfo,
     TableInfo,
+    TriggerInfo,
     ViewInfo,
     table_id,
 )
@@ -39,6 +40,7 @@ from privaci.catalog.queries import (
 )
 from privaci.catalog.routines import fetch_functions
 from privaci.catalog.skipped import fetch_skipped_objects
+from privaci.catalog.triggers import fetch_triggers
 from privaci.catalog.views_meta import fetch_views
 from privaci.errors import CatalogError
 
@@ -66,7 +68,7 @@ async def introspect_catalog(
         CatalogError: When catalog access fails (exit code 2).
     """
     try:
-        tables, views, functions, skipped_objects, partition_warnings = (
+        tables, views, functions, triggers, skipped_objects, partition_warnings = (
             await _introspect_in_transaction(conn)
         )
     except asyncpg.PostgresError as exc:
@@ -76,6 +78,7 @@ async def introspect_catalog(
         tables,
         views=views,
         functions=functions,
+        triggers=triggers,
         skipped_objects=skipped_objects,
     )
     tables = mark_self_cycles(tables)
@@ -90,6 +93,7 @@ async def introspect_catalog(
         warnings=warnings,
         views=views,
         functions=functions,
+        triggers=triggers,
         skipped_objects=skipped_objects,
     )
 
@@ -118,6 +122,7 @@ async def _introspect_in_transaction(
     dict[str, TableInfo],
     tuple[ViewInfo, ...],
     tuple[FunctionInfo, ...],
+    tuple[TriggerInfo, ...],
     tuple[SkippedObjectInfo, ...],
     tuple[CatalogWarning, ...],
 ]:
@@ -132,8 +137,16 @@ async def _introspect_in_transaction(
         partition_warnings = await attach_partition_metadata(conn, tables)
         views = await fetch_views(conn)
         functions = await fetch_functions(conn)
+        triggers = await fetch_triggers(conn)
         skipped_objects = await fetch_skipped_objects(conn)
-        return tables, views, functions, skipped_objects, partition_warnings
+        return (
+            tables,
+            views,
+            functions,
+            triggers,
+            skipped_objects,
+            partition_warnings,
+        )
 
 
 async def _fetch_tables(conn: asyncpg.Connection) -> dict[str, TableInfo]:

@@ -23,11 +23,12 @@ follow-ups live in the sibling commercial OpenSpec roadmap.
 | # | Change | Phase / scope | Blocks |
 | --- | --- | --- | --- |
 | **1** | [add-state-schema-abstraction](changes/add-state-schema-abstraction/) | Dialect-neutral `_privaci` DDL + connection ABCs | All connectors |
-| **2** | `catalog import-db-comments` | Public half of plugin `add-pii-annotation-catalog` | Plugin PII catalog |
-| **3** | [add-conditional-masking-cel](changes/add-conditional-masking-cel/) | Optional `when:` CEL on column rules | — |
-| **4** | [add-export-sinks-parquet-jsonl](changes/add-export-sinks-parquet-jsonl/) → [add-s3-object-connectors](changes/add-s3-object-connectors/) | Parquet/JSONL + S3 lake export | — |
-| **5** | [add-mysql-source-target](changes/add-mysql-source-target/) → [add-sqlserver-source-target](changes/add-sqlserver-source-target/) | Same-engine connectors | **#1** |
-| **6** | Cross-engine deterministic consistency *(proposed)* | Keyed identity stable across engines | **#5** |
+| **2** | [add-pg-dump-style-ddl-phases](changes/add-pg-dump-style-ddl-phases/) | pre-data / data / post-data; secondary indexes + triggers post-load | — |
+| **3** | `catalog import-db-comments` | Public half of plugin `add-pii-annotation-catalog` | Plugin PII catalog |
+| **4** | [add-conditional-masking-cel](changes/add-conditional-masking-cel/) | Optional `when:` CEL on column rules | — |
+| **5** | [add-export-sinks-parquet-jsonl](changes/add-export-sinks-parquet-jsonl/) → [add-s3-object-connectors](changes/add-s3-object-connectors/) | Parquet/JSONL + S3 lake export | — |
+| **6** | [add-mysql-source-target](changes/add-mysql-source-target/) → [add-sqlserver-source-target](changes/add-sqlserver-source-target/) | Same-engine connectors | **#1** |
+| **7** | Cross-engine deterministic consistency *(proposed)* | Keyed identity stable across engines | **#6** |
 
 Plugin-package follow-up for schema modes: report collectors only
 (`add-schema-replication-report-evidence`) — no engine logic.
@@ -38,6 +39,7 @@ Plugin-package follow-up for schema modes: report collectors only
 
 | Change | Status |
 | --- | --- |
+| [add-pg-dump-style-ddl-phases](changes/add-pg-dump-style-ddl-phases/) | Implementing — nuclear Highs addressed |
 | [harden-nuclear-codebase-findings](changes/harden-nuclear-codebase-findings/) | Implemented — archive pending |
 | [add-state-schema-abstraction](changes/add-state-schema-abstraction/) | Proposed — critical path |
 | [add-mysql-source-target](changes/add-mysql-source-target/) | Proposed — blocked on state abstraction |

@@ -96,6 +96,7 @@ def catalog_to_snapshot_dict(catalog: CatalogResult) -> dict[str, Any]:
         "tables": ordered_tables,
         "views": _views_snapshot(catalog),
         "functions": _functions_snapshot(catalog),
+        "triggers": _triggers_snapshot(catalog),
         "skipped_objects": _skipped_objects_snapshot(catalog),
         "load_plan": _load_plan_snapshot(catalog),
         "warnings": _warnings_snapshot(catalog),
@@ -129,6 +130,19 @@ def _functions_snapshot(catalog: CatalogResult) -> list[dict[str, Any]]:
             "schema_name": function.schema_name,
         }
         for function in sorted(catalog.functions, key=lambda item: item.identifier)
+    ]
+
+
+def _triggers_snapshot(catalog: CatalogResult) -> list[dict[str, Any]]:
+    return [
+        {
+            "create_sql": trigger.create_sql,
+            "function_identity": trigger.function_identity,
+            "schema_name": trigger.schema_name,
+            "table_name": trigger.table_name,
+            "trigger_name": trigger.trigger_name,
+        }
+        for trigger in sorted(catalog.triggers, key=lambda item: item.identifier)
     ]
 
 

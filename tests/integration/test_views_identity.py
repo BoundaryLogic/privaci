@@ -9,6 +9,7 @@ from privaci.catalog import introspect_catalog
 from privaci.config import load_config
 from privaci.pipeline import run_masking_pipeline
 from privaci.schema import replicate_schema
+from privaci.schema.post_data import apply_post_data_ddl
 from tests.fixtures.constants import TEST_SALT
 from tests.integration.assertions import audit_count
 from tests.integration.conftest import DEMO_CORP_CONFIG_PATH
@@ -163,21 +164,35 @@ async def test_demo_corp_pipeline_replicates_views_and_syncs_identity_sequences(
         assert int(skipped_mv or 0) == 0
 
         schema_name, table_name, trigger_name = _SKIPPED_TRIGGER
-        skipped_trigger = await target.fetchval(
+        created_trigger = await target.fetchval(
             """
             SELECT count(*)::int
             FROM _privaci.audit_log
-            WHERE event_type = 'skipped_object'
+            WHERE event_type = 'created_object'
               AND schema_name = $1
               AND table_name = $2
+              AND payload->>'kind' = 'trigger'
               AND payload->>'object_name' = $3
-              AND payload->>'reason' = 'unsafe_during_load'
+              AND payload->>'ddl_phase' = 'post-data'
             """,
             schema_name,
             table_name,
             trigger_name,
         )
-        assert int(skipped_trigger or 0) == 1
+        assert int(created_trigger or 0) == 1
+        trigger_exists = await target.fetchval(
+            """
+            SELECT count(*)::int
+            FROM pg_trigger t
+            JOIN pg_class c ON c.oid = t.tgrelid
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+            WHERE n.nspname = $1 AND c.relname = $2 AND t.tgname = $3
+            """,
+            schema_name,
+            table_name,
+            trigger_name,
+        )
+        assert int(trigger_exists or 0) == 1
 
         skipped_rule = await target.fetchval("""
             SELECT count(*)::int
@@ -279,7 +294,9 @@ async def test_matview_replicate_is_idempotent_on_truncate_rerun(
     target = await asyncpg.connect(target_dsn)
     try:
         catalog = await introspect_catalog(source)
-        await replicate_schema(target, catalog, config)
+        reapply = config.model_copy(update={"refresh_materialized_views": False})
+        await replicate_schema(target, catalog, reapply)
+        await apply_post_data_ddl(target, catalog, reapply)
         exists = await target.fetchval("""
             SELECT EXISTS (
                 SELECT 1 FROM pg_catalog.pg_matviews

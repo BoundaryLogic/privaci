@@ -19,6 +19,7 @@ if TYPE_CHECKING:
         FunctionInfo,
         SkippedObjectInfo,
         TableInfo,
+        TriggerInfo,
         ViewInfo,
     )
 
@@ -70,13 +71,14 @@ def assert_safe_identifiers(
     *,
     views: tuple[ViewInfo, ...] = (),
     functions: tuple[FunctionInfo, ...] = (),
+    triggers: tuple[TriggerInfo, ...] = (),
     skipped_objects: tuple[SkippedObjectInfo, ...] = (),
 ) -> None:
     """Reject NUL/control-char names at introspection time, before any SQL runs.
 
-    Validates schema/table/column names plus views, functions, sequences,
-    indexes, and constraint names so a hostile catalog fails loud during
-    pre-flight rather than at the first dynamically-built query.
+    Validates schema/table/column names plus views, functions, triggers,
+    sequences, indexes, and constraint names so a hostile catalog fails loud
+    during pre-flight rather than at the first dynamically-built query.
 
     Raises:
         CatalogError: If any identifier contains a NUL/control character.
@@ -100,6 +102,10 @@ def assert_safe_identifiers(
     for function in functions:
         quote_pg_identifier(function.schema_name)
         quote_pg_identifier(function.function_name)
+    for trigger in triggers:
+        quote_pg_identifier(trigger.schema_name)
+        quote_pg_identifier(trigger.table_name)
+        quote_pg_identifier(trigger.trigger_name)
     for skipped in skipped_objects:
         if skipped.schema_name:
             quote_pg_identifier(skipped.schema_name)

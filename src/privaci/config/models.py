@@ -102,6 +102,9 @@ class Config(BaseModel):
             in ``schema_mode: replicate``.
         replicate_functions: When true (default), replicate non-elevated
             functions/procedures in ``schema_mode: replicate``.
+        replicate_triggers: When true (default), create user triggers in the
+            **post-data** phase under ``schema_mode: replicate``. Ignored under
+            ``assume_existing`` (customer owns DDL). Set false to skip triggers.
         replicate_materialized_views: When true, create materialized-view shells
             with ``WITH NO DATA`` (never copy source storage). Default false.
             Rejected under ``schema_mode: assume_existing``.
@@ -132,6 +135,7 @@ class Config(BaseModel):
     passthrough_copy: PassthroughCopy = "auto"
     replicate_views: bool = True
     replicate_functions: bool = True
+    replicate_triggers: bool = True
     replicate_materialized_views: bool = False
     refresh_materialized_views: bool = False
     elevated_objects: dict[str, ElevatedDisposition] = Field(default_factory=dict)

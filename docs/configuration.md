@@ -72,13 +72,14 @@ privaci validate --config mask-rules.yaml
 | `on_existing_data` | enum | `fail` | Target collision policy: `fail`, `truncate`, `drop_create`. Under `assume_existing`, `fail` allows empty prebuilt tables but refuses rows; see [assume_existing](#schema_mode-assume_existing). `append` is rejected in the MVP. |
 | `schema_mode` | enum | `replicate` | Who owns target DDL: `replicate` (engine clones schema) or `assume_existing` (validate prebuilt target, then load). |
 | `passthrough_copy` | enum | `auto` | Binary COPY for unmasked tables: `auto` (binary when column order matches, else named batch), `require_binary` (fail if ineligible), `batch` (always named batch). |
-| `replicate_views` | bool | `true` | Replicate non-elevated plain views in `replicate` mode. |
-| `replicate_functions` | bool | `true` | Replicate non-elevated functions/procedures in `replicate` mode. |
-| `replicate_materialized_views` | bool | `false` | Create materialized-view shells with `WITH NO DATA` (never copy source storage). Rejected under `assume_existing`. |
+| `replicate_views` | bool | `true` | Replicate non-elevated plain views in `replicate` mode (**post-data**). |
+| `replicate_functions` | bool | `true` | Replicate non-elevated functions/procedures (**post-data**, except DEFAULT/CHECK deps which hoist to **pre-data**). |
+| `replicate_triggers` | bool | `true` | Create user triggers in **post-data** (do not fire during mask load). Set `false` to skip. Ignored under `assume_existing`. |
+| `replicate_materialized_views` | bool | `false` | Create materialized-view shells with `WITH NO DATA` in **post-data** (never copy source storage). Rejected under `assume_existing`. |
 | `refresh_materialized_views` | bool | `false` | After masked loads, `REFRESH MATERIALIZED VIEW` in dependency order (requires `replicate_materialized_views`; `replicate` mode only). Rejected under `assume_existing`. |
 | `elevated_objects` | map | `{}` | Explicit `replicate` or `skip` for elevated views/functions. Unresolved elevated objects fail preflight. |
 | `strict_autodetect` | bool | `false` | Fail the run when auto-detect finds uncovered PII columns. |
-| `replicate_all_indexes` | bool | `false` | Replicate every source index, not just unique/PK indexes. |
+| `replicate_all_indexes` | bool | `false` | Replicate every source index (non-unique indexes in **post-data**), not just unique/PK indexes. |
 | `batch_size` | int | `10000` | Default streaming batch size in rows (must be ≥ 1). |
 | `audit_log` | bool | `true` | Write the per-run audit log to `_privaci.audit_log`. |
 | `auto_detect` | bool | `true` | Run the zero-config PII column scanner. |
@@ -149,18 +150,35 @@ also compares constraint names. PrivaCI does not silently replace a same-name
 index or constraint whose definition differs. Use schema drift review or
 remove/rename the conflicting target object before retrying.
 
-### Object replication (views and functions)
+### Object replication (pg_dump-style phases)
 
-In `schema_mode: replicate` (defaults):
+In `schema_mode: replicate`, DDL is applied in three phases (same names as
+`pg_dump` sections):
 
-- **Functions/procedures** then **plain views** are created in dependency order
-  (`replicate_functions` / `replicate_views`, both default `true`).
-- **Elevated** objects require an explicit disposition (see below).
-- **Materialized views** are opt-in definition-only shells (see below);
-  triggers, rules, and publications are never copied.
+| Phase | Objects |
+| --- | --- |
+| **pre-data** | Schemas, extensions, sequences, tables, partition children, PRIMARY KEY / UNIQUE indexes, foreign keys; functions required by column `DEFAULT` / `CHECK` expressions |
+| **data** | Masked/passthrough row stream; per-table sequence `setval` |
+| **post-data** | Remaining functions/procedures, plain views, optional matview shells, optional non-unique indexes (`replicate_all_indexes`), triggers (`replicate_triggers`, default on), optional matview `REFRESH` |
 
-Each created view/function is recorded as `created_object`. Skipped objects use
-`skipped_object` with a `kind` (and `reason` when applicable).
+`RunStatus.SUCCEEDED` means all three phases completed. Phase membership is
+fixed (not configurable); use include/skip flags and `assume_existing` when you
+own target DDL.
+
+- **Elevated** objects still require an explicit disposition (see below).
+- **Materialized views** remain opt-in definition-only shells (see below).
+- **Rules** and **publications** remain skipped.
+
+Each created object is recorded as `created_object` (or
+`definition_only_object`) with `ddl_phase`. Skipped objects use
+`skipped_object` with a `kind` and `reason`.
+
+Triggers created in post-data apply to **subsequent** DML on the target; they
+do **not** fire against rows inserted during the mask COPY/load. Set
+`replicate_triggers: false` to skip (audit `skipped_object` with
+`reason: flag_disabled`). When the trigger function is not replicated
+(elevated skip or `replicate_functions: false`), the trigger is skipped with
+`reason: dependency_excluded`.
 
 ### Elevated objects
 
@@ -180,12 +198,15 @@ elevated_objects:
 - Missing entry → preflight exit **2** naming the object.
 
 `privaci init` scaffolds `elevated_objects: {}` and prints **ACTION REQUIRED**
-listing unresolved elevated objects. `privaci plan` prints the same reminder.
+listing unresolved elevated objects. `privaci plan` prints the same reminder
+and a pre-data / post-data phase summary.
 
 ### Objects still not replicated
 
-Triggers, rules, and logical-replication publications are never copied. Each is
-recorded as `skipped_object` (`kind`: `trigger`, `rule`, or `publication`).
+Rules and logical-replication publications are never copied. Each is recorded
+as `skipped_object` (`kind`: `rule` or `publication`). Triggers are skipped when
+`replicate_triggers: false` (`reason: flag_disabled`) or when their function is
+not replicated (`reason: dependency_excluded`).
 
 ### Materialized views (opt-in, definition-only)
 

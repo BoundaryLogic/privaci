@@ -81,7 +81,7 @@ Key columns: `audit_id` (UUIDv7 PK), `run_id`, `event_at`, `level`
 | `strict_mode_violation` | Strict autodetect refusal context |
 | `new_table` | Partition child discovered vs prior snapshot |
 | `skipped_object` | Object not replicated (`kind` + `reason`) |
-| `created_object` | View/function created on target |
+| `created_object` | View, function, trigger, or index created on target (`payload.ddl_phase`) |
 | `definition_only_object` | Matview shell created without copying source bytes |
 | `schema.validated` | `assume_existing` validation passed |
 | `schema.validation_failed` | `assume_existing` validation refused |
