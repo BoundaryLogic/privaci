@@ -114,6 +114,18 @@ MATRIX_CELLS: tuple[MatrixCell, ...] = (
         triage_note="Documented near-current behaviour rollback",
     ),
     MatrixCell(
+        id="replicate-triggers-off",
+        rank="P2",
+        repo="public",
+        label="replicate_triggers false skips post-data triggers",
+        axes={
+            "schema_mode": "replicate",
+            "replicate_triggers": "false",
+        },
+        capability_ids=("public-schema-modes-replicate-integration",),
+        triage_note="Escape hatch for noisy/broken source triggers",
+    ),
+    MatrixCell(
         id="matview-x-replicate",
         rank="P1",
         repo="public",

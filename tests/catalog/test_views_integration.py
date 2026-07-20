@@ -47,8 +47,10 @@ async def test_introspect_catalog_lists_demo_corp_views(
         if fn.identifier == "public.elevated_org_name(org_id bigint)"
     )
 
+    trigger_names = {t.trigger_name for t in catalog.triggers}
+    assert "users_audit_noop" in trigger_names
     skipped_kinds = {obj.kind for obj in catalog.skipped_objects}
-    assert "trigger" in skipped_kinds
+    assert "trigger" not in skipped_kinds
     assert "rule" in skipped_kinds
     assert "publication" in skipped_kinds
 

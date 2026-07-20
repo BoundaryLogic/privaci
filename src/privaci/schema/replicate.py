@@ -6,10 +6,15 @@ import logging
 
 import asyncpg
 
-from privaci.catalog.models import CatalogResult, ForeignKeyInfo, TableInfo
+from privaci.catalog.models import (
+    CatalogResult,
+    ForeignKeyInfo,
+    FunctionInfo,
+    TableInfo,
+)
 from privaci.catalog.partitions import config_table_id, is_partition_child
 from privaci.config.models import Config, TableConfig
-from privaci.errors import ConfigError, PreflightError
+from privaci.errors import ConfigError
 from privaci.schema.ddl import (
     emit_create_partition_child,
     emit_create_schema,
@@ -19,8 +24,10 @@ from privaci.schema.ddl import (
     emit_unique_indexes,
     foreign_key_exists,
 )
+from privaci.schema.execute import execute_ddl
 from privaci.schema.extensions import emit_create_extension, required_extensions
-from privaci.schema.objects import ReplicatedObject, replicate_functions_and_views
+from privaci.schema.function_hoist import functions_required_for_pre_data
+from privaci.schema.objects import ReplicatedObject, replicate_function_defs
 from privaci.schema.orphan_fks import assert_orphan_nulling_allowed
 from privaci.schema.sequences import sequence_columns
 from privaci.schema.table_policy import is_excluded_table
@@ -35,11 +42,11 @@ async def replicate_schema(
     catalog: CatalogResult,
     config: Config,
 ) -> tuple[ReplicatedObject, ...]:
-    """Clone in-scope source DDL into the target.
+    """Apply **pre-data** DDL: structure required before row inserts.
 
-    Creates schemas and tables (honoring per-table strategy), then unique
-    indexes and foreign keys, then functions, plain views, and optional
-    materialized-view shells (``WITH NO DATA``). Does not stream rows.
+    Order: schemas (tables ∪ hoisted functions) → extensions → DEFAULT/CHECK
+    functions → tables/UNIQUE/FKs. Does not stream rows or create
+    views/triggers/non-unique indexes.
 
     Raises:
         ConfigError: When ``exclude`` leaves a dangling NOT NULL FK.
@@ -47,23 +54,33 @@ async def replicate_schema(
     """
     validate_exclude_fks(catalog, config)
     tables = tables_in_load_order(catalog)
-    await _create_schemas_and_tables(conn, catalog, config, tables)
+    pre_fns = functions_required_for_pre_data(catalog, config)
+    await _create_pre_data_schemas(conn, catalog, pre_fns)
+    for extension_name in required_extensions(catalog):
+        await execute_ddl(conn, emit_create_extension(extension_name))
+    created = await replicate_function_defs(conn, pre_fns, ddl_phase="pre-data")
+    await _create_tables_and_unique_indexes(conn, config, tables)
     await _create_partition_children(conn, catalog, config, tables)
     await _create_foreign_keys(conn, catalog, config, tables)
-    return await replicate_functions_and_views(conn, catalog, config)
+    return tuple(created)
 
 
-async def _create_schemas_and_tables(
+async def _create_pre_data_schemas(
     conn: asyncpg.Connection,
     catalog: CatalogResult,
+    pre_fns: tuple[FunctionInfo, ...],
+) -> None:
+    schemas = {t.schema_name for t in catalog.tables.values()}
+    schemas.update(fn.schema_name for fn in pre_fns)
+    for schema_name in sorted(schemas):
+        await execute_ddl(conn, emit_create_schema(schema_name))
+
+
+async def _create_tables_and_unique_indexes(
+    conn: asyncpg.Connection,
     config: Config,
     tables: list[TableInfo],
 ) -> None:
-    schemas = {t.schema_name for t in catalog.tables.values()}
-    for schema_name in sorted(schemas):
-        await _execute(conn, emit_create_schema(schema_name))
-    for extension_name in required_extensions(catalog):
-        await _execute(conn, emit_create_extension(extension_name))
     created_sequences: set[str] = set()
     for table in tables:
         if is_partition_child(table):
@@ -73,13 +90,11 @@ async def _create_schemas_and_tables(
         for column in sequence_columns(table):
             if column.uses_serial and column.sequence_name:
                 if column.sequence_name not in created_sequences:
-                    await _execute(conn, emit_create_sequence(column.sequence_name))
+                    await execute_ddl(conn, emit_create_sequence(column.sequence_name))
                     created_sequences.add(column.sequence_name)
-        await _execute(conn, emit_create_table(table))
-        for stmt in emit_unique_indexes(
-            table, replicate_all=config.replicate_all_indexes
-        ):
-            await _execute(conn, stmt)
+        await execute_ddl(conn, emit_create_table(table))
+        for stmt in emit_unique_indexes(table):
+            await execute_ddl(conn, stmt)
 
 
 async def _create_partition_children(
@@ -96,7 +111,7 @@ async def _create_partition_children(
             continue
         if _resolve_strategy(parent, config) == _STRATEGY_EXCLUDE:
             continue
-        await _execute(conn, emit_create_partition_child(table, parent))
+        await execute_ddl(conn, emit_create_partition_child(table, parent))
 
 
 async def _create_foreign_keys(
@@ -125,7 +140,7 @@ async def _create_foreign_keys(
                     table.identifier,
                 )
                 continue
-            await _execute(conn, emit_foreign_key(table, fk))
+            await execute_ddl(conn, emit_foreign_key(table, fk))
 
 
 def _fk_references_excluded_or_missing(
@@ -207,14 +222,3 @@ def _offenders_for_excluded_table(
                 if column is not None and column.not_null:
                     offenders.append(f"{other.identifier}.{col_name}")
     return offenders
-
-
-async def _execute(conn: asyncpg.Connection, sql: str) -> None:
-    try:
-        await conn.execute(sql)
-    except asyncpg.PostgresError as exc:
-        raise PreflightError(
-            "Replicating schema to the target database",
-            cause=f"DDL execution failed on the target ({type(exc).__name__}: {exc}).",
-            remediation="Verify target permissions, required extensions, and retry.",
-        ) from exc

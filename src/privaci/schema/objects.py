@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Literal
 
 import asyncpg
 
@@ -16,7 +18,10 @@ from privaci.catalog.views_meta import (
 from privaci.config.models import Config
 from privaci.errors import PreflightError
 from privaci.schema.elevated import disposition_for_function, disposition_for_view
+from privaci.schema.execute import execute_ddl
 from privaci.schema.table_policy import excluded_table_ids
+
+DdlPhase = Literal["pre-data", "post-data"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,12 +34,16 @@ class ReplicatedObject:
     is_elevated: bool
     depends_on: tuple[str, ...] = ()
     definition_only: bool = False
+    ddl_phase: DdlPhase = "pre-data"
+    # When set, stored as payload.object_name (e.g. trigger name; object_name
+    # is the parent table for audit table_name alignment with skipped_object).
+    payload_object_name: str | None = None
 
     def __repr__(self) -> str:
         return (
             f"ReplicatedObject({self.schema_name}.{self.object_name!r}, "
             f"kind={self.kind!r}, elevated={self.is_elevated}, "
-            f"definition_only={self.definition_only})"
+            f"definition_only={self.definition_only}, ddl_phase={self.ddl_phase!r})"
         )
 
 
@@ -42,38 +51,70 @@ async def replicate_functions_and_views(
     conn: asyncpg.Connection,
     catalog: CatalogResult,
     config: Config,
+    *,
+    skip_function_ids: frozenset[str] = frozenset(),
+    ddl_phase: DdlPhase = "post-data",
 ) -> tuple[ReplicatedObject, ...]:
     """Create functions, plain views, then optional matview shells."""
     created: list[ReplicatedObject] = []
-    created.extend(await _replicate_functions(conn, catalog, config))
-    created.extend(await _replicate_views(conn, catalog, config))
-    created.extend(await _replicate_matviews(conn, catalog, config))
+    created.extend(
+        await _replicate_functions(
+            conn,
+            catalog,
+            config,
+            skip_function_ids=skip_function_ids,
+            ddl_phase=ddl_phase,
+        )
+    )
+    created.extend(await _replicate_views(conn, catalog, config, ddl_phase=ddl_phase))
+    created.extend(
+        await _replicate_matviews(conn, catalog, config, ddl_phase=ddl_phase)
+    )
     return tuple(created)
+
+
+async def replicate_function_defs(
+    conn: asyncpg.Connection,
+    functions: Sequence[FunctionInfo],
+    *,
+    ddl_phase: DdlPhase,
+) -> list[ReplicatedObject]:
+    """Create the given functions in order and return audit records."""
+    created: list[ReplicatedObject] = []
+    for function in functions:
+        await execute_ddl(conn, function.create_sql)
+        created.append(
+            ReplicatedObject(
+                schema_name=function.schema_name,
+                object_name=function_audit_name(function),
+                kind="function",
+                is_elevated=function.is_elevated,
+                depends_on=function.depends_on_functions + function.depends_on_tables,
+                ddl_phase=ddl_phase,
+            )
+        )
+    return created
 
 
 async def _replicate_functions(
     conn: asyncpg.Connection,
     catalog: CatalogResult,
     config: Config,
+    *,
+    skip_function_ids: frozenset[str] = frozenset(),
+    ddl_phase: DdlPhase = "post-data",
 ) -> list[ReplicatedObject]:
-    created: list[ReplicatedObject] = []
-    for function in functions_in_dependency_order(catalog.functions):
-        if disposition_for_function(function, config) != "replicate":
-            continue
-        await _execute(conn, function.create_sql)
-        created.append(
-            ReplicatedObject(
-                schema_name=function.schema_name,
-                object_name=_function_audit_name(function),
-                kind="function",
-                is_elevated=function.is_elevated,
-                depends_on=function.depends_on_functions + function.depends_on_tables,
-            )
-        )
-    return created
+    selected = [
+        function
+        for function in functions_in_dependency_order(catalog.functions)
+        if function.identifier not in skip_function_ids
+        and disposition_for_function(function, config) == "replicate"
+    ]
+    return await replicate_function_defs(conn, selected, ddl_phase=ddl_phase)
 
 
-def _function_audit_name(function: FunctionInfo) -> str:
+def function_audit_name(function: FunctionInfo) -> str:
+    """Return the audit ``table_name`` for a function (with identity args)."""
     if function.identity_args.strip():
         return f"{function.function_name}({function.identity_args})"
     return function.function_name
@@ -92,6 +133,8 @@ async def _replicate_views(
     conn: asyncpg.Connection,
     catalog: CatalogResult,
     config: Config,
+    *,
+    ddl_phase: DdlPhase = "post-data",
 ) -> list[ReplicatedObject]:
     created: list[ReplicatedObject] = []
     excluded = excluded_table_ids(config)
@@ -101,7 +144,7 @@ async def _replicate_views(
         if excluded.intersection(view.depends_on):
             continue
         await _set_search_path(conn, view.schema_name)
-        await _execute(conn, emit_create_view(view))
+        await execute_ddl(conn, emit_create_view(view))
         created.append(
             ReplicatedObject(
                 schema_name=view.schema_name,
@@ -109,6 +152,7 @@ async def _replicate_views(
                 kind="view",
                 is_elevated=view.is_elevated,
                 depends_on=view.depends_on,
+                ddl_phase=ddl_phase,
             )
         )
     return created
@@ -118,6 +162,8 @@ async def _replicate_matviews(
     conn: asyncpg.Connection,
     catalog: CatalogResult,
     config: Config,
+    *,
+    ddl_phase: DdlPhase = "post-data",
 ) -> list[ReplicatedObject]:
     in_scope = _in_scope_matviews(catalog, config)
     if not in_scope:
@@ -125,11 +171,11 @@ async def _replicate_matviews(
     # Drop dependents before parents so re-runs do not need CASCADE.
     for view in reversed(in_scope):
         qual = qualify(view.schema_name, view.view_name)
-        await _execute(conn, f"DROP MATERIALIZED VIEW IF EXISTS {qual}")
+        await execute_ddl(conn, f"DROP MATERIALIZED VIEW IF EXISTS {qual}")
     created: list[ReplicatedObject] = []
     for view in in_scope:
         await _set_search_path(conn, view.schema_name)
-        await _execute(conn, emit_create_matview(view))
+        await execute_ddl(conn, emit_create_matview(view))
         created.append(
             ReplicatedObject(
                 schema_name=view.schema_name,
@@ -138,6 +184,7 @@ async def _replicate_matviews(
                 is_elevated=False,
                 depends_on=view.depends_on,
                 definition_only=True,
+                ddl_phase=ddl_phase,
             )
         )
     return created
@@ -165,7 +212,7 @@ async def refresh_materialized_views(
     for view in _in_scope_matviews(catalog, config):
         qual = qualify(view.schema_name, view.view_name)
         # SECURITY: schema/view names are quote_pg_identifier-escaped via qualify.
-        await _execute(conn, f"REFRESH MATERIALIZED VIEW {qual}")
+        await execute_ddl(conn, f"REFRESH MATERIALIZED VIEW {qual}")
         refreshed.append((view.schema_name, view.view_name))
     return tuple(refreshed)
 
@@ -206,14 +253,3 @@ def emit_create_matview(view: ViewInfo) -> str:
     definition = view.definition.strip().rstrip(";")
     # SECURITY: schema/view names are quote_pg_identifier-escaped via qualify.
     return f"CREATE MATERIALIZED VIEW {qual} AS\n{definition}\nWITH NO DATA"
-
-
-async def _execute(conn: asyncpg.Connection, sql: str) -> None:
-    try:
-        await conn.execute(sql)
-    except asyncpg.PostgresError as exc:
-        raise PreflightError(
-            "Replicating schema to the target database",
-            cause=f"DDL execution failed on the target ({type(exc).__name__}: {exc}).",
-            remediation="Verify target permissions, required extensions, and retry.",
-        ) from exc

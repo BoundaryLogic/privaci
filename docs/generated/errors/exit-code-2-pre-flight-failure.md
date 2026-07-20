@@ -8,8 +8,10 @@ description: "PrivaCI exit code 2: operator causes, remediation steps, and CI br
 
 # Exit code 2: Pre-flight failure
 
-A pre-flight check failed **before any writes**. Raised by `PreflightError`
-and `CatalogError`.
+A pre-flight or schema-DDL check failed. Raised by `PreflightError` and
+`CatalogError`. Pre-data DDL failures happen before streaming; **post-data**
+DDL failures happen after rows are loaded — the run is marked failed (not
+succeeded) and is resumable once the fault is cleared.
 
 **Common causes**
 
@@ -25,6 +27,8 @@ and `CatalogError`.
 - Source or target unreachable, or insufficient privileges.
 - Missing `CREATE SCHEMA` privilege for `_privaci`.
 - A table referenced in config does not exist in the source.
+- Pre-data or post-data DDL failed on the target (permissions, missing
+  dependencies, or invalid object definitions).
 - `privaci resume` found no resumable run, or the config, source database, or
   salt changed since the interrupted run. The error names which one drifted; a
   run is resumable while its status is `in_progress`, `interrupted`, or

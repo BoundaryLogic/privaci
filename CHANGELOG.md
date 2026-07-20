@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING:** Schema replication uses pg_dump-style **pre-data / data /
+  post-data** phases. UNIQUE/PK indexes and FKs stay pre-data; plain views,
+  functions (except DEFAULT/CHECK deps), matview shells, and optional
+  non-unique indexes run in **post-data** after row streaming.
+- **BREAKING:** User triggers are replicated in post-data by default
+  (`replicate_triggers: true`). Set `replicate_triggers: false` to skip.
+  Triggers do not fire during the mask COPY/load itself.
+
+### Added
+
+- `replicate_triggers` config flag (default `true`) and `TriggerInfo` catalog
+  introspection via `pg_get_triggerdef`.
+- Audit payloads include `ddl_phase` (`pre-data` | `post-data`) for created
+  objects.
+- Post-data DDL failures use exit **2** (`PreflightError`), same as pre-data
+  DDL; `docs/error-codes.md` no longer claims exit 2 is only "before any writes".
+
 ## [1.2.0] - 2026-07-17
 
 ### Added

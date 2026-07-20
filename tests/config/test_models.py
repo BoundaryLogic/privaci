@@ -25,6 +25,7 @@ def test_config_applies_documented_defaults(valid_config_dict: dict[str, Any]) -
     assert config.auto_detect is True
     assert config.strict_autodetect is False
     assert config.replicate_all_indexes is False
+    assert config.replicate_triggers is True
     assert config.replicate_materialized_views is False
     assert config.refresh_materialized_views is False
     assert config.implied_fk_ignore == []

@@ -217,10 +217,19 @@ TRIGGERS_SQL = (
 SELECT
     n.nspname AS schema_name,
     c.relname AS table_name,
-    t.tgname AS trigger_name
+    t.tgname AS trigger_name,
+    pg_catalog.pg_get_triggerdef(t.oid, true) AS create_sql,
+    CASE
+        WHEN pg_catalog.pg_get_function_identity_arguments(p.oid) = ''
+        THEN pn.nspname || '.' || p.proname
+        ELSE pn.nspname || '.' || p.proname || '(' ||
+             pg_catalog.pg_get_function_identity_arguments(p.oid) || ')'
+    END AS function_identity
 FROM pg_catalog.pg_trigger t
 JOIN pg_catalog.pg_class c ON c.oid = t.tgrelid
 JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+JOIN pg_catalog.pg_proc p ON p.oid = t.tgfoid
+JOIN pg_catalog.pg_namespace pn ON pn.oid = p.pronamespace
 WHERE NOT t.tgisinternal
   AND c.relkind IN ('r', 'p')
   AND """

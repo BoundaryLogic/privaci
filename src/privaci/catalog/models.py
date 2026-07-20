@@ -102,7 +102,7 @@ class FunctionInfo:
 
 @dataclass(frozen=True, slots=True)
 class SkippedObjectInfo:
-    """A non-replicated catalog object (trigger, rule, publication)."""
+    """A non-replicated catalog object (rule or publication)."""
 
     schema_name: str
     object_name: str
@@ -113,6 +113,27 @@ class SkippedObjectInfo:
         return (
             f"SkippedObjectInfo({self.object_name!r}, kind={self.kind!r}, "
             f"parent={self.parent_table!r})"
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class TriggerInfo:
+    """A user trigger with enough metadata to emit post-data DDL."""
+
+    schema_name: str
+    table_name: str
+    trigger_name: str
+    create_sql: str
+    function_identity: str | None = None
+
+    @property
+    def identifier(self) -> str:
+        """Schema-qualified trigger id ``schema.table.trigger``."""
+        return f"{self.schema_name}.{self.table_name}.{self.trigger_name}"
+
+    def __repr__(self) -> str:
+        return (
+            f"TriggerInfo({self.identifier!r}, " f"function={self.function_identity!r})"
         )
 
 
@@ -269,6 +290,7 @@ class CatalogResult:
     warnings: tuple[CatalogWarning, ...] = ()
     views: tuple[ViewInfo, ...] = ()
     functions: tuple[FunctionInfo, ...] = ()
+    triggers: tuple[TriggerInfo, ...] = ()
     skipped_objects: tuple[SkippedObjectInfo, ...] = ()
 
     def to_snapshot_dict(self) -> dict[str, Any]:

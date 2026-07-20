@@ -22,8 +22,12 @@ from privaci.pipeline.lifecycle import (
     prepare_target_schema,
     record_event,
 )
+from privaci.pipeline.object_audits import (
+    emit_created_object_audit,
+    emit_definition_only_audit,
+)
 from privaci.pipeline.streaming import stream_all_tables
-from privaci.schema.objects import refresh_materialized_views
+from privaci.schema.post_data import apply_post_data_ddl
 from privaci.state import (
     AuditWriter,
     RunIdentity,
@@ -129,7 +133,7 @@ async def stream_and_finish(
         checkpoints=checkpoints or {},
         pseudonym_key=pseudonym_key,
     )
-    await _refresh_matviews_and_audit(target, catalog, config, audit)
+    await _apply_post_data_and_audit(target, catalog, config, audit)
     duration_s = time.monotonic() - started_at
     await finish_run(
         target,
@@ -154,26 +158,31 @@ async def stream_and_finish(
     return tables_done, total_rows, counts, total_bytes
 
 
-async def _refresh_matviews_and_audit(
+async def _apply_post_data_and_audit(
     target: asyncpg.Connection,
     catalog: CatalogResult,
     config: Config,
     audit: AuditWriter,
 ) -> None:
-    """Refresh opt-in matview shells and mark definition_only audits refreshed."""
-    refreshed = await refresh_materialized_views(target, catalog, config)
-    if not refreshed:
-        return
-    await audit.mark_definition_only_refreshed(target, refreshed)
-    for schema_name, object_name in refreshed:
-        emit(
-            Event.DEFINITION_ONLY_OBJECT,
-            schema_name=schema_name,
-            object_name=object_name,
-            kind="materialized_view",
-            contents_copied=False,
-            refreshed=True,
-        )
+    """Run post-data DDL and audit created/refreshed objects before SUCCEEDED."""
+    created, refreshed = await apply_post_data_ddl(target, catalog, config)
+    for obj in created:
+        if obj.definition_only:
+            await emit_definition_only_audit(target, audit, obj)
+        else:
+            await emit_created_object_audit(target, audit, obj)
+    if refreshed:
+        await audit.mark_definition_only_refreshed(target, refreshed)
+        for schema_name, object_name in refreshed:
+            emit(
+                Event.DEFINITION_ONLY_OBJECT,
+                schema_name=schema_name,
+                object_name=object_name,
+                kind="materialized_view",
+                contents_copied=False,
+                refreshed=True,
+                ddl_phase="post-data",
+            )
 
 
 async def close_aborted_run(

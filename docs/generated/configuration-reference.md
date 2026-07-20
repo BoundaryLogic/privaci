@@ -28,6 +28,7 @@ Regenerate with ``make docs-generate``.
 | `replicate_all_indexes` | boolean | no |  Default: `False`. |
 | `replicate_functions` | boolean | no |  Default: `True`. |
 | `replicate_materialized_views` | boolean | no |  Default: `False`. |
+| `replicate_triggers` | boolean | no |  Default: `True`. |
 | `replicate_views` | boolean | no |  Default: `True`. |
 | `schema_mode` | enum: `replicate`, `assume_existing` | no |  Default: `replicate`. |
 | `strict_autodetect` | boolean | no |  Default: `False`. |

@@ -94,25 +94,29 @@ def test_emit_create_table_preserves_pg_get_constraintdef_shape() -> None:
     assert "CHECK (CHECK" not in sql
 
 
-def test_emit_unique_indexes_honors_replicate_all_flag() -> None:
+def test_emit_indexes_split_unique_and_nonunique() -> None:
     # Arrange
+    from privaci.schema.ddl import emit_nonunique_indexes
+
     table = _sample_table()
 
     # Act
-    unique_only = emit_unique_indexes(table, replicate_all=False)
-    all_indexes = emit_unique_indexes(table, replicate_all=True)
+    unique_only = emit_unique_indexes(table)
+    nonunique = emit_nonunique_indexes(table)
 
     # Assert
     assert len(unique_only) == 1
-    assert len(all_indexes) == 2
+    assert len(nonunique) == 1
     assert "IF NOT EXISTS" in unique_only[0]
-    assert "IF NOT EXISTS" in all_indexes[0]
+    name, sql = nonunique[0]
+    assert name == "users_email_idx"
+    assert "IF NOT EXISTS" in sql
 
 
 def test_emit_unique_indexes_is_idempotent_sql() -> None:
     table = _sample_table()
 
-    sql = emit_unique_indexes(table, replicate_all=False)[0]
+    sql = emit_unique_indexes(table)[0]
 
     assert sql.startswith("CREATE UNIQUE INDEX IF NOT EXISTS")
 

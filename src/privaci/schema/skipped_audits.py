@@ -8,7 +8,11 @@ from privaci.catalog.models import CatalogResult, SkippedObjectInfo, ViewInfo
 from privaci.catalog.views_meta import matviews_in_dependency_order, matviews_in_scope
 from privaci.config.models import Config
 from privaci.schema.elevated import disposition_for_function, disposition_for_view
-from privaci.schema.table_policy import excluded_table_ids
+from privaci.schema.post_data import (
+    trigger_function_replicable,
+    trigger_should_replicate,
+)
+from privaci.schema.table_policy import excluded_table_ids, is_excluded_table
 
 
 def iter_skipped_object_audits(
@@ -32,8 +36,37 @@ def iter_skipped_object_audits(
     else:
         yield from _skipped_views(catalog, config)
         yield from _skipped_functions(catalog, config)
+        yield from _skipped_triggers(catalog, config)
     for obj in catalog.skipped_objects:
         yield _audit_target(obj), _audit_table_name(obj), _audit_payload(obj)
+
+
+def _skipped_triggers(
+    catalog: CatalogResult,
+    config: Config,
+) -> Iterator[tuple[str | None, str | None, dict[str, str]]]:
+    if config.schema_mode != "replicate":
+        return
+    for trigger in catalog.triggers:
+        table = catalog.tables.get(f"{trigger.schema_name}.{trigger.table_name}")
+        if table is not None and is_excluded_table(table, config):
+            continue
+        if trigger_should_replicate(trigger, catalog, config):
+            continue
+        reason = "flag_disabled"
+        if config.replicate_triggers and not trigger_function_replicable(
+            trigger, catalog, config
+        ):
+            reason = "dependency_excluded"
+        yield (
+            trigger.schema_name,
+            trigger.table_name,
+            {
+                "kind": "trigger",
+                "object_name": trigger.trigger_name,
+                "reason": reason,
+            },
+        )
 
 
 def _skipped_views(
@@ -136,9 +169,7 @@ def _audit_payload(obj: SkippedObjectInfo) -> dict[str, str]:
     payload: dict[str, str] = {"kind": obj.kind}
     if obj.parent_table is not None:
         payload["object_name"] = obj.object_name
-    if obj.kind == "trigger":
-        payload["reason"] = "unsafe_during_load"
-    elif obj.kind == "rule":
+    if obj.kind == "rule":
         payload["reason"] = "customer_owned_semantics"
     elif obj.kind == "publication":
         payload["reason"] = "low_value_footgun"

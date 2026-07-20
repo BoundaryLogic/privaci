@@ -198,10 +198,14 @@ CAPABILITIES: dict[str, Capability] = {
             "tests/preflight/test_passthrough_copy.py",
             "tests/preflight/test_target_collision.py",
             "tests/pipeline/test_schema_modes_lifecycle.py",
+            "tests/pipeline/test_object_audits.py",
             "tests/catalog/test_routines_order.py",
             "tests/schema/test_elevated.py",
             "tests/schema/test_objects.py",
             "tests/schema/test_matviews.py",
+            "tests/schema/test_function_hoist.py",
+            "tests/schema/test_execute.py",
+            "tests/schema/test_post_data.py",
         ),
         tags=frozenset({"unit", "public", "schema"}),
     ),
@@ -209,12 +213,16 @@ CAPABILITIES: dict[str, Capability] = {
         id="public-schema-modes-replicate-integration",
         label="Replicate mode object DDL",
         description=(
-            "schema_mode: replicate creates invoker views/functions, matview "
-            "shells when opted in, applies elevated_objects skip, and audits "
-            "Tier-3 skipped objects."
+            "schema_mode: replicate creates invoker views/functions in "
+            "post-data, matview shells when opted in, replicates triggers in "
+            "post-data by default, applies elevated_objects skip, and audits "
+            "tier-3 skipped rules/publications."
         ),
         repo="public",
-        test_paths=("tests/integration/test_views_identity.py",),
+        test_paths=(
+            "tests/integration/test_views_identity.py",
+            "tests/integration/test_ddl_phases.py",
+        ),
         requires_postgres=True,
         requires_nlp=True,
         metrics_kind="unit",
