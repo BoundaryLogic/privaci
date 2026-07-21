@@ -64,13 +64,13 @@ def spacy_available() -> bool:
     if _PROBE_RESULT is not None:
         return _PROBE_RESULT
     if _LOAD_FAILED:
-        _PROBE_RESULT = False
-        return False
-    if _MODEL is not None:
-        _PROBE_RESULT = True
-        return True
-    _PROBE_RESULT = _probe_spacy_package()
-    return _PROBE_RESULT
+        result = False
+    elif _MODEL is not None:
+        result = True
+    else:
+        result = _probe_spacy_package()
+    _PROBE_RESULT = result
+    return result
 
 
 def mask_entities_in_text(text: str, *, salt: str, column_path: str) -> str:
