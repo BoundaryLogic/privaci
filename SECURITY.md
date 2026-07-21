@@ -4,7 +4,13 @@
 
 | Version | Supported |
 |---------|-----------|
-| `0.1.x` (public beta) | Yes |
+| `1.3.x` | Yes |
+| `1.2.x` | Security fixes while current |
+| `< 1.2` | No |
+
+BoundaryLogic maintains the public engine for production deployments (including
+alongside an optional plugin package). See [`CONTRIBUTING.md`](CONTRIBUTING.md)
+for how to propose fixes.
 
 ## Reporting a vulnerability
 

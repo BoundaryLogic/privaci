@@ -24,6 +24,8 @@ succeeded) and is resumable once the fault is cleared.
   type on the target (see `schema.validation_failed` in `_privaci.audit_log`).
 - `passthrough_copy: require_binary` and a passthrough table is not binary-COPY
   eligible (column order/type mismatch).
+- `ner_mask` is configured or auto-detected but SpaCy / `en_core_web_sm` is not
+  available (`pip install 'privaci[nlp]'` or change the action).
 - Source or target unreachable, or insufficient privileges.
 - Missing `CREATE SCHEMA` privilege for `_privaci`.
 - A table referenced in config does not exist in the source.

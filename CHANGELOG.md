@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING (behaviour):** ``ner_mask`` without SpaCy / ``en_core_web_sm`` now
+  fails closed — config validate (exit **3**) for explicit YAML, preflight
+  (exit **2**) for effective/auto-detect actions, and runtime ``MaskingError``
+  (exit **1**) instead of silently copying source text. Install
+  ``privaci[nlp]`` or change the action.
+- ``privaci.spikes`` is excluded from the installable wheel (spike modules stay
+  in the source tree for contributors).
+- Docs: ``hash`` vs ``hmac_hash`` linkability and low-entropy risks;
+  ReDoS parse-time screen documents nested-group gaps.
+- CI ``pip-audit`` is a hard gate (no ``continue-on-error``).
+- Added ``CONTRIBUTING.md``, refreshed ``SECURITY.md`` support table, and
+  ADR-0013 (exact-pinned runtime dependencies).
+
 ## [1.3.0] - 2026-07-21
 
 ### Added

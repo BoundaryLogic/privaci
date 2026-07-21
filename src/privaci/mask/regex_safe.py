@@ -2,16 +2,17 @@
 
 Protection against catastrophic backtracking (ReDoS) is layered:
 
-1. Parse time: :func:`reject_redos_prone_pattern` rejects pattern *shapes* that
-   are known to backtrack catastrophically (an unbounded quantifier applied to a
-   group that itself contains an unbounded quantifier or an alternation).
-2. Run time: :func:`safe_regex_sub` caps the input length per value.
+1. Parse time: :func:`reject_redos_prone_pattern` rejects common pattern
+   *shapes* that nest unbounded quantifiers inside a single-level group
+   (for example ``(a+)+``). The screen uses a non-recursive regex and does
+   **not** walk nested groups — shapes such as ``((a+)b)*`` may still pass.
+2. Run time: :func:`safe_regex_sub` caps the input length per value (64 KiB).
+   That bounds input size, not worst-case backtracking time on adversarial
+   patterns that slip past layer 1.
 
-The substitution runs in-process. An earlier implementation dispatched each cell
-to a worker thread with a wall-clock timeout, but CPython's ``re`` engine holds
-the GIL for the duration of a match, so the timeout could not preempt a runaway
-match (and added per-cell thread overhead). The parse-time screen plus the input
-cap are the effective guards.
+The substitution runs in-process. An earlier thread-timeout approach could not
+preempt CPython's GIL-bound ``re`` engine. Treat layer 1 as a best-effort
+shape screen, not a complete ReDoS proof; prefer simple patterns.
 """
 
 from __future__ import annotations

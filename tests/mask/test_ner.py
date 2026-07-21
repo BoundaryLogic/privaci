@@ -34,7 +34,7 @@ class _FakeDoc:
         return self._ents
 
 
-def test_ner_passthrough_when_model_unavailable(
+def test_ner_raises_when_model_unavailable(
     monkeypatch: pytest.MonkeyPatch,
     _reset_model: object,
 ) -> None:
@@ -42,15 +42,24 @@ def test_ner_passthrough_when_model_unavailable(
     text = "Alice met Bob in Paris."
     monkeypatch.setattr(ner_module, "_load_model", lambda: None)
 
-    # Act
-    result = ner_module.mask_entities_in_text(
-        text,
-        salt=TEST_SALT,
-        column_path="public.notes.body",
-    )
+    # Act / Assert
+    with pytest.raises(MaskingError, match="NER on public.notes.body"):
+        ner_module.mask_entities_in_text(
+            text,
+            salt=TEST_SALT,
+            column_path="public.notes.body",
+        )
 
-    # Assert — when the model is unavailable, text is unchanged.
-    assert result == text
+
+def test_spacy_available_false_when_load_returns_none(
+    monkeypatch: pytest.MonkeyPatch,
+    _reset_model: object,
+) -> None:
+    # Arrange
+    monkeypatch.setattr(ner_module, "_load_model", lambda: None)
+
+    # Act / Assert
+    assert ner_module.spacy_available() is False
 
 
 def test_ner_empty_string_unchanged() -> None:

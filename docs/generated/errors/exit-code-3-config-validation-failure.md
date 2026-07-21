@@ -21,6 +21,8 @@ description: "PrivaCI exit code 3: operator causes, remediation steps, and CI br
 - `when:` references an unknown column, an unsupported type (`jsonb`, arrays,
   `numeric`, composites), a disallowed CEL builtin (e.g. `matches`, `map`),
   or exceeds size/AST limits.
+- Explicit `ner_mask` in YAML when SpaCy / `en_core_web_sm` is not available
+  (`pip install 'privaci[nlp]'` or change the action).
 
 **Remediation**
 

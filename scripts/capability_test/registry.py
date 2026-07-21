@@ -139,6 +139,19 @@ CAPABILITIES: dict[str, Capability] = {
         tags=frozenset({"unit", "public", "pii-catalog"}),
     ),
     # --- Public engine (integration / Postgres) ---
+    "public-ner-mask-prereq": Capability(
+        id="public-ner-mask-prereq",
+        label="ner_mask SpaCy prerequisite",
+        description=(
+            "Fail-closed ner_mask when SpaCy is missing (config, preflight, runtime)."
+        ),
+        repo="public",
+        test_paths=(
+            "tests/mask/test_ner.py",
+            "tests/config/test_ner_deps.py",
+        ),
+        tags=frozenset({"unit", "masking", "public", "nlp"}),
+    ),
     "public-spacy-ner": Capability(
         id="public-spacy-ner",
         label="SpaCy NER stack",

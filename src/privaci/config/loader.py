@@ -21,6 +21,7 @@ from privaci.config.actions import ACTION_TAGS
 from privaci.config.conditional import validate_conditional_masking
 from privaci.config.keyed import validate_keyed_actions
 from privaci.config.models import Config
+from privaci.config.ner_deps import validate_ner_mask_actions
 from privaci.errors import ConfigError
 from privaci.mask.faker.registry import validate_fake_providers
 
@@ -60,6 +61,7 @@ def load_config(
     _reject_ai_refine_without_commercial(config, commercial_installed)
     validate_keyed_actions(config)
     validate_conditional_masking(config)
+    validate_ner_mask_actions(config)
     validate_fake_providers(config)
     return config
 

@@ -49,6 +49,14 @@ def test_reject_redos_prone_pattern_allows_safe_patterns(pattern: str) -> None:
     assert reject_redos_prone_pattern(pattern) == pattern
 
 
+def test_reject_redos_prone_pattern_allows_nested_group_gap() -> None:
+    # Arrange — nested quantified groups slip past the non-recursive screen.
+    pattern = "((a+)b)*"
+
+    # Act / Assert — documented limitation of layer 1 (not a full AST walk).
+    assert reject_redos_prone_pattern(pattern) == pattern
+
+
 def test_safe_regex_sub_applies_pattern() -> None:
     # Act
     result = safe_regex_sub(r"\d+", "X", "abc123def")

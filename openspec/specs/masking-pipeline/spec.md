@@ -265,3 +265,15 @@ non-passthrough actions).
 - **WHEN** `passthrough_copy: auto` and only some rows would mask under `when`
 - **THEN** the engine SHALL still stream the table via the batch path
 - **AND** SHALL evaluate `when` per row.
+
+### Requirement: ner_mask fails closed without SpaCy
+
+When the resolved action is `ner_mask`, the engine SHALL require a loadable
+SpaCy model. It SHALL NOT return source text unchanged for non-empty values
+when SpaCy is unavailable.
+
+#### Scenario: ner_mask without SpaCy at runtime
+
+- **WHEN** `ner_mask` is applied to a non-empty cell and SpaCy is unavailable
+- **THEN** the engine SHALL raise a masking failure (exit **1**) and SHALL NOT
+  write the original cell value as a successful mask outcome

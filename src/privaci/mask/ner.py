@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Protocol, cast
 
 from privaci.errors import MaskingError
 from privaci.mask.faker import FakeRequest, generate_fake
-
-logger = logging.getLogger(__name__)
 
 _ENTITY_PROVIDER: dict[str, str] = {
     "PERSON": "full_name",
@@ -45,20 +42,37 @@ class _SpacyLanguage(Protocol):
 _MODEL: _SpacyLanguage | None = None
 
 
+def spacy_available() -> bool:
+    """Return whether SpaCy and ``en_core_web_sm`` can be loaded.
+
+    Used by config/preflight gates so ``ner_mask`` never silently passthroughs.
+    """
+    return _load_model() is not None
+
+
 def mask_entities_in_text(text: str, *, salt: str, column_path: str) -> str:
     """Replace named entities in ``text`` with deterministic fakes.
 
-    Returns ``text`` unchanged when SpaCy is not installed or no entities match.
+    Empty strings are returned unchanged. When SpaCy is unavailable, raises
+    rather than returning source text (fail-closed for privacy).
 
     Raises:
-        MaskingError: When SpaCy is installed but fails to process the text.
+        MaskingError: When SpaCy is unavailable, or when it fails to process
+            the text.
     """
     if not text:
         return text
     nlp = _load_model()
     if nlp is None:
-        logger.debug("SpaCy unavailable; ner_mask passthrough for %s", column_path)
-        return text
+        raise MaskingError(
+            f"Running NER on {column_path}",
+            cause=("SpaCy or model en_core_web_sm is not available for ner_mask."),
+            remediation=(
+                "Install the NLP extra (`pip install 'privaci[nlp]'`) and the "
+                "en_core_web_sm model, or change the column action. See "
+                "docs/configuration.md#actions."
+            ),
+        )
     try:
         doc = nlp(text)
     except Exception as exc:

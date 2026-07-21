@@ -23,6 +23,7 @@ from privaci.preflight.checks import (
     verify_source_readable,
     verify_strict_autodetect,
 )
+from privaci.preflight.ner_spacy import verify_ner_mask_spacy
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,6 +95,7 @@ async def _run_preflight_checks(
     verify_conditional_when(config, catalog)
     verify_exclude_strategy(config, catalog)
     detection = build_detection(config, catalog)
+    verify_ner_mask_spacy(config, catalog, detection)
     if not defer_strict:
         verify_strict_autodetect(config, detection)
     warnings = await run_target_checks(
