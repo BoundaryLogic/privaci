@@ -18,8 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the source tree for contributors).
 - Docs: ``hash`` vs ``hmac_hash`` linkability and low-entropy risks;
   ReDoS parse-time screen documents nested-group gaps.
-- Docs: ``ai_refine`` / Level-3 documented as **not implemented** (fail closed;
-  never advertise live Bedrock/Azure calls). See ``docs/configuration.md`` and
+- Docs: ``ai_refine`` / Level-3 documented as **not implemented and not wired**
+  into the masking path (mask time is ``L3NotInstalledError`` / exit **3**; do
+  not claim live Bedrock/Azure calls). See ``docs/configuration.md`` and
   architecture overview/memory-model.
 - ``openspec/post-v1-roadmap.md`` rewritten for public subsetting (P1), value
   scan (P2), bench (P3), export-first platform bet (P4); listing go-live treated

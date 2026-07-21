@@ -298,7 +298,7 @@ names and extra keys are rejected with the offending YAML path.
 | `null` | — | — | Write `NULL`. Rejected at pre-flight on `NOT NULL` columns. |
 | `static` | `value` | — | Replace every value with a constant. |
 | `ner_mask` | — | `entities` | Level-2 SpaCy NER. `entities` defaults to `PERSON, ORG, GPE, LOC`. **Requires** `pip install 'privaci[nlp]'` and the `en_core_web_sm` model. Missing SpaCy fails at config validate (exit **3**, explicit YAML), preflight (exit **2**, including auto-detect), or runtime ``MaskingError`` (exit **1**) — never silent passthrough of source text. |
-| `ai_refine` | `provider`, `model` | `params` | **Level-3 (not implemented).** Config-accepted when a plugin package is installed; connectors must fail closed until built. Rejected in community mode (exit 3). Do not use in production configs yet. |
+| `ai_refine` | `provider`, `model` | `params` | **Level-3 (not implemented / not wired).** Rejected in community mode at config validate (exit 3). With a plugin package installed, config may accept the action, but mask time still raises ``L3NotInstalledError`` (exit 3) until connectors are wired and implemented. Do not use in production configs yet. |
 
 ### Conditional masking (`when:`)
 
@@ -568,8 +568,8 @@ All violations below exit `3` and name the YAML path:
 - `on_existing_data: append` (unsupported in the MVP).
 - `batch_size < 1` (global or per-table).
 - `action: ai_refine` without an LLM connector plugin installed, **or** with a
-  plugin whose connectors are not yet implemented (fail closed — never silent
-  passthrough of source text).
+  plugin installed but Level-3 not yet wired into the masking path (mask time
+  still raises ``L3NotInstalledError``, exit 3).
 - `action: null` on a `NOT NULL` column (checked during pre-flight against the
   live catalog).
 - Configured table names absent from the source catalog (pre-flight exit `3`).

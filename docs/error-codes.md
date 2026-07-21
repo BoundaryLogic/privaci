@@ -120,8 +120,6 @@ An unexpected error not covered by a specific code. Raised by
   elapsed budget overrun). Errors omit cell values.
 - `ner_mask` ran on a non-empty cell but SpaCy / `en_core_web_sm` was unavailable
   (normally caught earlier at validate exit **3** or preflight exit **2**).
-- `ai_refine` ran against a registered L3 connector that is **not yet
-  implemented** (stubs fail closed; never passthrough source text).
 
 **Remediation**
 
@@ -213,9 +211,11 @@ GRANT CREATE ON DATABASE privaci_target TO privaci_role;
 - Explicit `ner_mask` in YAML when SpaCy / `en_core_web_sm` is not available
   (`pip install 'privaci[nlp]'` or change the action).
 
-**Note:** When a plugin is installed but L3 connectors are **not yet
-implemented**, `ai_refine` fails at runtime with ``MaskingError`` (exit **1**),
-not exit 3 — stubs must not passthrough source text.
+**Note:** Level-3 is **not wired** into the masking path yet. Even when a
+plugin package is installed and registers LLM connectors, ``ai_refine`` still
+raises ``L3NotInstalledError`` (exit **3**) at mask time. Connector stubs in
+the plugin package fail closed if called directly; do not configure
+``ai_refine`` in production until L3 is implemented and wired.
 
 **Remediation**
 

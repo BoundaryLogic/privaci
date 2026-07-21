@@ -125,10 +125,11 @@ text columns, to avoid loading the model.
 ### Level 3 masking (plugin, opt-in — not implemented)
 
 `action: ai_refine` is reserved for BYO-LLM refinement via a plugin
-`LLMConnector`. **Connectors are not implemented yet**; until they are, a
-configured `ai_refine` column must fail closed (error), never silently
-passthrough source text. When implemented, the design is small **context
-windows** per request (not the full column/table in memory).
+`LLMConnector`. **Not implemented and not wired into the masking path yet** —
+mask time raises ``L3NotInstalledError`` (exit 3) even when a plugin package
+is installed. When implemented, the design is small **context windows** per
+request (not the full column/table in memory), and connectors must fail closed
+(never silent passthrough of source text).
 
 ## Security: no intermediate data on disk
 

@@ -24,9 +24,11 @@ description: "PrivaCI exit code 3: operator causes, remediation steps, and CI br
 - Explicit `ner_mask` in YAML when SpaCy / `en_core_web_sm` is not available
   (`pip install 'privaci[nlp]'` or change the action).
 
-**Note:** When a plugin is installed but L3 connectors are **not yet
-implemented**, `ai_refine` fails at runtime with ``MaskingError`` (exit **1**),
-not exit 3 — stubs must not passthrough source text.
+**Note:** Level-3 is **not wired** into the masking path yet. Even when a
+plugin package is installed and registers LLM connectors, ``ai_refine`` still
+raises ``L3NotInstalledError`` (exit **3**) at mask time. Connector stubs in
+the plugin package fail closed if called directly; do not configure
+``ai_refine`` in production until L3 is implemented and wired.
 
 **Remediation**
 
