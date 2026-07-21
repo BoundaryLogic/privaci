@@ -1,0 +1,63 @@
+"""Preflight gate: effective ``ner_mask`` (including auto-detect) needs SpaCy."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+
+from privaci.autodetect.models import DetectionResult
+from privaci.autodetect.resolve import resolve_effective_table_config
+from privaci.catalog.models import CatalogResult
+from privaci.catalog.partitions import config_table_id
+from privaci.config.actions import NerMaskAction
+from privaci.config.models import Config
+from privaci.errors import PreflightError
+from privaci.mask.ner import NER_MASK_REMEDIATION, spacy_available
+
+
+def iter_effective_ner_columns(
+    config: Config,
+    catalog: CatalogResult,
+    detection: DetectionResult,
+) -> Iterator[str]:
+    """Yield schema-qualified columns whose effective action is ``ner_mask``.
+
+    Partition children resolve via the parent table id (same as streaming).
+    """
+    seen_config_tables: set[str] = set()
+    for table in catalog.tables.values():
+        config_table = catalog.tables.get(config_table_id(table), table)
+        if config_table.identifier in seen_config_tables:
+            continue
+        if config_table.identifier not in config.tables and not config.auto_detect:
+            continue
+        seen_config_tables.add(config_table.identifier)
+        effective = resolve_effective_table_config(config_table, config, detection)
+        for column_name, action in effective.columns.items():
+            if isinstance(action, NerMaskAction):
+                yield f"{config_table.identifier}.{column_name}"
+
+
+def verify_ner_mask_spacy(
+    config: Config,
+    catalog: CatalogResult,
+    detection: DetectionResult,
+) -> None:
+    """Reject effective ``ner_mask`` (including auto-detect) without SpaCy.
+
+    Raises:
+        PreflightError: Exit **2** when SpaCy is unavailable for any effective
+            ``ner_mask`` column.
+    """
+    paths = sorted(iter_effective_ner_columns(config, catalog, detection))
+    if not paths:
+        return
+    if spacy_available():
+        return
+    raise PreflightError(
+        "Validating ner_mask SpaCy prerequisite",
+        cause=(
+            "ner_mask requires SpaCy (en_core_web_sm) but it is not available for: "
+            + ", ".join(paths)
+        ),
+        remediation=NER_MASK_REMEDIATION,
+    )

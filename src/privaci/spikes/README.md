@@ -1,11 +1,13 @@
 # spikes
 
 Week-1 architecture validation scripts (COPY-binary throughput, cyclic FK
-deferred constraints, SpaCy throughput). Not part of the production CLI.
+deferred constraints, SpaCy throughput). Not part of the production CLI and
+**excluded from the installable wheel** (`pyproject.toml` setuptools exclude).
+Run from a source checkout only.
 
 ## Public API
 
-Runnable modules under `privaci.spikes.*`; documented in
+Runnable modules under `privaci.spikes.*` in a git checkout; documented in
 [`docs/spikes/`](../../../docs/spikes/README.md).
 
 ## Configuration

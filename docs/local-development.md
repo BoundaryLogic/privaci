@@ -20,7 +20,7 @@ Where this document and `.cursorrules` disagree, `.cursorrules` wins.
 
 | Tool | Minimum version | Notes |
 |------|-----------------|-------|
-| Python | **3.12 (exactly)** | Per ADR-0002. No 3.11 shims. SpaCy (`nlp` extra) has no wheels for 3.13/3.14 — a non-3.12 venv silently lacks SpaCy. Verify with `python --version`. |
+| Python | **3.12 (exactly)** | Per ADR-0002. No 3.11 shims. SpaCy (`nlp` extra) has no wheels for 3.13/3.14 — a non-3.12 venv cannot load SpaCy. Configs that use `ner_mask` (including auto-detect) **fail closed** without it (exit 3/2). Verify with `python --version`. |
 | Docker **or** Podman + Compose v2 | recent | For compose fixtures and the demo run. Podman is the rootless Fedora-native option (see §4.4). On Windows use Docker Desktop (WSL2 backend) or WSL2 — see [`deployment.md` § Windows](deployment.md#windows). |
 | `make` | any | Convenience targets only |
 | `git` | recent | |
@@ -44,7 +44,8 @@ source .venv/bin/activate
 python --version            # verify: Python 3.12.x
 
 # NOTE: The venv interpreter MUST be 3.12. The `nlp` extra (SpaCy 3.8.x) has
-# no wheels for 3.13/3.14, so a 3.14 venv will silently skip SpaCy and the
+# no wheels for 3.13/3.14, so a 3.14 venv cannot load SpaCy. Any effective
+# ner_mask (YAML or auto-detect) then fails closed at validate/preflight, and
 # spikes will fail with "No module named spacy". If `python --version` is not
 # 3.12, recreate the venv: `rm -rf .venv && python3.12 -m venv .venv`.
 

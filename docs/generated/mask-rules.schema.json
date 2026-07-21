@@ -164,7 +164,7 @@
     },
     "NerMaskAction": {
       "additionalProperties": false,
-      "description": "Mask named entities found by the Level-2 SpaCy NER model.\n\nAttributes:\n    entities: Entity labels to mask. Defaults to ``PERSON``, ``ORG``,\n        ``GPE``, ``LOC``.",
+      "description": "Mask named entities found by the Level-2 SpaCy NER model.\n\nRequires ``pip install 'privaci[nlp]'`` and model ``en_core_web_sm``.\nMissing SpaCy fails at config validate (exit 3), preflight (exit 2), or\nruntime (exit 1) \u2014 never silent passthrough of source text.\n\nAttributes:\n    entities: Entity labels to mask. Defaults to ``PERSON``, ``ORG``,\n        ``GPE``, ``LOC``.",
       "properties": {
         "action": {
           "const": "ner_mask",

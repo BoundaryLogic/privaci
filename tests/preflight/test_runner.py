@@ -56,3 +56,48 @@ async def test_defer_strict_skips_verify_strict_autodetect(mocker) -> None:
         defer_strict=False,
     )
     strict.assert_called_once_with(config, detection)
+
+
+@pytest.mark.asyncio
+async def test_run_preflight_calls_verify_ner_mask_spacy(mocker) -> None:
+    # Arrange — wiring: runner must invoke the SpaCy gate after detection
+    source = AsyncMock()
+    target = AsyncMock()
+    catalog = CatalogResult(tables={}, load_plan=LoadPlan(layers=()))
+    config = Config(version=SUPPORTED_CONFIG_VERSION)
+    detection = DetectionResult(findings=())
+    mocker.patch(
+        "privaci.preflight.runner.verify_source_readable",
+        new=AsyncMock(),
+    )
+    mocker.patch(
+        "privaci.preflight.runner.introspect_catalog",
+        new=AsyncMock(return_value=catalog),
+    )
+    mocker.patch("privaci.preflight.runner.build_detection", return_value=detection)
+    mocker.patch("privaci.preflight.runner.verify_config_tables_exist")
+    mocker.patch("privaci.preflight.runner.verify_partition_config")
+    mocker.patch("privaci.preflight.runner.verify_null_actions")
+    mocker.patch("privaci.preflight.runner.verify_conditional_when")
+    mocker.patch("privaci.preflight.runner.verify_exclude_strategy")
+    ner_gate = mocker.patch("privaci.preflight.runner.verify_ner_mask_spacy")
+    mocker.patch("privaci.preflight.runner.verify_strict_autodetect")
+    mocker.patch(
+        "privaci.preflight.runner.run_target_checks",
+        new=AsyncMock(return_value=[]),
+    )
+    mocker.patch("privaci.preflight.runner.collect_dry_run_rows", return_value=[])
+    mocker.patch("privaci.preflight.runner.emit")
+
+    # Act
+    await _run_preflight_checks(
+        source,
+        target,
+        config,
+        dry_run=True,
+        for_resume=False,
+        defer_strict=False,
+    )
+
+    # Assert
+    ner_gate.assert_called_once_with(config, catalog, detection)

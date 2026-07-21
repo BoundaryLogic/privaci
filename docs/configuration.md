@@ -291,13 +291,13 @@ names and extra keys are rejected with the offending YAML path.
 |--------|-----------------|-----------------|-------|
 | `fake` | `provider` | `seed_alias`, `params` | Deterministic synthetic value from a registered provider. Unknown provider names fail validation (exit 3). |
 | `regex_mask` | `pattern`, `replace` | `flags` | `pattern` must compile; unknown `flags` are rejected. |
-| `hash` | — | — | Salted, deterministic hash. |
-| `hmac_hash` | — | `encoding` | Keyed HMAC-SHA256 using `pseudonym_key`. Requires a plugin granting the `keyed_actions` capability; rejected in community mode (exit 5). |
+| `hash` | — | — | Salted SHA-256 of raw `salt` concatenated with `value` (no delimiter between them; no column path). Same value hashes the same across tables/columns — useful when you intentionally want join/linkability. Prefer `hmac_hash` when column-scoped digests are required. Low-entropy inputs (phone, SSN) with a known salt are dictionary-reversible; do not treat `hash` as irreversible anonymization for those fields. |
+| `hmac_hash` | — | `encoding` | Keyed HMAC-SHA256 using `pseudonym_key`, scoped by column path. Requires a plugin granting the `keyed_actions` capability; rejected in community mode (exit 5). |
 | `pseudonym` | `provider` | `seed_alias`, `params` | Keyed deterministic fake (same providers as `fake`). Requires the `keyed_actions` capability; rejected in community mode (exit 5). |
 | `passthrough` | — | — | Copy the value unchanged. |
 | `null` | — | — | Write `NULL`. Rejected at pre-flight on `NOT NULL` columns. |
 | `static` | `value` | — | Replace every value with a constant. |
-| `ner_mask` | — | `entities` | Level-2 SpaCy NER. `entities` defaults to `PERSON, ORG, GPE, LOC`. |
+| `ner_mask` | — | `entities` | Level-2 SpaCy NER. `entities` defaults to `PERSON, ORG, GPE, LOC`. **Requires** `pip install 'privaci[nlp]'` and the `en_core_web_sm` model. Missing SpaCy fails at config validate (exit **3**, explicit YAML), preflight (exit **2**, including auto-detect), or runtime ``MaskingError`` (exit **1**) — never silent passthrough of source text. |
 | `ai_refine` | `provider`, `model` | `params` | **Level-3.** Requires an LLM connector plugin; rejected in community mode. |
 
 ### Conditional masking (`when:`)
@@ -457,6 +457,9 @@ backend only reads regular files under allowed roots (default:
 `privaci verify` audits a completed run by comparing the target against the
 source. It is **value-free**: it reports only counts, rates, and verdicts —
 never raw cell values — so it is safe to run in any environment, including CI.
+Cell equality uses string forms (`str(src)` vs `str(tgt)`), so float formatting
+or timestamp precision differences can produce false FAIL/WARN verdicts — treat
+verify as a leak/passthrough screen, not a typed equality oracle.
 
 ```bash
 privaci verify --config mask-rules.yaml

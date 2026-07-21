@@ -66,7 +66,7 @@ run_lint_and_test() {
   python scripts/check_public_repo_language.py --git-log 30
   pytest --cov=src --cov-report=term-missing --cov-fail-under=85 -m "not integration"
 
-  pip-audit --requirement requirements.txt || true
+  pip-audit --requirement requirements.txt
 }
 
 run_integration() {

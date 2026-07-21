@@ -63,6 +63,7 @@ privaci = "privaci.cli.app:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+exclude = ["privaci.spikes", "privaci.spikes.*"]
 
 [tool.setuptools.package-data]
 # Ship the PEP 561 marker so downstream packages (e.g. privaci-commercial) get

@@ -143,6 +143,64 @@ def test_plan_runs_without_target(tmp_path: Path, mocker: MockerFixture) -> None
     assert payload["summary"]["mask"] >= 1
 
 
+def test_plan_warns_when_ner_mask_without_spacy(
+    tmp_path: Path, mocker: MockerFixture
+) -> None:
+    # Arrange
+    notes = TableInfo(
+        schema_name="public",
+        table_name="notes",
+        columns=(ColumnInfo(name="body", data_type="text", not_null=False),),
+    )
+    catalog = CatalogResult(
+        tables={notes.identifier: notes},
+        load_plan=LoadPlan(layers=(LoadLayer(table_ids=(notes.identifier,)),)),
+    )
+    config = tmp_path / "mask-rules.yaml"
+    config.write_text(
+        yaml.safe_dump(
+            {
+                "version": SUPPORTED_CONFIG_VERSION,
+                "global_salt": TEST_SALT,
+                "tables": {
+                    "public.notes": {
+                        "columns": {"body": {"action": "ner_mask"}},
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    mocker.patch(
+        "privaci.config.ner_deps.spacy_available",
+        return_value=True,
+    )
+    mocker.patch(
+        "privaci.cli._plan.introspect_source_catalog",
+        return_value=catalog,
+    )
+    mocker.patch("privaci.cli._plan.spacy_available", return_value=False)
+
+    # Act
+    result = runner.invoke(
+        app,
+        [
+            "plan",
+            "--config",
+            str(config),
+            "--source",
+            "postgresql://x/y",
+            "--format",
+            "json",
+        ],
+    )
+
+    # Assert — plan still succeeds; warning on stderr
+    assert result.exit_code == 0, result.output
+    assert "WARNING: ner_mask requires SpaCy" in result.output
+    assert "public.notes.body" in result.output
+
+
 def test_init_missing_source_raises_catalog_error(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

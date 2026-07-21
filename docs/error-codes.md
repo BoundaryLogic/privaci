@@ -118,6 +118,8 @@ An unexpected error not covered by a specific code. Raised by
   do not trigger this exit.
 - A `when:` CEL evaluation failed for a row (non-bool result, runtime error, or
   elapsed budget overrun). Errors omit cell values.
+- `ner_mask` ran on a non-empty cell but SpaCy / `en_core_web_sm` was unavailable
+  (normally caught earlier at validate exit **3** or preflight exit **2**).
 
 **Remediation**
 
@@ -147,6 +149,8 @@ succeeded) and is resumable once the fault is cleared.
   type on the target (see `schema.validation_failed` in `_privaci.audit_log`).
 - `passthrough_copy: require_binary` and a passthrough table is not binary-COPY
   eligible (column order/type mismatch).
+- `ner_mask` is configured or auto-detected but SpaCy / `en_core_web_sm` is not
+  available (`pip install 'privaci[nlp]'` or change the action).
 - Source or target unreachable, or insufficient privileges.
 - Missing `CREATE SCHEMA` privilege for `_privaci`.
 - A table referenced in config does not exist in the source.
@@ -204,6 +208,8 @@ GRANT CREATE ON DATABASE privaci_target TO privaci_role;
 - `when:` references an unknown column, an unsupported type (`jsonb`, arrays,
   `numeric`, composites), a disallowed CEL builtin (e.g. `matches`, `map`),
   or exceeds size/AST limits.
+- Explicit `ner_mask` in YAML when SpaCy / `en_core_web_sm` is not available
+  (`pip install 'privaci[nlp]'` or change the action).
 
 **Remediation**
 

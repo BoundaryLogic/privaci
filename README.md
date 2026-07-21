@@ -57,6 +57,8 @@ Key pages:
 
 **Developing PrivaCI**
 
+- [Contributing](CONTRIBUTING.md) — branch workflow, CI, maintenance commitment
+- [Security policy](SECURITY.md) — vulnerability reporting
 - [Local development & testing](https://docs.boundarylogic.io/local-development/)
 - [Test fixtures — MedicalHelpDesk Corp](https://docs.boundarylogic.io/test-fixtures/)
 - [Architecture decision records](https://docs.boundarylogic.io/adr/)

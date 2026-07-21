@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import logging
+import importlib.util
 from typing import Protocol, cast
 
 from privaci.errors import MaskingError
 from privaci.mask.faker import FakeRequest, generate_fake
-
-logger = logging.getLogger(__name__)
 
 _ENTITY_PROVIDER: dict[str, str] = {
     "PERSON": "full_name",
@@ -16,6 +14,14 @@ _ENTITY_PROVIDER: dict[str, str] = {
     "GPE": "city",
     "LOC": "city",
 }
+
+NER_MASK_REMEDIATION = (
+    "Install the NLP extra (`pip install 'privaci[nlp]'`) and download "
+    "en_core_web_sm, or change the column action away from ner_mask. "
+    "See docs/configuration.md#actions."
+)
+
+_SPACY_MODEL_NAME = "en_core_web_sm"
 
 
 class _SpacyEntity(Protocol):
@@ -43,22 +49,42 @@ class _SpacyLanguage(Protocol):
 
 
 _MODEL: _SpacyLanguage | None = None
+_LOAD_FAILED: bool = False
+
+
+def spacy_available() -> bool:
+    """Return whether SpaCy and ``en_core_web_sm`` appear installable.
+
+    Cheap probe for config/preflight (import + package meta). Full model load
+    is deferred to the first ``mask_entities_in_text`` call. Fail-closed: a
+    positive probe that later fails to load still raises at runtime.
+    """
+    if _LOAD_FAILED:
+        return False
+    if _MODEL is not None:
+        return True
+    return _probe_spacy_package()
 
 
 def mask_entities_in_text(text: str, *, salt: str, column_path: str) -> str:
     """Replace named entities in ``text`` with deterministic fakes.
 
-    Returns ``text`` unchanged when SpaCy is not installed or no entities match.
+    Empty strings are returned unchanged. When SpaCy is unavailable, raises
+    rather than returning source text (fail-closed for privacy).
 
     Raises:
-        MaskingError: When SpaCy is installed but fails to process the text.
+        MaskingError: When SpaCy is unavailable, or when it fails to process
+            the text.
     """
     if not text:
         return text
     nlp = _load_model()
     if nlp is None:
-        logger.debug("SpaCy unavailable; ner_mask passthrough for %s", column_path)
-        return text
+        raise MaskingError(
+            f"Running NER on {column_path}",
+            cause=("SpaCy or model en_core_web_sm is not available for ner_mask."),
+            remediation=NER_MASK_REMEDIATION,
+        )
     try:
         doc = nlp(text)
     except Exception as exc:
@@ -98,17 +124,36 @@ def _replace_entities(
     return "".join(parts)
 
 
+def _probe_spacy_package() -> bool:
+    """Return True when the SpaCy package and model meta are present."""
+    if importlib.util.find_spec("spacy") is None:
+        return False
+    try:
+        from spacy.util import is_package
+    except ImportError:
+        return False
+    return bool(is_package(_SPACY_MODEL_NAME))
+
+
 def _load_model() -> _SpacyLanguage | None:
     """Lazy-load ``en_core_web_sm`` when the optional NLP extra is installed."""
-    global _MODEL
+    global _MODEL, _LOAD_FAILED
+    if _LOAD_FAILED:
+        return None
     if _MODEL is not None:
         return _MODEL
     try:
         import spacy
-    except ImportError:
-        return None
-    try:
-        _MODEL = cast(_SpacyLanguage, spacy.load("en_core_web_sm"))
-    except OSError:
+
+        _MODEL = cast(_SpacyLanguage, spacy.load(_SPACY_MODEL_NAME))
+    except (ImportError, OSError):
+        _LOAD_FAILED = True
         return None
     return _MODEL
+
+
+def _reset_model_cache_for_tests() -> None:
+    """Clear module caches (test-only)."""
+    global _MODEL, _LOAD_FAILED
+    _MODEL = None
+    _LOAD_FAILED = False
