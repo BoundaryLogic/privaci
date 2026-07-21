@@ -36,6 +36,6 @@
 
 ## Deferred (commercial train)
 
-- [ ] 4.2 Commercial repo: grant `conditional_masking` for `standard` and
+- [x] 4.2 Commercial repo: grant `conditional_masking` for `standard` and
       `compliance` in `capabilities_for_tier`; update licensing docs
 
