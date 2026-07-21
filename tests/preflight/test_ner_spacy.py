@@ -15,7 +15,10 @@ from privaci.catalog.models import (
 from privaci.config.actions import FakeAction, NerMaskAction
 from privaci.config.models import Config, TableConfig
 from privaci.errors import PreflightError
-from privaci.preflight.ner_spacy import verify_ner_mask_spacy
+from privaci.preflight.ner_spacy import (
+    iter_effective_ner_columns,
+    verify_ner_mask_spacy,
+)
 from tests.fixtures.constants import SUPPORTED_CONFIG_VERSION
 
 
@@ -108,3 +111,42 @@ def test_verify_ner_mask_spacy_noop_without_ner(mocker: object) -> None:
 
     # Assert
     spy.assert_not_called()
+
+
+def test_iter_effective_ner_uses_parent_for_partition_child() -> None:
+    # Arrange — child inherits parent YAML; path uses parent id (streaming parity)
+    parent = TableInfo(
+        schema_name="public",
+        table_name="events",
+        columns=(ColumnInfo(name="notes", data_type="text", not_null=False),),
+        is_partitioned=True,
+        partition_children=("public.events_2024",),
+    )
+    child = TableInfo(
+        schema_name="public",
+        table_name="events_2024",
+        columns=(ColumnInfo(name="notes", data_type="text", not_null=False),),
+        parent_partition="public.events",
+    )
+    catalog = CatalogResult(
+        tables={parent.identifier: parent, child.identifier: child},
+        load_plan=LoadPlan(
+            layers=(LoadLayer(table_ids=(parent.identifier, child.identifier)),)
+        ),
+    )
+    config = Config(
+        version=SUPPORTED_CONFIG_VERSION,
+        tables={
+            "public.events": TableConfig(
+                columns={"notes": NerMaskAction(action="ner_mask")}
+            )
+        },
+    )
+
+    # Act
+    paths = list(
+        iter_effective_ner_columns(config, catalog, DetectionResult(findings=()))
+    )
+
+    # Assert — one path on the parent config table, not a duplicate child path
+    assert paths == ["public.events.notes"]

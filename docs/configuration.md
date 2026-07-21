@@ -297,7 +297,7 @@ names and extra keys are rejected with the offending YAML path.
 | `passthrough` | — | — | Copy the value unchanged. |
 | `null` | — | — | Write `NULL`. Rejected at pre-flight on `NOT NULL` columns. |
 | `static` | `value` | — | Replace every value with a constant. |
-| `ner_mask` | — | `entities` | Level-2 SpaCy NER. `entities` defaults to `PERSON, ORG, GPE, LOC`. **Requires** `pip install 'privaci[nlp]'` and the `en_core_web_sm` model. Missing SpaCy fails at config validate (exit **3**, explicit YAML) or preflight (exit **2**, including auto-detect); runtime never passthroughs raw text. |
+| `ner_mask` | — | `entities` | Level-2 SpaCy NER. `entities` defaults to `PERSON, ORG, GPE, LOC`. **Requires** `pip install 'privaci[nlp]'` and the `en_core_web_sm` model. Missing SpaCy fails at config validate (exit **3**, explicit YAML), preflight (exit **2**, including auto-detect), or runtime ``MaskingError`` (exit **1**) — never silent passthrough of source text. |
 | `ai_refine` | `provider`, `model` | `params` | **Level-3.** Requires an LLM connector plugin; rejected in community mode. |
 
 ### Conditional masking (`when:`)

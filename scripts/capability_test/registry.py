@@ -147,7 +147,7 @@ CAPABILITIES: dict[str, Capability] = {
         ),
         repo="public",
         test_paths=(
-            "tests/mask/test_ner.py",
+            "tests/mask/test_ner_prereq.py",
             "tests/config/test_ner_deps.py",
             "tests/preflight/test_ner_spacy.py",
         ),

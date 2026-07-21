@@ -4,18 +4,17 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 
+from privaci.config.actions import NerMaskAction
 from privaci.config.models import Config
 from privaci.errors import ConfigError
 from privaci.mask.ner import NER_MASK_REMEDIATION, spacy_available
-
-_NER_ACTION = "ner_mask"
 
 
 def iter_explicit_ner_columns(config: Config) -> Iterator[str]:
     """Yield ``tables.<t>.columns.<c>`` paths for explicit ``ner_mask`` actions."""
     for table_id, table in config.tables.items():
         for column_name, action in table.columns.items():
-            if action.action == _NER_ACTION:
+            if isinstance(action, NerMaskAction):
                 yield f"tables.{table_id}.columns.{column_name}"
 
 

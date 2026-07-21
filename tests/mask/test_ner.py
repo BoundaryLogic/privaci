@@ -34,32 +34,12 @@ class _FakeDoc:
         return self._ents
 
 
-def test_ner_raises_when_model_unavailable(
-    monkeypatch: pytest.MonkeyPatch,
-    _reset_model: object,
-) -> None:
-    # Arrange
-    text = "Alice met Bob in Paris."
-    monkeypatch.setattr(ner_module, "_load_model", lambda: None)
-
-    # Act / Assert
-    with pytest.raises(MaskingError, match="NER on public.notes.body"):
-        ner_module.mask_entities_in_text(
-            text,
-            salt=TEST_SALT,
-            column_path="public.notes.body",
-        )
-
-
-def test_spacy_available_false_when_load_returns_none(
-    monkeypatch: pytest.MonkeyPatch,
-    _reset_model: object,
-) -> None:
-    # Arrange
-    monkeypatch.setattr(ner_module, "_load_model", lambda: None)
-
-    # Act / Assert
-    assert ner_module.spacy_available() is False
+@pytest.fixture
+def _reset_model() -> object:
+    """Restore the module-level model/probe caches after a test mutates them."""
+    ner_module._reset_model_cache_for_tests()
+    yield
+    ner_module._reset_model_cache_for_tests()
 
 
 def test_ner_empty_string_unchanged() -> None:
@@ -70,14 +50,6 @@ def test_ner_empty_string_unchanged() -> None:
         )
         == ""
     )
-
-
-@pytest.fixture
-def _reset_model() -> object:
-    """Restore the module-level model cache after a test mutates it."""
-    original = ner_module._MODEL
-    yield
-    ner_module._MODEL = original
 
 
 def test_ner_replaces_known_entities_and_keeps_unknown(
@@ -151,10 +123,12 @@ def test_load_model_returns_none_without_spacy(
     monkeypatch: pytest.MonkeyPatch, _reset_model: object
 ) -> None:
     # Arrange — make `import spacy` fail regardless of install state.
-    ner_module._MODEL = None
     monkeypatch.setitem(sys.modules, "spacy", None)
 
     # Act / Assert
+    assert ner_module._load_model() is None
+    assert ner_module._LOAD_FAILED is True
+    # Negative cache: second call must not re-import.
     assert ner_module._load_model() is None
 
 
@@ -165,7 +139,6 @@ def test_load_model_loads_and_caches(
     pipeline = lambda _text: _FakeDoc([])  # noqa: E731
     fake_spacy = types.ModuleType("spacy")
     fake_spacy.load = lambda _name: pipeline  # type: ignore[attr-defined]
-    ner_module._MODEL = None
     monkeypatch.setitem(sys.modules, "spacy", fake_spacy)
 
     # Act
@@ -173,6 +146,7 @@ def test_load_model_loads_and_caches(
 
     # Assert
     assert loaded is pipeline
+    assert ner_module.spacy_available() is True
 
 
 def test_load_model_returns_none_when_model_missing(
@@ -184,8 +158,9 @@ def test_load_model_returns_none_when_model_missing(
 
     fake_spacy = types.ModuleType("spacy")
     fake_spacy.load = _raise_oserror  # type: ignore[attr-defined]
-    ner_module._MODEL = None
     monkeypatch.setitem(sys.modules, "spacy", fake_spacy)
 
     # Act / Assert
     assert ner_module._load_model() is None
+    assert ner_module._LOAD_FAILED is True
+    assert ner_module.spacy_available() is False

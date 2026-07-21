@@ -14,8 +14,10 @@ from privaci.cli.plan_json import render_plan_json
 from privaci.cli.source_catalog import introspect_source_catalog
 from privaci.config import load_config
 from privaci.config.models import Config
+from privaci.mask.ner import NER_MASK_REMEDIATION, spacy_available
 from privaci.preflight import PreflightReport
 from privaci.preflight.checks import collect_dry_run_rows, verify_config_tables_exist
+from privaci.preflight.ner_spacy import iter_effective_ner_columns
 from privaci.schema.elevated import elevated_objects_in_scope
 from privaci.schema.function_hoist import functions_required_for_pre_data
 
@@ -48,6 +50,7 @@ def execute_plan(
         )
 
     report = run_with_signal_handlers(_run)
+    _warn_ner_mask_without_spacy(config, report)
     if output_format == "json":
         typer.echo(render_plan_json(report), nl=False)
         return
@@ -62,6 +65,24 @@ def execute_plan(
         typer.echo("ACTION REQUIRED: set elevated_objects dispositions for:")
         for identifier in unresolved:
             typer.echo(f"  - {identifier}")
+
+
+def _warn_ner_mask_without_spacy(config: Config, report: PreflightReport) -> None:
+    """Warn when the plan includes ``ner_mask`` but SpaCy is missing.
+
+    Plan is source-only and does not hard-fail (run/dry-run preflight exit 2).
+    """
+    paths = sorted(iter_effective_ner_columns(config, report.catalog, report.detection))
+    if not paths or spacy_available():
+        return
+    typer.echo(
+        "WARNING: ner_mask requires SpaCy (en_core_web_sm) but it is not "
+        "available. A run or dry-run will fail (exit 2) for:",
+        err=True,
+    )
+    for path in paths:
+        typer.echo(f"  - {path}", err=True)
+    typer.echo(f"Remediation: {NER_MASK_REMEDIATION}", err=True)
 
 
 def _print_ddl_phases(catalog: CatalogResult, config: Config) -> None:

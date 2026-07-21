@@ -24,25 +24,32 @@ free-text name patterns to `ner_mask`, amplifying the footgun.
 
 ## Decisions
 
-1. **Probe:** `spacy_available() -> bool` wraps existing `_load_model()` success
-   (import + `en_core_web_sm` load). Cache via existing `_MODEL` sentinel.
+1. **Probe:** `spacy_available() -> bool` is a cheap import /
+   `spacy.util.is_package("en_core_web_sm")` check (no full model load). Full
+   `spacy.load` stays lazy in `_load_model()`, with negative cache on
+   `ImportError`/`OSError` so config + preflight do not retry a failed load.
 2. **Explicit YAML:** `validate_ner_mask_actions(config)` at config load (same
    seam as keyed actions) → `ConfigError` exit **3** listing
    `tables.<t>.columns.<c>` paths.
 3. **Auto-detect path:** After `build_detection`, preflight
-   `verify_ner_mask_spacy(config, detection)` walks effective columns via
-   `resolve_effective_table_config` → `PreflightError` exit **2**.
+   `verify_ner_mask_spacy(config, catalog, detection)` walks effective columns
+   via `resolve_effective_table_config` (partition children via
+   `config_table_id`) → `PreflightError` exit **2**.
 4. **Runtime:** `mask_entities_in_text` raises `MaskingError` exit **1** when
    the model is unavailable (never return raw text for non-empty input).
 5. **Empty string:** Still returns unchanged (nothing to mask).
 6. **Public language:** Remediation cites `privaci[nlp]` / docs — no product
    tier names (ADR-0007).
+7. **`privaci plan`:** Warns (stderr) when effective `ner_mask` lacks SpaCy;
+   hard fail remains run/dry-run preflight.
 
 ## Risks / Trade-offs
 
 - Operators who relied on silent passthrough will see new failures — intentional.
-- `privaci plan` / preview with defer_strict still must not write; preflight for
-  run/dry-run enforces the gate. Config load catches explicit YAML even without DB.
+- `privaci plan` warns on effective `ner_mask` without SpaCy; run/dry-run
+  preflight hard-fails (exit 2). Config load catches explicit YAML even without DB.
+- Lightweight probe can theoretically pass when a later `spacy.load` fails;
+  runtime still fail-closes with exit **1**.
 
 ## Migration Plan
 

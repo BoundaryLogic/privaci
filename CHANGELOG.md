@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ReDoS parse-time screen documents nested-group gaps.
 - CI ``pip-audit`` is a hard gate (no ``continue-on-error``); local
   ``scripts/ci-local.sh`` matches (no soft ``|| true``).
+- ``spacy_available`` uses a lightweight package probe; failed loads are
+  negatively cached; ``privaci plan`` warns when effective ``ner_mask`` lacks
+  SpaCy.
 - Added ``CONTRIBUTING.md``, refreshed ``SECURITY.md`` support table, and
   ADR-0013 (exact-pinned runtime dependencies).
 

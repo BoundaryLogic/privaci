@@ -7,11 +7,11 @@ from collections.abc import Iterator
 from privaci.autodetect.models import DetectionResult
 from privaci.autodetect.resolve import resolve_effective_table_config
 from privaci.catalog.models import CatalogResult
+from privaci.catalog.partitions import config_table_id
+from privaci.config.actions import NerMaskAction
 from privaci.config.models import Config
 from privaci.errors import PreflightError
 from privaci.mask.ner import NER_MASK_REMEDIATION, spacy_available
-
-_NER_ACTION = "ner_mask"
 
 
 def iter_effective_ner_columns(
@@ -19,14 +19,22 @@ def iter_effective_ner_columns(
     catalog: CatalogResult,
     detection: DetectionResult,
 ) -> Iterator[str]:
-    """Yield schema-qualified columns whose effective action is ``ner_mask``."""
+    """Yield schema-qualified columns whose effective action is ``ner_mask``.
+
+    Partition children resolve via the parent table id (same as streaming).
+    """
+    seen_config_tables: set[str] = set()
     for table in catalog.tables.values():
-        if table.identifier not in config.tables and not config.auto_detect:
+        config_table = catalog.tables.get(config_table_id(table), table)
+        if config_table.identifier in seen_config_tables:
             continue
-        effective = resolve_effective_table_config(table, config, detection)
+        if config_table.identifier not in config.tables and not config.auto_detect:
+            continue
+        seen_config_tables.add(config_table.identifier)
+        effective = resolve_effective_table_config(config_table, config, detection)
         for column_name, action in effective.columns.items():
-            if action.action == _NER_ACTION:
-                yield f"{table.identifier}.{column_name}"
+            if isinstance(action, NerMaskAction):
+                yield f"{config_table.identifier}.{column_name}"
 
 
 def verify_ner_mask_spacy(

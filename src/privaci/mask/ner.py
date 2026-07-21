@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 from typing import Protocol, cast
 
 from privaci.errors import MaskingError
@@ -19,6 +20,8 @@ NER_MASK_REMEDIATION = (
     "en_core_web_sm, or change the column action away from ner_mask. "
     "See docs/configuration.md#actions."
 )
+
+_SPACY_MODEL_NAME = "en_core_web_sm"
 
 
 class _SpacyEntity(Protocol):
@@ -46,14 +49,28 @@ class _SpacyLanguage(Protocol):
 
 
 _MODEL: _SpacyLanguage | None = None
+_LOAD_FAILED: bool = False
+_PROBE_RESULT: bool | None = None
 
 
 def spacy_available() -> bool:
-    """Return whether SpaCy and ``en_core_web_sm`` can be loaded.
+    """Return whether SpaCy and ``en_core_web_sm`` appear installable.
 
-    Used by config/preflight gates so ``ner_mask`` never silently passthroughs.
+    Cheap probe for config/preflight (import + package meta). Full model load
+    is deferred to the first ``mask_entities_in_text`` call. Fail-closed: a
+    positive probe that later fails to load still raises at runtime.
     """
-    return _load_model() is not None
+    global _PROBE_RESULT
+    if _PROBE_RESULT is not None:
+        return _PROBE_RESULT
+    if _LOAD_FAILED:
+        _PROBE_RESULT = False
+        return False
+    if _MODEL is not None:
+        _PROBE_RESULT = True
+        return True
+    _PROBE_RESULT = _probe_spacy_package()
+    return _PROBE_RESULT
 
 
 def mask_entities_in_text(text: str, *, salt: str, column_path: str) -> str:
@@ -114,17 +131,39 @@ def _replace_entities(
     return "".join(parts)
 
 
+def _probe_spacy_package() -> bool:
+    """Return True when the SpaCy package and model meta are present."""
+    if importlib.util.find_spec("spacy") is None:
+        return False
+    try:
+        from spacy.util import is_package
+    except ImportError:
+        return False
+    return bool(is_package(_SPACY_MODEL_NAME))
+
+
 def _load_model() -> _SpacyLanguage | None:
     """Lazy-load ``en_core_web_sm`` when the optional NLP extra is installed."""
-    global _MODEL
+    global _MODEL, _LOAD_FAILED, _PROBE_RESULT
+    if _LOAD_FAILED:
+        return None
     if _MODEL is not None:
         return _MODEL
     try:
         import spacy
-    except ImportError:
+
+        _MODEL = cast(_SpacyLanguage, spacy.load(_SPACY_MODEL_NAME))
+    except (ImportError, OSError):
+        _LOAD_FAILED = True
+        _PROBE_RESULT = False
         return None
-    try:
-        _MODEL = cast(_SpacyLanguage, spacy.load("en_core_web_sm"))
-    except OSError:
-        return None
+    _PROBE_RESULT = True
     return _MODEL
+
+
+def _reset_model_cache_for_tests() -> None:
+    """Clear module caches (test-only)."""
+    global _MODEL, _LOAD_FAILED, _PROBE_RESULT
+    _MODEL = None
+    _LOAD_FAILED = False
+    _PROBE_RESULT = None
