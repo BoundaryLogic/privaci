@@ -122,11 +122,13 @@ When freeform-text columns use local NER, the `en_core_web_sm` model is loaded
 Disable Level 2 by using Level 1 actions only, or `action: passthrough` on
 text columns, to avoid loading the model.
 
-### Level 3 masking (commercial, opt-in)
+### Level 3 masking (plugin, opt-in — not implemented)
 
-`action: ai_refine` sends **context windows** to AWS Bedrock or Azure OpenAI.
-The full column or table is never held in memory for L3; each window is
-processed and discarded.
+`action: ai_refine` is reserved for BYO-LLM refinement via a plugin
+`LLMConnector`. **Connectors are not implemented yet**; until they are, a
+configured `ai_refine` column must fail closed (error), never silently
+passthrough source text. When implemented, the design is small **context
+windows** per request (not the full column/table in memory).
 
 ## Security: no intermediate data on disk
 

@@ -23,6 +23,8 @@ An unexpected error not covered by a specific code. Raised by
   elapsed budget overrun). Errors omit cell values.
 - `ner_mask` ran on a non-empty cell but SpaCy / `en_core_web_sm` was unavailable
   (normally caught earlier at validate exit **3** or preflight exit **2**).
+- `ai_refine` ran against a registered L3 connector that is **not yet
+  implemented** (stubs fail closed; never passthrough source text).
 
 **Remediation**
 

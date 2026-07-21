@@ -15,8 +15,8 @@ registers them via Python entry points under the group `privaci.plugins`.
 |------|-----|---------|
 | `license_validator` | `LicenseValidator` | Marketplace entitlement |
 | `usage_meter` | `UsageMeter` | Billing heartbeat |
-| `llm_connector.aws_bedrock` | `LLMConnector` | Level 3 Bedrock |
-| `llm_connector.azure_openai` | `LLMConnector` | Level 3 Azure OpenAI |
+| `llm_connector.aws_bedrock` | `LLMConnector` | Level 3 Bedrock (**reserved — not implemented**) |
+| `llm_connector.azure_openai` | `LLMConnector` | Level 3 Azure OpenAI (**reserved — not implemented**) |
 | `report_renderer.json` | `ReportRenderer` | Signed JSON reports |
 | `report_renderer.pdf` | `ReportRenderer` | PDF reports (commercial) |
 | `notifier.slack` | `Notifier` | Slack webhook |

@@ -120,6 +120,8 @@ An unexpected error not covered by a specific code. Raised by
   elapsed budget overrun). Errors omit cell values.
 - `ner_mask` ran on a non-empty cell but SpaCy / `en_core_web_sm` was unavailable
   (normally caught earlier at validate exit **3** or preflight exit **2**).
+- `ai_refine` ran against a registered L3 connector that is **not yet
+  implemented** (stubs fail closed; never passthrough source text).
 
 **Remediation**
 
@@ -195,21 +197,25 @@ GRANT CREATE ON DATABASE privaci_target TO privaci_role;
 
 ## Exit code 3: Config validation failure
 
-`mask-rules.yaml` failed schema validation, or a commercial-only action
-(`ai_refine`) was requested without the commercial layer. Raised by
+`mask-rules.yaml` failed schema validation, or a plugin-only action
+(`ai_refine`) was requested without a plugin package. Raised by
 `ConfigError` and `L3NotInstalledError`.
 
 **Common causes**
 
 - Unknown field (configs use `extra = forbid`).
 - Unknown `action` type or missing required field for an action.
-- `action: ai_refine` without the commercial layer installed.
+- `action: ai_refine` without a plugin package that registers an LLM connector.
 - Engine v2 reading a `version: "1.0"` config without `migrate-config`.
 - `when:` references an unknown column, an unsupported type (`jsonb`, arrays,
   `numeric`, composites), a disallowed CEL builtin (e.g. `matches`, `map`),
   or exceeds size/AST limits.
 - Explicit `ner_mask` in YAML when SpaCy / `en_core_web_sm` is not available
   (`pip install 'privaci[nlp]'` or change the action).
+
+**Note:** When a plugin is installed but L3 connectors are **not yet
+implemented**, `ai_refine` fails at runtime with ``MaskingError`` (exit **1**),
+not exit 3 — stubs must not passthrough source text.
 
 **Remediation**
 
