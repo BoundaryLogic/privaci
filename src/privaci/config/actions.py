@@ -168,6 +168,10 @@ class StaticAction(_ActionBase):
 class NerMaskAction(_ActionBase):
     """Mask named entities found by the Level-2 SpaCy NER model.
 
+    Requires ``pip install 'privaci[nlp]'`` and model ``en_core_web_sm``.
+    Missing SpaCy fails at config validate (exit 3), preflight (exit 2), or
+    runtime (exit 1) — never silent passthrough of source text.
+
     Attributes:
         entities: Entity labels to mask. Defaults to ``PERSON``, ``ORG``,
             ``GPE``, ``LOC``.

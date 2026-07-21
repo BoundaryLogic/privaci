@@ -291,7 +291,7 @@ names and extra keys are rejected with the offending YAML path.
 |--------|-----------------|-----------------|-------|
 | `fake` | `provider` | `seed_alias`, `params` | Deterministic synthetic value from a registered provider. Unknown provider names fail validation (exit 3). |
 | `regex_mask` | `pattern`, `replace` | `flags` | `pattern` must compile; unknown `flags` are rejected. |
-| `hash` | — | — | Salted SHA-256 of `salt \|\| value` (no column path). Same value hashes the same across tables/columns — useful when you intentionally want join/linkability. Prefer `hmac_hash` when column-scoped digests are required. Low-entropy inputs (phone, SSN) with a known salt are dictionary-reversible; do not treat `hash` as irreversible anonymization for those fields. |
+| `hash` | — | — | Salted SHA-256 of raw `salt` concatenated with `value` (no delimiter between them; no column path). Same value hashes the same across tables/columns — useful when you intentionally want join/linkability. Prefer `hmac_hash` when column-scoped digests are required. Low-entropy inputs (phone, SSN) with a known salt are dictionary-reversible; do not treat `hash` as irreversible anonymization for those fields. |
 | `hmac_hash` | — | `encoding` | Keyed HMAC-SHA256 using `pseudonym_key`, scoped by column path. Requires a plugin granting the `keyed_actions` capability; rejected in community mode (exit 5). |
 | `pseudonym` | `provider` | `seed_alias`, `params` | Keyed deterministic fake (same providers as `fake`). Requires the `keyed_actions` capability; rejected in community mode (exit 5). |
 | `passthrough` | — | — | Copy the value unchanged. |

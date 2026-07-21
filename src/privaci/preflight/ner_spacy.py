@@ -8,9 +8,8 @@ from privaci.autodetect.models import DetectionResult
 from privaci.autodetect.resolve import resolve_effective_table_config
 from privaci.catalog.models import CatalogResult
 from privaci.config.models import Config
-from privaci.config.ner_deps import NER_MASK_REMEDIATION
 from privaci.errors import PreflightError
-from privaci.mask.ner import spacy_available
+from privaci.mask.ner import NER_MASK_REMEDIATION, spacy_available
 
 _NER_ACTION = "ner_mask"
 

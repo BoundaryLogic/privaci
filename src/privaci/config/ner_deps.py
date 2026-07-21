@@ -6,14 +6,9 @@ from collections.abc import Iterator
 
 from privaci.config.models import Config
 from privaci.errors import ConfigError
-from privaci.mask.ner import spacy_available
+from privaci.mask.ner import NER_MASK_REMEDIATION, spacy_available
 
 _NER_ACTION = "ner_mask"
-NER_MASK_REMEDIATION = (
-    "Install the NLP extra (`pip install 'privaci[nlp]'`) and download "
-    "en_core_web_sm, or change the column action away from ner_mask. "
-    "See docs/configuration.md#actions."
-)
 
 
 def iter_explicit_ner_columns(config: Config) -> Iterator[str]:

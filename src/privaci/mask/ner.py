@@ -14,6 +14,12 @@ _ENTITY_PROVIDER: dict[str, str] = {
     "LOC": "city",
 }
 
+NER_MASK_REMEDIATION = (
+    "Install the NLP extra (`pip install 'privaci[nlp]'`) and download "
+    "en_core_web_sm, or change the column action away from ner_mask. "
+    "See docs/configuration.md#actions."
+)
+
 
 class _SpacyEntity(Protocol):
     """Minimal SpaCy entity surface used by NER masking."""
@@ -67,11 +73,7 @@ def mask_entities_in_text(text: str, *, salt: str, column_path: str) -> str:
         raise MaskingError(
             f"Running NER on {column_path}",
             cause=("SpaCy or model en_core_web_sm is not available for ner_mask."),
-            remediation=(
-                "Install the NLP extra (`pip install 'privaci[nlp]'`) and the "
-                "en_core_web_sm model, or change the column action. See "
-                "docs/configuration.md#actions."
-            ),
+            remediation=NER_MASK_REMEDIATION,
         )
     try:
         doc = nlp(text)

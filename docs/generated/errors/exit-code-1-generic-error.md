@@ -21,6 +21,8 @@ An unexpected error not covered by a specific code. Raised by
   do not trigger this exit.
 - A `when:` CEL evaluation failed for a row (non-bool result, runtime error, or
   elapsed budget overrun). Errors omit cell values.
+- `ner_mask` ran on a non-empty cell but SpaCy / `en_core_web_sm` was unavailable
+  (normally caught earlier at validate exit **3** or preflight exit **2**).
 
 **Remediation**
 

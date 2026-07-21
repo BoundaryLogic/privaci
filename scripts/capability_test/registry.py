@@ -149,6 +149,7 @@ CAPABILITIES: dict[str, Capability] = {
         test_paths=(
             "tests/mask/test_ner.py",
             "tests/config/test_ner_deps.py",
+            "tests/preflight/test_ner_spacy.py",
         ),
         tags=frozenset({"unit", "masking", "public", "nlp"}),
     ),

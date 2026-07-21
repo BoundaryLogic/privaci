@@ -18,7 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the source tree for contributors).
 - Docs: ``hash`` vs ``hmac_hash`` linkability and low-entropy risks;
   ReDoS parse-time screen documents nested-group gaps.
-- CI ``pip-audit`` is a hard gate (no ``continue-on-error``).
+- CI ``pip-audit`` is a hard gate (no ``continue-on-error``); local
+  ``scripts/ci-local.sh`` matches (no soft ``|| true``).
 - Added ``CONTRIBUTING.md``, refreshed ``SECURITY.md`` support table, and
   ADR-0013 (exact-pinned runtime dependencies).
 
