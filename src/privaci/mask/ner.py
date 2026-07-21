@@ -50,7 +50,6 @@ class _SpacyLanguage(Protocol):
 
 _MODEL: _SpacyLanguage | None = None
 _LOAD_FAILED: bool = False
-_PROBE_RESULT: bool | None = None
 
 
 def spacy_available() -> bool:
@@ -60,17 +59,11 @@ def spacy_available() -> bool:
     is deferred to the first ``mask_entities_in_text`` call. Fail-closed: a
     positive probe that later fails to load still raises at runtime.
     """
-    global _PROBE_RESULT
-    if _PROBE_RESULT is not None:
-        return _PROBE_RESULT
     if _LOAD_FAILED:
-        result = False
-    elif _MODEL is not None:
-        result = True
-    else:
-        result = _probe_spacy_package()
-    _PROBE_RESULT = result
-    return result
+        return False
+    if _MODEL is not None:
+        return True
+    return _probe_spacy_package()
 
 
 def mask_entities_in_text(text: str, *, salt: str, column_path: str) -> str:
@@ -144,7 +137,7 @@ def _probe_spacy_package() -> bool:
 
 def _load_model() -> _SpacyLanguage | None:
     """Lazy-load ``en_core_web_sm`` when the optional NLP extra is installed."""
-    global _MODEL, _LOAD_FAILED, _PROBE_RESULT
+    global _MODEL, _LOAD_FAILED
     if _LOAD_FAILED:
         return None
     if _MODEL is not None:
@@ -155,15 +148,12 @@ def _load_model() -> _SpacyLanguage | None:
         _MODEL = cast(_SpacyLanguage, spacy.load(_SPACY_MODEL_NAME))
     except (ImportError, OSError):
         _LOAD_FAILED = True
-        _PROBE_RESULT = False
         return None
-    _PROBE_RESULT = True
     return _MODEL
 
 
 def _reset_model_cache_for_tests() -> None:
     """Clear module caches (test-only)."""
-    global _MODEL, _LOAD_FAILED, _PROBE_RESULT
+    global _MODEL, _LOAD_FAILED
     _MODEL = None
     _LOAD_FAILED = False
-    _PROBE_RESULT = None

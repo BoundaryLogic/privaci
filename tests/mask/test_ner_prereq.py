@@ -46,7 +46,7 @@ def test_spacy_available_false_when_probe_fails(
 
     # Act / Assert
     assert ner_module.spacy_available() is False
-    assert ner_module.spacy_available() is False  # cached
+    assert ner_module.spacy_available() is False
 
 
 def test_spacy_available_true_when_package_present(
@@ -76,5 +76,5 @@ def test_spacy_available_false_when_load_failed(
     # Act
     assert ner_module._load_model() is None
 
-    # Assert — probe inherits negative cache
+    # Assert — failed load is negatively cached via _LOAD_FAILED
     assert ner_module.spacy_available() is False

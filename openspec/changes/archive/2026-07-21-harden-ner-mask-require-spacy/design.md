@@ -27,7 +27,9 @@ free-text name patterns to `ner_mask`, amplifying the footgun.
 1. **Probe:** `spacy_available() -> bool` is a cheap import /
    `spacy.util.is_package("en_core_web_sm")` check (no full model load). Full
    `spacy.load` stays lazy in `_load_model()`, with negative cache on
-   `ImportError`/`OSError` so config + preflight do not retry a failed load.
+   `ImportError`/`OSError` via `_LOAD_FAILED` so config + preflight do not
+   retry a failed load. Availability after failure/success is derived from
+   `_LOAD_FAILED` / `_MODEL` (no separate probe cache global).
 2. **Explicit YAML:** `validate_ner_mask_actions(config)` at config load (same
    seam as keyed actions) → `ConfigError` exit **3** listing
    `tables.<t>.columns.<c>` paths.
