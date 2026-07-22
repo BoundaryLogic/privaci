@@ -58,3 +58,8 @@ BugBot/review threads and merge valid extras.
 ## Output
 
 High → Medium → Low. Evidence + fix. What looks solid. Fix order.
+
+**Severity:** High, Medium, and Low are all ship blockers for the parent
+closeout. Do not mark Medium/Low as “optional” or “defer after merge.”
+List every finding with a concrete fix; the parent will not ship with open
+Medium/Low unless the user waives them explicitly.

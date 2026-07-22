@@ -11,6 +11,9 @@ folder is the canonical documentation set. Start here, then follow the links.
 
 | Doc | What it covers |
 |-----|----------------|
+| [`../CONSTITUTION.md`](../CONSTITUTION.md) | Project non-negotiables (Articles I–X) |
+| [`ci-gates.md`](ci-gates.md) | CI/pre-commit gates mapped to constitution articles |
+| [`quality-evidence.md`](quality-evidence.md) | Threat model → tests/gates → nuclear checkpoints (confidence model) |
 | [`quickstart.md`](quickstart.md) | Zero to first masked row (evaluation compose or your own DBs) |
 | [`local-development.md`](local-development.md) | Workstation setup (Python 3.12 venv, Docker/Podman), test layers, capability harness (§6.1), day-to-day loop |
 | [`test-fixtures.md`](test-fixtures.md) | The "MedicalHelpDesk Corp" source schema and dataset tiers |
@@ -81,6 +84,7 @@ Auto-generated reference pages (regenerate with `make docs-generate`):
 | [0010](adr/0010-constant-memory-streaming.md) | Constant-memory streaming bounds |
 | [0008](adr/0008-fk-strategy-topo-sort-deferred.md) | Topo-sort + deferred-constraint FK strategy |
 | [0009](adr/0009-postgres-native-partitioning.md) | Native partitioning support |
+| [0014](adr/0014-project-constitution.md) | Project Constitution (`CONSTITUTION.md`) |
 
 ## Source of truth for the MVP
 

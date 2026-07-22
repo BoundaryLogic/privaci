@@ -37,3 +37,7 @@ Do not approve for “tests pass.” Block on missed visible code-judo, unjustif
 1k crossing, new spaghetti, wrong-layer/duplicate helpers, leaky abstractions.
 
 Prioritized findings + concrete remedies. Fewer high-conviction comments.
+
+**Severity:** High, Medium, and Low are all ship blockers. Verdict must not be
+“approve” / “ready” while any severity remains open. Prefer **Request changes**
+until the closeout table can go green (parent fixes or user waives).

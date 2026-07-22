@@ -1,0 +1,24 @@
+---
+description: Obey CONSTITUTION.md — no shortcuts that violate non-negotiables
+alwaysApply: true
+---
+
+# Project Constitution
+
+Before implementing, reviewing, or merging changes in this repository, read
+and obey root [`CONSTITUTION.md`](../../CONSTITUTION.md).
+
+## Non-negotiable reminders
+
+- Data stays in the customer environment — no PII phone-home (Article I).
+- Fail closed rather than silently expose or weaken masking (Article II).
+- Never log raw PII; no secrets in git or images (Article III, VI).
+- Bounded memory; respect resource-safety scripts (Article IV).
+- Do not skip required CI, OpenSpec nuclear, or waive without an issue
+  (Article V, IX).
+- Update docs bound by `docs/registry.yaml` in the same change (Article X).
+
+If a task conflicts with the constitution, stop and amend the constitution
+via ADR (Article IX) — do not “shortcut to save time.”
+
+Gate map: [`docs/ci-gates.md`](../../docs/ci-gates.md).

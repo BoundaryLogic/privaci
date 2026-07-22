@@ -1,0 +1,10 @@
+# Critical coverage floors (constitution Article VIII / design D6).
+# First publish: set to measured combined coverage on this branch; burn down
+# toward 98% then 100% via https://github.com/BoundaryLogic/privaci/issues/42
+# Never lower a published floor without an Article VIII note in the PR.
+# Keys MUST be coverage --include globs ending in /* (no silent rewrite).
+
+[floors]
+"src/privaci/mask/*" = 96
+"src/privaci/config/*" = 98
+"src/privaci/secrets/*" = 92

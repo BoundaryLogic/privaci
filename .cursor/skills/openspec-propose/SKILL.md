@@ -17,8 +17,11 @@ I'll create a change with artifacts:
 - tasks.md (implementation steps)
 
 When the artifacts look complete, **`nuclear-openspec` is required** before
-coding (rule: `nuclear-openspec-before-implement.mdc`). When ready to implement
-after that gate, run /opsx:apply.
+coding (rule: `nuclear-openspec-before-implement.mdc`). `design.md` MUST
+include a **Threat model** section (see `docs/quality-evidence.md`).
+`tasks.md` SHOULD include Verification tasks with positive + negative tests
+for machine-checkable threats. When ready to implement after that gate, run
+/opsx:apply.
 
 ---
 

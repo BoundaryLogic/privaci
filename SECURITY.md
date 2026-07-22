@@ -60,5 +60,6 @@ use the synthetic fixtures under `deploy/demo-seed/` or `tests/fixtures/`.
 - Use read-only root filesystem and mount config as `:ro`.
 - Never commit `.env`, salts, or database credentials to version control.
 
-See [`docs/error-codes.md`](docs/error-codes.md) and
+See [`CONSTITUTION.md`](CONSTITUTION.md) for non-negotiables (trust boundary,
+fail closed, PII hygiene), [`docs/error-codes.md`](docs/error-codes.md) and
 [`docs/deployment.md`](docs/deployment.md) for operational hardening.

@@ -116,7 +116,7 @@ def _mask_empty_string(action: ColumnAction) -> Any:
     return ""
 
 
-def _dispatch_mask_action(
+def _dispatch_mask_action(  # noqa: C901  # issue #42 complexity burn-down
     value: Any,
     action: ColumnAction,
     *,
@@ -160,6 +160,12 @@ def _dispatch_mask_action(
 
 
 def _hash_value(value: Any, salt: str) -> str:
+    """Return salted SHA-256 hex digest without column scoping.
+
+    Intentional: same ``(salt, value)`` yields the same digest across columns so
+    operators can keep join/linkability. Prefer ``hmac_hash`` when digests must
+    be column-scoped (see ``docs/configuration.md`` and masking-pipeline spec).
+    """
     text = str(value)
     digest = hashlib.sha256()
     digest.update(salt.encode("utf-8"))

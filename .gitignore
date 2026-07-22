@@ -52,6 +52,7 @@ mutation.sqlite
 # IDE
 .idea/
 .vscode/
+*.code-workspace
 *.swp
 *.swo
 

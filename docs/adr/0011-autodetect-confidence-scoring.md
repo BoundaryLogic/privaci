@@ -59,6 +59,8 @@ need a stable finding model.
 - Catalog introspection gains a read of `pg_stats.avg_width`; missing
   stats (never-`ANALYZE` tables) yield `medium` for freeform candidates
   on sensitive tables, `low` otherwise.
+- Built-in name patterns place IP rules ahead of the generic `address`
+  substring so columns like `ip_address` are not scored as street addresses.
 - **Revisit when:** we add config packs with table-scoped patterns,
   ship value-shape sampling, or integrate an on-prem embedding model for
   semantic column classification.

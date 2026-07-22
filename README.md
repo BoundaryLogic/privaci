@@ -7,6 +7,9 @@ PrivaCI is a stateless batch engine that reads from a PostgreSQL source
 writes realistic synthetic data to a staging database with referential
 integrity preserved.
 
+**Principles:** see [`CONSTITUTION.md`](CONSTITUTION.md) (non-negotiables) and
+[`docs/ci-gates.md`](docs/ci-gates.md) (how CI enforces them).
+
 ## Prerequisites
 
 - Python **3.12+**, or the official container image

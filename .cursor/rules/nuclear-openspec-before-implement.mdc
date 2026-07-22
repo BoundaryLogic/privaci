@@ -30,7 +30,10 @@ time — see `nuclear-branch-before-pr.mdc`.
 4. If verdict is **Amend then implement** or **Re-scope**: update OpenSpec
    artifacts first; do **not** write feature code until High gaps are closed or
    explicitly deferred in `design.md` / `tasks.md` with rationale.
-5. Only then proceed with `openspec-apply` / implementation.
+5. Confirm `design.md` has a **Threat model** section (or documented skim for
+   trivial doc-only) per `docs/quality-evidence.md` and
+   `.cursor/skills/nuclear-openspec/SKILL.md`.
+6. Only then proceed with `openspec-apply` / implementation.
 
 ## Exceptions (narrow)
 

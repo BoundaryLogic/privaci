@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Project [`CONSTITUTION.md`](CONSTITUTION.md) (Articles I–X), ADR-0014, and
+  [`docs/ci-gates.md`](docs/ci-gates.md) mapping articles to CI gates.
+- [`docs/quality-evidence.md`](docs/quality-evidence.md) — threat model before
+  code, regression tests for nuclear findings, closed-set nuclear convergence.
+- Document registry (`docs/registry.yaml`) and CI hardening program (Dependabot,
+  SAST/supply-chain including typos + SHA-pinned Actions on new/touched
+  workflows, architecture limits, coverage floors, Article I offline/HTTP bans,
+  mutation on mask+config, duplicate-code via jscpd) — see OpenSpec
+  `add-ci-hardening-gates`. (Release/docs/publish workflows may still use
+  tag refs where practical.)
+
 ### Changed
 
 - **BREAKING (behaviour):** ``ner_mask`` without SpaCy / ``en_core_web_sm`` now

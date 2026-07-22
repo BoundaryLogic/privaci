@@ -1,0 +1,7 @@
+# Validated-identifier SQL builders (OpenSpec add-ci-hardening-gates D7).
+# Prefer path:symbol over path:lineno so edits do not silently desync.
+
+src/privaci/stream/batch_write.py:insert_records # issue #42
+src/privaci/stream/copy_binary.py:_copy_passthrough_payload # issue #42
+src/privaci/stream/copy_binary.py:_sequence_max_values # issue #42
+src/privaci/stream/fetch.py:fetch_batch # issue #42

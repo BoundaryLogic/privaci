@@ -1,0 +1,105 @@
+name: Container hygiene
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      workflows: ${{ steps.filter.outputs.workflows }}
+      container: ${{ steps.filter.outputs.container }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+
+      - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590  # v3
+        id: filter
+        with:
+          filters: |
+            workflows:
+              - '.github/workflows/**'
+            container:
+              - 'Dockerfile'
+              - 'requirements.txt'
+              - 'requirements-nlp.txt'
+              - 'requirements-dev.txt'
+              - 'pyproject.toml'
+              - 'deploy/**'
+              - 'compose*.yml'
+              - '.dockerignore'
+
+  actionlint:
+    name: actionlint
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+
+      - uses: rhysd/actionlint@a443f344ff32813837fa49f7aa6cbc478d770e62  # v1.7.9
+
+  hadolint:
+    name: hadolint
+    needs: changes
+    if: needs.changes.outputs.container == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+
+      - uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf  # v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: error
+
+  trivy:
+    name: Trivy filesystem scan
+    needs: changes
+    if: needs.changes.outputs.container == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+
+      - name: Scan Dockerfile and requirements for vulnerabilities
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # 0.35.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          skip-dirs: src,tests,docs,scripts,.github
+
+  hygiene-gate:
+    name: Hygiene gate
+    needs: [changes, actionlint, hadolint, trivy]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Aggregate hygiene job results
+        env:
+          CHANGES: ${{ needs.changes.result }}
+          ACTIONLINT: ${{ needs.actionlint.result }}
+          HADOLINT: ${{ needs.hadolint.result }}
+          TRIVY: ${{ needs.trivy.result }}
+        run: |
+          failed=0
+          if [ "${CHANGES}" = "failure" ] || [ "${CHANGES}" = "cancelled" ]; then
+            echo "changes job ${CHANGES}"
+            failed=1
+          fi
+          for job in ACTIONLINT HADOLINT TRIVY; do
+            result="${!job}"
+            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+              echo "${job} ${result}"
+              failed=1
+            fi
+          done
+          exit "${failed}"

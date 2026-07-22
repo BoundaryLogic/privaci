@@ -66,7 +66,7 @@ def qualify(schema_name: str, object_name: str) -> str:
     return f"{quote_pg_identifier(schema_name)}.{quote_pg_identifier(object_name)}"
 
 
-def assert_safe_identifiers(
+def assert_safe_identifiers(  # noqa: C901  # issue #42 complexity burn-down
     tables: dict[str, TableInfo],
     *,
     views: tuple[ViewInfo, ...] = (),
