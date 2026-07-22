@@ -2,11 +2,11 @@
 # Mirror .github/workflows/ci.yml locally — run before every commit.
 #
 # Usage:
-#   ./scripts/ci-local.sh                 # lint-and-test (default; pre-commit hook)
+#   ./scripts/ci-local.sh                 # lint-and-test + Semgrep + link/parity guards
 #   ./scripts/ci-local.sh --integration   # + Postgres integration (needs Docker)
 #   ./scripts/ci-local.sh --docs          # + full mkdocs build (generate_docs --check is default)
 #   ./scripts/ci-local.sh --helm          # + helm lint
-#   ./scripts/ci-local.sh --security      # + Semgrep (gitleaks is already in default)
+#   ./scripts/ci-local.sh --security      # alias: Semgrep already runs in default
 #   ./scripts/ci-local.sh --mutation      # + critical mutation (mask+config; never default)
 set -euo pipefail
 
@@ -72,6 +72,8 @@ run_lint_and_test() {
   python scripts/check_public_repo_language.py --git-log 30
   python scripts/generate_docs.py --check
   python scripts/check_doc_registry.py
+  python scripts/check_mkdocs_doc_links.py
+  python scripts/check_ci_workflow_parity.py
   python scripts/check_file_limits.py
   python scripts/check_security_ast.py
   ./scripts/check-duplicates.sh
@@ -105,6 +107,33 @@ run_lint_and_test() {
   python scripts/check_coverage_floors.py
 
   pip-audit --requirement requirements.txt
+  # PR always runs Semgrep; keep it in default so local green ⇒ Semgrep green.
+  run_semgrep
+}
+
+SEMGREP_IMAGE="${SEMGREP_IMAGE:-semgrep/semgrep:1.110.0}"
+
+run_semgrep() {
+  local args=(
+    scan
+    --config=.semgrep.yml
+    --config=auto
+    --error
+    --severity=ERROR
+    src/privaci
+  )
+  if command -v semgrep >/dev/null 2>&1; then
+    semgrep "${args[@]}"
+    return
+  fi
+  if command -v docker >/dev/null 2>&1; then
+    echo "ci-local: semgrep CLI missing — using ${SEMGREP_IMAGE}"
+    docker run --rm -v "$ROOT:/src" -w /src "${SEMGREP_IMAGE}" semgrep "${args[@]}"
+    return
+  fi
+  echo "ERROR: Semgrep required for ci-local parity with the GitHub Semgrep job." >&2
+  echo "  Install: pip install semgrep   OR   ensure docker can pull ${SEMGREP_IMAGE}" >&2
+  exit 1
 }
 
 run_integration() {
@@ -134,13 +163,8 @@ run_helm() {
 }
 
 run_security() {
-  # Semgrep only — gitleaks already runs in default lint-and-test.
-  if command -v semgrep >/dev/null 2>&1; then
-    semgrep scan --config=.semgrep.yml --config=auto --error --severity=ERROR src/privaci
-  else
-    echo "ci-local: semgrep not installed — pip install semgrep or use GitHub Semgrep workflow" >&2
-    return 1
-  fi
+  # Kept for scripts/docs that still pass --security; Semgrep already ran in default.
+  echo "ci-local: --security is a no-op (Semgrep runs in default lint-and-test)"
 }
 
 run_mutation() {

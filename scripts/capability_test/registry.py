@@ -357,6 +357,8 @@ CAPABILITIES: dict[str, Capability] = {
             "tests/scripts/test_check_file_limits.py",
             "tests/scripts/test_check_security_ast.py",
             "tests/scripts/test_check_coverage_floors.py",
+            "tests/scripts/test_check_mkdocs_doc_links.py",
+            "tests/scripts/test_check_ci_workflow_parity.py",
         ),
         tags=frozenset({"unit", "docs", "public"}),
     ),

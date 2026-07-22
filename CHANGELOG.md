@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   favour of GitHub default setup; nosemgrep on quote_pg_identifier DDL; MkDocs
   links to root `CONSTITUTION.md` / `.jscpd.json` use GitHub URLs so `--strict`
   passes.
+- Local parity for those PR-only gaps: Semgrep in **default** `ci-local`
+  (Docker image fallback), `check_mkdocs_doc_links.py`, and
+  `check_ci_workflow_parity.py` (also on GitHub `lint-and-test`).
 
 ### Added
 

@@ -88,13 +88,14 @@ ownership.
 ### D4 — Local vs CI-only split (resource safety)
 
 **Choice:** Default `ci-local` gains: generate_docs check, doc registry
-(including exit-code sync), import-linter, C901, file limits, security AST,
-critical coverage floors, Article I import ban check, jscpd, typos, and
-gitleaks. Flags: `--security` (local Semgrep: `.semgrep.yml` + `--config=auto`
-+ `--error`), `--mutation` (explicit), `--docs` (full mkdocs). CodeQL (GitHub
-default setup — advanced workflow conflicts with default SARIF upload),
-Scorecard, and mutation remain GitHub-scheduled or CI-only jobs (not part of
-default or `--security`).
+(including exit-code sync), MkDocs docs/-boundary link check, CI workflow tool
+parity (no gitleaks-action / no advanced codeql.yml), import-linter, C901,
+file limits, security AST, critical coverage floors, Article I import ban
+check, jscpd, typos, gitleaks, and **Semgrep** (same flags as the GitHub
+Semgrep job; Docker image fallback when the CLI is missing). Flags:
+`--mutation` (explicit), `--docs` (full mkdocs). `--security` is a no-op alias.
+CodeQL (GitHub default setup — advanced workflow conflicts with default SARIF
+upload), Scorecard, and mutation remain GitHub-scheduled or CI-only jobs.
 
 **Rationale:** Matches `.cursor/rules/resource-safety.mdc`; agents must not
 OOM laptops.
@@ -130,7 +131,7 @@ D13 before hard require.
 dynamic `__import__`, `subprocess(shell=True)`, heuristic SQL concat, and
 logger calls that interpolate PII-ish names without redaction helpers.
 Semgrep adds defense in depth (`--config=auto` + local rules + `--error` in
-CI and ``ci-local --security``). AST scope: `mask`, `stream`, `secrets`,
+CI and **default** ``ci-local``). AST scope: `mask`, `stream`, `secrets`,
 `config`, `pipeline`. Local Semgrep rules: eval on `mask/`; HTTP imports on
 `mask`/`stream`/`pipeline`.
 

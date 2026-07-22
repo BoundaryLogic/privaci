@@ -33,9 +33,10 @@ checkpoints): [`quality-evidence.md`](quality-evidence.md).
 ## Local commands
 
 ```bash
-./scripts/ci-local.sh              # default unit gates (incl. registry + generate_docs --check + typos + gitleaks)
+./scripts/ci-local.sh              # default unit gates (incl. Semgrep, MkDocs link
+                                   # boundary, workflow parity, registry, typos, gitleaks)
 ./scripts/check-duplicates.sh      # jscpd on mask/config/secrets/stream (also in default ci-local)
-./scripts/ci-local.sh --security   # Semgrep (gitleaks already in default)
+./scripts/ci-local.sh --security   # no-op alias (Semgrep already in default)
 ./scripts/ci-local.sh --mutation   # cosmic-ray on mask+config (never default)
 ./scripts/ci-local.sh --docs       # full MkDocs build (needs sibling docs sync)
 ```
@@ -146,5 +147,12 @@ are unchanged so the check name stays stable for branch protection).
 - C901 max 10 → 8 while retiring `# noqa: C901` waivers.
 - Semgrep vs Security AST: AST owns local SQL/logging/packaging/HTTP/eval for
   `SCAN_PACKAGES` (`mask`/`stream`/`secrets`/`config`/`pipeline`; HTTP limited
-  to `mask`/`stream`/`pipeline`). Semgrep is PR/local `--security`
-  defense-in-depth (`.semgrep.yml` + `--config=auto` + `--error`).
+  to `mask`/`stream`/`pipeline`). Semgrep runs in **default** `ci-local` and the
+  PR Semgrep job (`.semgrep.yml` + `--config=auto` + `--error`); fail closed if
+  neither the CLI nor Docker is available locally.
+- MkDocs link boundary: `check_mkdocs_doc_links.py` fails relative links that
+  leave `docs/` (same class as `mkdocs build --strict`). Out-of-tree files use
+  absolute GitHub URLs.
+- Workflow tool parity: `check_ci_workflow_parity.py` bans `gitleaks-action` and
+  advanced `codeql.yml` (org default setup), and pins Semgrep/gitleaks versions
+  against pre-commit.

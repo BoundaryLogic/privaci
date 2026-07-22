@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
 
       - name: Run Semgrep (fail closed on ERROR findings)
-        # Parity with scripts/ci-local.sh --security (semgrep CLI + --error).
+        # Parity with default scripts/ci-local.sh (same flags + image pin).
         run: >
           semgrep scan
           --config=.semgrep.yml

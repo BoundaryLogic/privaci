@@ -60,6 +60,12 @@ jobs:
       - name: generate docs check
         run: python scripts/generate_docs.py --check
 
+      - name: MkDocs docs/ link boundary
+        run: python scripts/check_mkdocs_doc_links.py
+
+      - name: CI workflow tool parity
+        run: python scripts/check_ci_workflow_parity.py
+
       - name: document registry (PR coupling)
         if: github.event_name == 'pull_request'
         run: >

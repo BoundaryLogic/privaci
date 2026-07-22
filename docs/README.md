@@ -3,7 +3,7 @@
 PrivaCI is an in-VPC PostgreSQL batch masking and anonymization engine. This
 folder is the canonical documentation set. Start here, then follow the links.
 
-> **Doc conventions:** see [`.cursor/rules/documentation.mdc`](../.cursor/rules/documentation.mdc).
+> **Doc conventions:** see [`.cursor/rules/documentation.mdc`](https://github.com/BoundaryLogic/privaci/blob/main/.cursor/rules/documentation.mdc).
 > Docs are updated in the same change as the code, are written customer-first
 > with examples, and use stable headings/anchors so tooling can link into them.
 
@@ -11,7 +11,7 @@ folder is the canonical documentation set. Start here, then follow the links.
 
 | Doc | What it covers |
 |-----|----------------|
-| [`../CONSTITUTION.md`](../CONSTITUTION.md) | Project non-negotiables (Articles I–X) |
+| [`../CONSTITUTION.md`](https://github.com/BoundaryLogic/privaci/blob/main/CONSTITUTION.md) | Project non-negotiables (Articles I–X) |
 | [`ci-gates.md`](ci-gates.md) | CI/pre-commit gates mapped to constitution articles |
 | [`quality-evidence.md`](quality-evidence.md) | Threat model → tests/gates → nuclear checkpoints (confidence model) |
 | [`quickstart.md`](quickstart.md) | Zero to first masked row (evaluation compose or your own DBs) |

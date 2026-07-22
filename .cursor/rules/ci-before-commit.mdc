@@ -7,8 +7,9 @@ alwaysApply: true
 
 **Never run `git commit` until `./scripts/ci-local.sh` exits 0.**
 
-This mirrors GitHub `lint-and-test` exactly (black, isort, ruff, mypy, guards,
-pytest + coverage). Pre-push is too late — CI must pass **before** commit.
+This mirrors GitHub `lint-and-test` plus the PR Semgrep job (black, isort, ruff,
+mypy, guards, Semgrep, pytest + coverage). Pre-push is too late — CI must pass
+**before** commit.
 
 ## Agent workflow (every time)
 
