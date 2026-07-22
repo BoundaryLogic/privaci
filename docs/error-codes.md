@@ -195,21 +195,27 @@ GRANT CREATE ON DATABASE privaci_target TO privaci_role;
 
 ## Exit code 3: Config validation failure
 
-`mask-rules.yaml` failed schema validation, or a commercial-only action
-(`ai_refine`) was requested without the commercial layer. Raised by
+`mask-rules.yaml` failed schema validation, or a plugin-only action
+(`ai_refine`) was requested without a plugin package. Raised by
 `ConfigError` and `L3NotInstalledError`.
 
 **Common causes**
 
 - Unknown field (configs use `extra = forbid`).
 - Unknown `action` type or missing required field for an action.
-- `action: ai_refine` without the commercial layer installed.
+- `action: ai_refine` without a plugin package that registers an LLM connector.
 - Engine v2 reading a `version: "1.0"` config without `migrate-config`.
 - `when:` references an unknown column, an unsupported type (`jsonb`, arrays,
   `numeric`, composites), a disallowed CEL builtin (e.g. `matches`, `map`),
   or exceeds size/AST limits.
 - Explicit `ner_mask` in YAML when SpaCy / `en_core_web_sm` is not available
   (`pip install 'privaci[nlp]'` or change the action).
+
+**Note:** Level-3 is **not wired** into the masking path yet. Even when a
+plugin package is installed and registers LLM connectors, ``ai_refine`` still
+raises ``L3NotInstalledError`` (exit **3**) at mask time. Connector stubs in
+the plugin package fail closed if called directly; do not configure
+``ai_refine`` in production until L3 is implemented and wired.
 
 **Remediation**
 

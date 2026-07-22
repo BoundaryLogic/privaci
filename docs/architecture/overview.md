@@ -70,7 +70,7 @@ table-level done/not-done checkpoints.
 |-------|-----------|------|
 | L1 | Column rules (`fake`, `regex_mask`, `hash`, …) | Always |
 | L2 | SpaCy NER (`ner_mask`) | Text columns, optional |
-| L3 | LLM refinement (`ai_refine`) | Commercial plugin only |
+| L3 | LLM refinement (`ai_refine`) | Plugin only — **not implemented / not wired**; mask time exit **3** |
 
 Auto-detect (`auto_detect: true`) scans column names and sample values to
 propose rules. See ADR-0011 for confidence scoring.
