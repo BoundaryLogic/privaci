@@ -8,8 +8,6 @@ import pytest
 
 from tests.scripts.conftest_helpers import ensure_scripts_path, write_py
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
-
 ensure_scripts_path()
 import security_ast as _lib  # noqa: E402
 

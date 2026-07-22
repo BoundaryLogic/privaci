@@ -183,7 +183,9 @@ async def _drop_user_schemas(conn: asyncpg.Connection) -> None:
         schema = quote_pg_identifier(row["schema_name"])
         # SECURITY: schema is rendered via quote_pg_identifier (escapes quotes,
         # rejects control chars), so a hostile target catalog cannot inject SQL.
-        await conn.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")  # noqa: S608
+        await conn.execute(  # nosemgrep
+            f"DROP SCHEMA IF EXISTS {schema} CASCADE"
+        )  # noqa: S608
 
 
 async def _truncate_in_scope_tables(
@@ -200,4 +202,4 @@ async def _truncate_in_scope_tables(
             continue
         # SECURITY: qual is rendered via quote_pg_identifier (escapes quotes,
         # rejects control chars), so catalog identifiers cannot inject SQL.
-        await conn.execute(f"TRUNCATE TABLE {qual} CASCADE")  # noqa: S608
+        await conn.execute(f"TRUNCATE TABLE {qual} CASCADE")  # nosemgrep  # noqa: S608

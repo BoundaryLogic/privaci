@@ -1,6 +1,7 @@
 # CI gates and constitution enforcement
 
-Maps [`CONSTITUTION.md`](../CONSTITUTION.md) articles to local and GitHub
+Maps [`CONSTITUTION.md`](https://github.com/BoundaryLogic/privaci/blob/main/CONSTITUTION.md)
+articles to local and GitHub
 checks. Hard is the default for automatable articles.
 
 How gates fit the broader confidence model (threat model → tests → nuclear
@@ -23,7 +24,7 @@ checkpoints): [`quality-evidence.md`](quality-evidence.md).
 | III PII hygiene | gitleaks (pre-commit + default `ci-local` + `lint-and-test`); Security AST logging bans; audit tests | Novel log shapes |
 | IV Memory | Streaming tests; file/function limits; agent resource scripts | Bench regressions |
 | V No shortcuts | Required status checks; TODO/waiver issue guard | Nuclear judgment |
-| VI Secure defaults | pip-audit; Dependabot; Scorecard; Trivy/hadolint/actionlint via **Hygiene gate** (`container-hygiene`); CodeQL; SQL AST + allowlist; Semgrep | CVE triage debates |
+| VI Secure defaults | pip-audit; Dependabot; Scorecard; Trivy/hadolint/actionlint via **Hygiene gate** (`container-hygiene`); CodeQL (GitHub default setup); SQL AST + allowlist; Semgrep | CVE triage debates |
 | VII Honesty | Public language guard; document registry; `generate_docs --check` | Marketing tone |
 | VIII Architecture | import-linter; C901; file limits; critical coverage floors; **jscpd duplicate-code** | Boundary redesigns |
 | IX Amendments | Constitution registry row; waiver process | Waiver approval |
@@ -44,7 +45,7 @@ Default `./scripts/ci-local.sh` is sized for a laptop agent budget
 Do not treat it as unbounded — CodeQL, Scorecard, and mutation stay CI-only.
 ## Duplicate code (jscpd)
 
-- Config: [`.jscpd.json`](../.jscpd.json) — fail if duplicated lines in scoped
+- Config: [`.jscpd.json`](https://github.com/BoundaryLogic/privaci/blob/main/.jscpd.json) — fail if duplicated lines in scoped
   packages ≥ **1%** (`minLines` 10, `minTokens` 50).
 - Scope: `src/privaci/{mask,config,secrets,stream}/`
 - Runner: `./scripts/check-duplicates.sh` (requires Node.js 20+ / `npx`)
@@ -131,7 +132,8 @@ below 98% only on first publish with a burn-down issue (D6 exception).
 
 ## Branch protection
 
-After calibration, require: `lint-and-test`, `integration`, CodeQL, Semgrep,
+After calibration, require: `lint-and-test`, `integration`, CodeQL (default
+setup), Semgrep,
 and the **Hygiene gate** job from `container-hygiene.yml` (aggregates
 path-filtered Trivy / hadolint / actionlint; no-op success when those paths
 are unchanged so the check name stays stable for branch protection).

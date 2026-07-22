@@ -28,10 +28,11 @@ path filters skip a job).
 - **THEN** `.github/dependabot.yml` configures weekly pip and github-actions
   updates
 
-#### Scenario: CodeQL workflow present
+#### Scenario: CodeQL analysis configured
 - **WHEN** the SAST phase is merged
-- **THEN** `.github/workflows/codeql.yml` (or equivalent) runs CodeQL for
-  Python on PRs to `main`
+- **THEN** GitHub CodeQL default setup analyzes Python on PRs to `main`
+  (advanced `codeql.yml` is not used — it conflicts with default setup SARIF
+  upload)
 
 ### Requirement: Architecture import and size limits
 The repository MUST enforce import-linter contracts that prevent forbidden

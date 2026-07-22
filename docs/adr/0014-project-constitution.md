@@ -14,7 +14,7 @@ rather than CI-enforced.
 
 ## Decision
 
-Adopt a root [`CONSTITUTION.md`](../../CONSTITUTION.md) as the canonical
+Adopt a root [`CONSTITUTION.md`](https://github.com/BoundaryLogic/privaci/blob/main/CONSTITUTION.md) as the canonical
 article list (I–X). CI and pre-commit gates documented in
 [`docs/ci-gates.md`](../ci-gates.md) enforce automatable articles. A Cursor
 rule always points assistants at the constitution. Amendments follow Article

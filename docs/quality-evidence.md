@@ -57,5 +57,6 @@ See `.cursor/skills/nuclear-branch/SKILL.md` and
 - Closed-set nuclear clean (or findings fixed/waived with quotes)
 - Docs/CHANGELOG match shipped behaviour
 
-Related: [`ci-gates.md`](ci-gates.md), [`CONSTITUTION.md`](../CONSTITUTION.md),
+Related: [`ci-gates.md`](ci-gates.md),
+[`CONSTITUTION.md`](https://github.com/BoundaryLogic/privaci/blob/main/CONSTITUTION.md),
 ADR-0014.

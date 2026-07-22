@@ -12,7 +12,9 @@ gives auditors a SQL-queryable history of PII handling, and records a stable
 [ADR-0004](adr/0004-state-in-target-database.md).
 
 The engine creates this schema automatically on first run. You only need to
-grant the masking role permission to do so.
+grant the masking role permission to do so. Schema replication and truncate
+helpers quote catalog identifiers (`quote_pg_identifier`) before any DDL string
+interpolation on the target.
 
 ## Required grant
 

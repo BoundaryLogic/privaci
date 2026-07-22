@@ -86,6 +86,11 @@ privaci validate --config mask-rules.yaml
 | `implied_fk_ignore` | list[string] | `[]` | Source column paths (`schema.table.column`) whose [implied FK warnings](#implied-soft-foreign-keys) are silenced. |
 | `tables` | mapping | `{}` | Table identifier → [table config](#table-configuration). Keys must match the catalog (`schema.table`, e.g. `public.users`). |
 
+Target DDL that must interpolate schema/table names (truncate, drop schema,
+`search_path`, and similar) always runs those identifiers through
+`quote_pg_identifier` first. Semgrep `auto` SQL-concatenation findings on those
+paths are calibrated with `nosemgrep` next to the SECURITY comments.
+
 ## Auto-detect
 
 When `auto_detect: true` (default), PrivaCI inspects every column name against a

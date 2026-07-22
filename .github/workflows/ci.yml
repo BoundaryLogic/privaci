@@ -12,10 +12,6 @@ permissions:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      # gitleaks-action lists PR commits / may comment.
-      pull-requests: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
@@ -91,10 +87,20 @@ jobs:
       - name: typos
         uses: crate-ci/typos@685eb3d55be2f85191e8c84acb9f44d7756f84ab  # v1.29.4
 
+      # Use the OSS CLI (matches ci-local / pre-commit). gitleaks-action requires
+      # an org GITLEAKS_LICENSE secret; the binary does not.
+      - name: Install gitleaks
+        run: |
+          set -euo pipefail
+          ver="8.24.2"
+          curl -sSfL \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${ver}/gitleaks_${ver}_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+          sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
       - name: gitleaks
-        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7  # v2.3.9
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gitleaks detect --source . --verbose
 
       - name: import contracts
         run: lint-imports

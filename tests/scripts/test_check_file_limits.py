@@ -8,9 +8,6 @@ import pytest
 
 from tests.scripts.conftest_helpers import load_scripts_module, write_py
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
-
-
 _lib = load_scripts_module("file_limit_lib", "file_limit_lib.py")
 
 

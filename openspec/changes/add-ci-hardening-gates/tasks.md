@@ -39,7 +39,8 @@
 
 ## 3. Supply chain and SAST
 
-- [x] 3.1 Add CodeQL workflow for Python (push/PR to main + schedule)
+- [x] 3.1 Confirm CodeQL via GitHub default setup for Python (advanced
+      `codeql.yml` omitted — conflicts with default-setup SARIF upload)
 - [x] 3.2 Add OpenSSF Scorecard workflow
 - [x] 3.3 Add gitleaks to pre-commit and/or CI
 - [x] 3.4 Document required-check enablement steps in `docs/ci-gates.md`

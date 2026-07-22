@@ -91,7 +91,8 @@ ownership.
 (including exit-code sync), import-linter, C901, file limits, security AST,
 critical coverage floors, Article I import ban check, jscpd, typos, and
 gitleaks. Flags: `--security` (local Semgrep: `.semgrep.yml` + `--config=auto`
-+ `--error`), `--mutation` (explicit), `--docs` (full mkdocs). CodeQL,
++ `--error`), `--mutation` (explicit), `--docs` (full mkdocs). CodeQL (GitHub
+default setup — advanced workflow conflicts with default SARIF upload),
 Scorecard, and mutation remain GitHub-scheduled or CI-only jobs (not part of
 default or `--security`).
 

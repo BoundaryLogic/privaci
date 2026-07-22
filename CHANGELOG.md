@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- CI hardening calibration on PR #43: run gitleaks OSS CLI (org
+  `gitleaks-action` needs a license secret); drop advanced CodeQL workflow in
+  favour of GitHub default setup; nosemgrep on quote_pg_identifier DDL; MkDocs
+  links to root `CONSTITUTION.md` / `.jscpd.json` use GitHub URLs so `--strict`
+  passes.
+
 ### Added
 
 - Project [`CONSTITUTION.md`](CONSTITUTION.md) (Articles I–X), ADR-0014, and
