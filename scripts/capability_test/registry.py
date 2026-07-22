@@ -106,6 +106,14 @@ CAPABILITIES: dict[str, Capability] = {
         test_paths=("tests/mask/test_keyed.py",),
         tags=frozenset({"unit", "masking", "public", "keyed"}),
     ),
+    "public-article-i-offline-mask": Capability(
+        id="public-article-i-offline-mask",
+        label="Article I offline mask path",
+        description=("Masking path works with network sockets blocked (no egress)."),
+        repo="public",
+        test_paths=("tests/mask/test_offline_mask_path.py",),
+        tags=frozenset({"unit", "masking", "public", "security"}),
+    ),
     "public-conditional-masking-cel": Capability(
         id="public-conditional-masking-cel",
         label="Conditional masking (CEL when:)",
@@ -345,6 +353,12 @@ CAPABILITIES: dict[str, Capability] = {
         test_paths=(
             "tests/docs/test_generate_docs.py",
             "tests/scripts/test_sync_commercial_docs.py",
+            "tests/scripts/test_check_doc_registry.py",
+            "tests/scripts/test_check_file_limits.py",
+            "tests/scripts/test_check_security_ast.py",
+            "tests/scripts/test_check_coverage_floors.py",
+            "tests/scripts/test_check_mkdocs_doc_links.py",
+            "tests/scripts/test_check_ci_workflow_parity.py",
         ),
         tags=frozenset({"unit", "docs", "public"}),
     ),

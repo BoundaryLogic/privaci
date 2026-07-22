@@ -34,3 +34,10 @@ have been updated with it). Do not boil the ocean on unrelated docs.
 
 High → Medium → Low with **doc+code** (or **spec+code**) evidence pairs.
 **Contract coverage map** + **Deferred**.
+
+**Severity:** High, Medium, and Low are all ship blockers. Do **not** verdict
+**Ship** while Medium or Low findings remain open unless the user has already
+waived them. Prefer **Amend then ship** (or **Do not ship**) until the parent
+closeout can clear every row. Put true follow-ups (out of scope / future
+calibration) under **Deferred** only when they are **not** defects in what this
+diff claims to ship — and say so explicitly.

@@ -1,0 +1,57 @@
+rules:
+  - id: ban-eval-exec-on-scan-path
+    message: eval/exec is banned on the security AST scan path (fail closed).
+    severity: ERROR
+    languages: [python]
+    paths:
+      include:
+        - src/privaci/mask/
+        - src/privaci/stream/
+        - src/privaci/pipeline/
+        - src/privaci/config/
+        - src/privaci/secrets/
+    patterns:
+      - pattern-either:
+          - pattern: eval(...)
+          - pattern: exec(...)
+
+  - id: ban-subprocess-shell-true
+    message: subprocess with shell=True is banned (fail closed).
+    severity: ERROR
+    languages: [python]
+    paths:
+      include:
+        - src/privaci/
+    patterns:
+      - pattern-either:
+          - pattern: subprocess.run(..., shell=True, ...)
+          - pattern: subprocess.Popen(..., shell=True, ...)
+          - pattern: subprocess.call(..., shell=True, ...)
+          - pattern: subprocess.check_call(..., shell=True, ...)
+          - pattern: subprocess.check_output(..., shell=True, ...)
+
+  - id: ban-http-imports-article-i
+    message: >-
+      HTTP client imports are banned on the Article I path (mask/stream/pipeline —
+      no egress from masking/streaming).
+    severity: ERROR
+    languages: [python]
+    paths:
+      include:
+        - src/privaci/mask/
+        - src/privaci/stream/
+        - src/privaci/pipeline/
+    patterns:
+      - pattern-either:
+          - pattern: import httpx
+          - pattern: import requests
+          - pattern: import urllib
+          - pattern: import urllib3
+          - pattern: import aiohttp
+          - pattern: import http
+          - pattern: from httpx import $X
+          - pattern: from requests import $X
+          - pattern: from urllib import $X
+          - pattern: from urllib.request import $X
+          - pattern: from http import $X
+          - pattern: from http.client import $X

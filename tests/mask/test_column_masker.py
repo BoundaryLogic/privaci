@@ -115,6 +115,35 @@ def test_hash_action_is_deterministic() -> None:
     assert first != "secret"
 
 
+def test_hash_action_is_joinable_across_column_paths() -> None:
+    """Plain hash omits column_path so equal values stay linkable across columns.
+
+    Contrast with ``hmac_hash`` / faker seeds, which intentionally scope by path.
+    """
+    # Arrange
+    action = HashAction(action="hash")
+    value = "shared-token"
+
+    # Act
+    email_hash = mask_column_value(
+        value,
+        action,
+        salt=TEST_SALT,
+        column_path="public.users.email",
+        is_unique=False,
+    )
+    note_hash = mask_column_value(
+        value,
+        action,
+        salt=TEST_SALT,
+        column_path="public.notes.body",
+        is_unique=False,
+    )
+
+    # Assert
+    assert email_hash == note_hash
+
+
 def test_fake_action_masks_value() -> None:
     # Arrange
     action = FakeAction(action="fake", provider="email")

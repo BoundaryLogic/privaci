@@ -1,0 +1,167 @@
+# Document registry — maps code paths to operator docs (CONSTITUTION Article X).
+# See docs/ci-gates.md for diff bases, waivers, and changelog policy.
+
+meta:
+  exclude_packages:
+    - spikes
+
+entries:
+  - id: constitution
+    code:
+      - CONSTITUTION.md
+    docs:
+      - docs/adr/0014-project-constitution.md
+      - docs/ci-gates.md
+      - docs/quality-evidence.md
+
+  - id: env-docs
+    code:
+      - .env.example
+    docs:
+      - docs/configuration.md
+      - docs/cli-reference.md
+      - docs/deployment.md
+      - docs/local-development.md
+      - docs/test-fixtures.md
+      - docs/generated/cli-reference.md
+
+  - id: errors
+    code:
+      - src/privaci/errors.py
+    docs:
+      - docs/error-codes.md
+      - docs/generated/errors/**
+    changelog: required
+
+  - id: cli
+    code:
+      - src/privaci/cli/**
+    docs:
+      - docs/cli-reference.md
+      - docs/generated/cli-reference.md
+    changelog: required
+
+  - id: config
+    code:
+      - src/privaci/config/**
+    docs:
+      - docs/configuration.md
+      - docs/generated/configuration/**
+      - docs/generated/configuration-reference.md
+    changelog: required
+
+  - id: mask
+    code:
+      - src/privaci/mask/**
+    docs:
+      - docs/configuration.md
+      - docs/architecture/memory-model.md
+    changelog: required
+
+  - id: secrets
+    code:
+      - src/privaci/secrets/**
+    docs:
+      - docs/configuration.md
+      - docs/deployment.md
+    changelog: required
+
+  - id: autodetect
+    code:
+      - src/privaci/autodetect/**
+    docs:
+      - docs/configuration.md
+      - docs/adr/0011-autodetect-confidence-scoring.md
+
+  - id: catalog
+    code:
+      - src/privaci/catalog/**
+    docs:
+      - docs/configuration.md
+      - docs/architecture/overview.md
+
+  - id: cel
+    code:
+      - src/privaci/cel/**
+    docs:
+      - docs/configuration.md
+
+  - id: contracts
+    code:
+      - src/privaci/contracts/**
+    docs:
+      - docs/extending-privaci.md
+
+  - id: observability
+    code:
+      - src/privaci/observability/**
+    docs:
+      - docs/observability.md
+
+  - id: packs
+    code:
+      - src/privaci/packs/**
+    docs:
+      - docs/runbooks/pack-signing.md
+      - docs/configuration.md
+
+  - id: pii-catalog
+    code:
+      - src/privaci/pii_catalog/**
+    docs:
+      - docs/pii-catalog.md
+
+  - id: pipeline
+    code:
+      - src/privaci/pipeline/**
+    docs:
+      - docs/architecture/overview.md
+      - docs/configuration.md
+
+  - id: preflight
+    code:
+      - src/privaci/preflight/**
+    docs:
+      - docs/configuration.md
+      - docs/error-codes.md
+
+  - id: runtime
+    code:
+      - src/privaci/runtime/**
+    docs:
+      - docs/deployment.md
+      - docs/architecture/overview.md
+
+  - id: schema
+    code:
+      - src/privaci/schema/**
+    docs:
+      - docs/configuration.md
+      - docs/state-schema.md
+
+  - id: state
+    code:
+      - src/privaci/state/**
+    docs:
+      - docs/state-schema.md
+      - docs/configuration.md
+
+  - id: storage
+    code:
+      - src/privaci/storage/**
+    docs:
+      - docs/object-output.md
+      - docs/extending-privaci.md
+
+  - id: stream
+    code:
+      - src/privaci/stream/**
+    docs:
+      - docs/architecture/memory-model.md
+      - docs/adr/0010-constant-memory-streaming.md
+
+  - id: verify
+    code:
+      - src/privaci/verify/**
+    docs:
+      - docs/configuration.md

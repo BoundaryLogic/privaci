@@ -19,7 +19,7 @@ async def truncate_target_table(conn: asyncpg.Connection, table: TableInfo) -> N
     qual = table.sql_ref
     # SECURITY: qual is rendered via quote_pg_identifier, which escapes embedded
     # quotes and rejects control chars, so catalog identifiers cannot inject SQL.
-    await conn.execute(f"TRUNCATE {qual}")  # noqa: S608
+    await conn.execute(f"TRUNCATE {qual}")  # noqa: S608  # nosemgrep
 
 
 async def finalize_empty_strategy_table(

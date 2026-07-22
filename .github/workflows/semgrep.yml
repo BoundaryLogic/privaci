@@ -1,0 +1,31 @@
+name: Semgrep
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  semgrep:
+    name: Semgrep scan
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:1.110.0
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+
+      - name: Run Semgrep (fail closed on ERROR findings)
+        # Parity with default scripts/ci-local.sh (same flags + image pin).
+        run: >
+          semgrep scan
+          --config=.semgrep.yml
+          --config=auto
+          --error
+          --severity=ERROR
+          src/privaci

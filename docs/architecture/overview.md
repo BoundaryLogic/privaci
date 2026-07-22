@@ -7,7 +7,8 @@ description: "Batch CLI shape, COPY-binary streaming, FK ordering, checkpoints, 
 
 This page summarizes the MVP architecture documented in full in
 `openspec/changes/init-privaci-engine/design.md` and the numbered ADRs under
-[`adr/`](../adr/README.md).
+[`adr/`](../adr/README.md). Project non-negotiables and CI enforcement live in
+[`CONSTITUTION.md`](https://github.com/BoundaryLogic/privaci/blob/main/CONSTITUTION.md) and [`ci-gates.md`](../ci-gates.md).
 
 ## Product shape
 

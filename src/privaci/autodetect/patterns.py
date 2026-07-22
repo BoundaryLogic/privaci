@@ -58,7 +58,7 @@ BUILTIN_PATTERNS: tuple[PatternRule, ...] = (
     PatternRule("display_name", "substring", "display_name", "full_name", "fake"),
     PatternRule("name_exact", "regex", r"^name$", "full_name", "fake"),
     # IP rules precede the generic `address` substring so `ip_address` is not
-    # mis-matched as a street address. `ip` is word-anchored to avoid matching
+    # mismatched as a street address. `ip` is word-anchored to avoid matching
     # substrings like `descr(ip)tion` or `sh(ip)ping`.
     PatternRule("ip_address", "substring", "ip_address", "ip_address", "fake"),
     PatternRule("ip_suffix", "suffix", "_ip", "ip_address", "fake"),

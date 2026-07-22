@@ -6,11 +6,15 @@ separate private repository.
 
 ## Before you start
 
-1. Read [`SECURITY.md`](SECURITY.md) for vulnerability reporting (do not open
+1. Read [`CONSTITUTION.md`](CONSTITUTION.md) — project non-negotiables (CI
+   enforces automatable articles; see [`docs/ci-gates.md`](docs/ci-gates.md)).
+2. Read [`docs/quality-evidence.md`](docs/quality-evidence.md) — threat model
+   before code, regression tests, nuclear as checkpoint (not proof).
+3. Read [`SECURITY.md`](SECURITY.md) for vulnerability reporting (do not open
    public issues for security bugs).
-2. Skim [`docs/local-development.md`](docs/local-development.md) for the
+4. Skim [`docs/local-development.md`](docs/local-development.md) for the
    Python 3.12, Docker, and fixture workflow.
-3. Open an issue or discussion before large design changes.
+5. Open an issue or discussion before large design changes.
 
 ## Development workflow
 
@@ -22,6 +26,12 @@ pre-commit install
 pre-commit install --hook-type commit-msg
 ./scripts/ci-local.sh   # required before every commit that touches src/tests/scripts
 ```
+
+Default `./scripts/ci-local.sh` also runs the jscpd duplicate-code gate and
+needs **Node.js 20+** (`npx`) on `PATH`, plus `typos` and `gitleaks` (via
+`pre-commit install` or standalone CLIs). See
+[`docs/ci-gates.md`](docs/ci-gates.md) and
+[`docs/local-development.md`](docs/local-development.md).
 
 - Use a feature branch (`feat/…`, `fix/…`, `docs/…`) — do not push directly to
   `main`.

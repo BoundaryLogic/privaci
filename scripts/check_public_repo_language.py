@@ -65,6 +65,10 @@ _OPERATOR_UX_PREFIXES: tuple[str, ...] = (
 
 _SCAN_ROOTS: tuple[Path, ...] = (
     ROOT / "src" / "privaci",
+    ROOT / "CONSTITUTION.md",
+    ROOT / "docs" / "ci-gates.md",
+    ROOT / "docs" / "quality-evidence.md",
+    ROOT / "docs" / "registry.yaml",
     ROOT / "docs" / "object-output.md",
     ROOT / "docs" / "configuration.md",
     ROOT / "docs" / "cli-reference.md",

@@ -37,3 +37,4 @@ for PrivaCI. Each ADR follows the template defined in
 | 0011 | [Auto-detect confidence scoring and table context](0011-autodetect-confidence-scoring.md) | Accepted |
 | 0012 | [Capability tiers and License Manager](0012-capability-tiers-and-license-manager.md) | Accepted |
 | 0013 | [Exact-pinned runtime dependencies](0013-exact-pinned-runtime-dependencies.md) | Accepted |
+| 0014 | [Project Constitution](0014-project-constitution.md) | Accepted |

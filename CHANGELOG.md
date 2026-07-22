@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- CI hardening calibration on PR #43: run gitleaks OSS CLI (org
+  `gitleaks-action` needs a license secret); drop advanced CodeQL workflow in
+  favour of GitHub default setup; nosemgrep on quote_pg_identifier DDL; MkDocs
+  links to root `CONSTITUTION.md` / `.jscpd.json` use GitHub URLs so `--strict`
+  passes.
+- Local parity for those PR-only gaps: Semgrep in **default** `ci-local`
+  (Docker image fallback), `check_mkdocs_doc_links.py`, and
+  `check_ci_workflow_parity.py` (also on GitHub `lint-and-test`).
+
+### Added
+
+- Project [`CONSTITUTION.md`](CONSTITUTION.md) (Articles I–X), ADR-0014, and
+  [`docs/ci-gates.md`](docs/ci-gates.md) mapping articles to CI gates.
+- [`docs/quality-evidence.md`](docs/quality-evidence.md) — threat model before
+  code, regression tests for nuclear findings, closed-set nuclear convergence.
+- Document registry (`docs/registry.yaml`) and CI hardening program (Dependabot,
+  SAST/supply-chain including typos + SHA-pinned Actions on new/touched
+  workflows, architecture limits, coverage floors, Article I offline/HTTP bans,
+  mutation on mask+config, duplicate-code via jscpd) — see OpenSpec
+  `add-ci-hardening-gates`. (Release/docs/publish workflows may still use
+  tag refs where practical.)
+
 ### Changed
 
 - **BREAKING (behaviour):** ``ner_mask`` without SpaCy / ``en_core_web_sm`` now

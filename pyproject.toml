@@ -40,6 +40,7 @@ dev = [
     "black==26.3.1",
     "cosmic-ray==8.4.6",
     "hypothesis==6.127.6",
+    "import-linter==2.1",
     "isort==6.0.1",
     "mkdocs-material==9.6.11",
     "mkdocs==1.6.1",
@@ -148,12 +149,62 @@ target-version = "py312"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "UP", "S", "B", "A"]
+select = ["E", "F", "W", "I", "N", "UP", "S", "B", "A", "C901"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
 [tool.ruff.lint.per-file-ignores]
 "tests/conftest.py" = ["E402"]
 "tests/**" = ["S101", "S105", "S108"]
 "src/privaci/secrets/**" = ["A005"]
+"scripts/check_*.py" = ["E402"]
+"scripts/security_ast/**" = ["N802"]  # ast.NodeVisitor visit_* names
 
 [tool.ruff.lint.isort]
 known-first-party = ["privaci", "tests"]
+
+# Import contracts (constitution Article VIII).
+[tool.importlinter]
+root_package = "privaci"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Mask must not import CLI or pipeline orchestration"
+type = "forbidden"
+source_modules = ["privaci.mask"]
+forbidden_modules = ["privaci.cli", "privaci.pipeline"]
+
+[[tool.importlinter.contracts]]
+name = "Stream must not import CLI or pipeline orchestration"
+type = "forbidden"
+source_modules = ["privaci.stream"]
+forbidden_modules = ["privaci.cli", "privaci.pipeline"]
+
+[[tool.importlinter.contracts]]
+name = "Catalog must not import CLI or pipeline orchestration"
+type = "forbidden"
+source_modules = ["privaci.catalog"]
+forbidden_modules = ["privaci.cli", "privaci.pipeline"]
+
+[[tool.importlinter.contracts]]
+name = "Contracts must not import CLI or pipeline"
+type = "forbidden"
+source_modules = ["privaci.contracts"]
+forbidden_modules = [
+    "privaci.cli",
+    "privaci.pipeline",
+    "privaci.stream",
+    "privaci.catalog",
+    "privaci.schema",
+]
+
+[[tool.importlinter.contracts]]
+name = "Engine must not import packaging package"
+type = "forbidden"
+source_modules = [
+    "privaci",
+]
+forbidden_modules = [
+    "privaci_commercial",
+]

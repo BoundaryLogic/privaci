@@ -10,9 +10,10 @@ without loading whole tables into RAM. Memory use scales with **row width
 and batch size**, not with **total database size**.
 
 > **Related decisions:** [ADR-0006](../adr/0006-copy-binary-streaming.md)
-> (COPY-binary streaming) and
+> (COPY-binary streaming),
 > [ADR-0010](../adr/0010-constant-memory-streaming.md) (batch bounds and
-> backpressure).
+> backpressure), and [`CONSTITUTION.md`](https://github.com/BoundaryLogic/privaci/blob/main/CONSTITUTION.md) Article IV
+> (memory safety) / [`ci-gates.md`](../ci-gates.md).
 
 ## What you need to know
 

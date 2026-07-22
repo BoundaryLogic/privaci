@@ -1,0 +1,26 @@
+# Baseline burn-down waivers (OpenSpec add-ci-hardening-gates D13).
+# Format: path[:function] # issue #N
+# Tracking: https://github.com/BoundaryLogic/privaci/issues/42
+
+src/privaci/cli/app.py # issue #42
+src/privaci/catalog/identifiers.py:assert_safe_identifiers # issue #42
+src/privaci/catalog/introspect.py:introspect_catalog # issue #42
+src/privaci/cel/ast_policy.py:assert_expression_policy # issue #42
+src/privaci/cel/binding.py:annotations_for_when # issue #42
+src/privaci/cli/_init.py:execute_init # issue #42
+src/privaci/cli/_plan.py:execute_plan # issue #42
+src/privaci/cli/_resume.py:_resume_async # issue #42
+src/privaci/config/keyed.py:validate_keyed_actions # issue #42
+src/privaci/config/scaffold.py:build_scaffold_config # issue #42
+src/privaci/contracts/plugins.py:load_plugins # issue #42
+src/privaci/mask/column_masker.py:_dispatch_mask_action # issue #42
+src/privaci/pipeline/run_lifecycle.py:stream_and_finish # issue #42
+src/privaci/pipeline/runner.py:_execute_masking_pipeline # issue #42
+src/privaci/pipeline/runner.py:_run_connected_pipeline # issue #42
+src/privaci/pipeline/streaming.py:stream_all_tables # issue #42
+src/privaci/pipeline/streaming.py:stream_one_table # issue #42
+src/privaci/preflight/runner.py:_run_preflight_checks # issue #42
+src/privaci/schema/assume_existing.py:_validate_table # issue #42
+src/privaci/state/schema_snapshot.py:validate_resume_schema_snapshot # issue #42
+src/privaci/stream/copy_binary.py:_pipe_binary_passthrough # issue #42
+src/privaci/stream/table.py:stream_table # issue #42

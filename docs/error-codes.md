@@ -155,7 +155,8 @@ succeeded) and is resumable once the fault is cleared.
 - Missing `CREATE SCHEMA` privilege for `_privaci`.
 - A table referenced in config does not exist in the source.
 - Pre-data or post-data DDL failed on the target (permissions, missing
-  dependencies, or invalid object definitions).
+  dependencies, or invalid object definitions). Catalog identifiers in engine
+  DDL are escaped via `quote_pg_identifier` before interpolation.
 - `privaci resume` found no resumable run, or the config, source database, or
   salt changed since the interrupted run. The error names which one drifted; a
   run is resumable while its status is `in_progress`, `interrupted`, or

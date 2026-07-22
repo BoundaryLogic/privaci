@@ -1,0 +1,12 @@
+{
+  "threshold": 1,
+  "minLines": 10,
+  "minTokens": 50,
+  "format": ["python"],
+  "ignore": [
+    "**/spikes/**",
+    "**/__pycache__/**",
+    "**/.venv/**"
+  ],
+  "reporters": ["console"]
+}

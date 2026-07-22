@@ -1,4 +1,16 @@
 repos:
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.29.4
+    hooks:
+      # Repo-wide scan so ``_typos.toml`` extend-exclude applies (not per-file args).
+      - id: typos
+        pass_filenames: false
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.2
+    hooks:
+      - id: gitleaks
+
   - repo: https://github.com/psf/black
     rev: 26.3.1
     hooks:
@@ -19,6 +31,14 @@ repos:
 
   - repo: local
     hooks:
+      - id: document-registry
+        name: document registry (staged coupling)
+        entry: python scripts/check_doc_registry.py --staged
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        files: ^(src/|docs/|CONSTITUTION\.md|\.env\.example$)
+
       - id: public-repo-language-staged
         name: public repo language guard — staged lines (ADR-0007, blocks commit)
         entry: python scripts/check_public_repo_language.py --staged

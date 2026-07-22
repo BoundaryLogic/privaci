@@ -220,7 +220,9 @@ async def refresh_materialized_views(
 async def _set_search_path(conn: asyncpg.Connection, schema_name: str) -> None:
     schema = quote_pg_identifier(schema_name)
     # SECURITY: schema is quote_pg_identifier-escaped.
-    await conn.execute(f"SET search_path TO {schema}, pg_catalog")  # noqa: S608
+    await conn.execute(  # nosemgrep
+        f"SET search_path TO {schema}, pg_catalog"
+    )  # noqa: S608
 
 
 def emit_create_view(view: ViewInfo) -> str:

@@ -6,50 +6,89 @@ alwaysApply: true
 # Nuclear branch before PR (non-negotiable)
 
 **Never open or push-for-review a PR until `nuclear-branch` has been run on the
-branch (or uncommitted set about to ship) and High findings are fixed or
-explicitly waived by the user.**
+branch (or uncommitted set about to ship) and High, Medium, and Low findings
+are fixed or explicitly waived by the user (per finding).**
 
 This is the PR-time gate. Plan-time OpenSpec nuclear is separate — see
 `nuclear-openspec-before-implement.mdc`.
+
+## Severity (non-negotiable)
+
+- **High, Medium, and Low** from the nuclear triple are **ship blockers**.
+- Do **not** defer Medium/Low to “after merge” or “follow-up PR” unless the user
+  **explicitly waives** that finding (quote the waiver in the reply and PR body).
+- “Ship with Mediums” / “Amend then ship leaving Mediums” is **not** allowed.
 
 ## When it applies
 
 - User asks to create a PR (`gh pr create`, “open a PR”, “ship it”)
 - User asks to push a branch that is intended for review (first push of a
   feature/fix branch, or push after substantial new commits)
+- User asks `/nuclear-branch` or “run nuclear”
 - Agent is about to run `gh pr create` per user request
 
-## Agent workflow
+## Freeze → one triple → closeout (avoid rework)
 
-1. Ensure CI gates for commit/push are already satisfied (`ci-before-commit`,
-   `integration-before-push` as applicable).
-2. Read and follow `.cursor/skills/nuclear-branch/SKILL.md` (triple: review,
-   quality, contracts). Prefer Diff `branch changes` vs the PR base.
-3. Fix High findings on the branch (new commit(s) + `ci-local` again) **or**
-   get an explicit user waiver per finding.
-4. Only then `git push` (if needed) and `gh pr create` / update the PR body with
-   a short **Nuclear** note: pass / findings fixed / waived.
+1. **Freeze the tree** for the review (stop feature edits). Note Diff scope:
+   prefer `branch changes`; use `uncommitted changes` when there are no commits.
+2. Launch **exactly one** nuclear-branch triple. Do **not** start a second
+   triple while one is in flight. Do **not** begin fixing until **all three**
+   agents have returned.
+3. **Ignore stale completions** from an earlier triple once a newer triple was
+   started (cite the newer run’s agent ids). Late notifications from superseded
+   runs are not a to-do list.
+4. **Synthesize** a single closeout table before coding:
+
+   `| ID | Severity | Finding | Status | Evidence | Regression |`
+
+   Deduplicate overlaps. Status starts as `open`. **Regression** is the test
+   path, checker, or gate that locks the fix (required to mark closed — see
+   `docs/quality-evidence.md`).
+5. **Fix every open High, Medium, and Low** in one batch (or get per-finding
+   waivers). For each fix, record verify evidence **and** Regression.
+6. **Do not** re-run nuclear after every patch. At most **one closeout re-run**
+   after the batch is done and verified. That re-run is **closed-set only**:
+   prior findings + regressions of that set + new Highs. New Medium/Low that
+   are not regressions → waive with issue or one small batch — not another
+   discovery redesign.
+7. Only then push / open PR. PR body: `nuclear-branch: pass` or
+   `nuclear-branch: fixed …; waived … (quotes)`.
+
+## Agent workflow (PR / push)
+
+1. Ensure CI gates for commit/push (`ci-before-commit`, `integration-before-push`
+   as applicable).
+2. Follow `.cursor/skills/nuclear-branch/SKILL.md` (freeze → triple → closeout).
+3. Close **all** severities (or waivers) per above.
+4. Then `git push` / `gh pr create` with a **Nuclear** note.
 
 ## PR description
 
-Include a one-liner under Test plan or a **Nuclear** subsection, e.g.:
+- `nuclear-branch: pass`
+- `nuclear-branch: fixed N High, M Medium, L Low (…); waived: …`
 
-- `nuclear-branch: pass` 
-- `nuclear-branch: fixed N High (…); M Medium deferred`
+Do **not** write “Medium deferred.”
+
+## OpenSpec land criterion (when the change adds CI/docs gates)
+
+Mark OpenSpec tasks `[x]` only after the gate runs on **both** the default
+`./scripts/ci-local.sh` path and the matching GitHub job — or the task/docs
+**explicitly** demote it (e.g. pre-commit-only) with rationale. “File exists”
+is not done.
 
 ## Exceptions (narrow)
 
-- User explicitly waives nuclear-branch for this PR (quote in the reply and PR
-  body).
+- User explicitly waives nuclear-branch for this PR (quote in reply + PR body).
+- User explicitly waives **individual** findings (quote each).
 - Docs-only / skills-only / chore with no behaviour change — run a **contracts
-  skim** (docs/CHANGELOG) and state that full triple was scoped down; do not
-  silently skip.
+  skim** and state the scope-down; do not silently skip.
 - PR already open and user asks only for a tiny follow-up push: re-run nuclear
-  on the **new** commits (or full branch if unsure).
+  on the **new** commits (or full branch if unsure), still closing all severities.
 
 ## Never
 
 - Open a PR immediately after commit without nuclear-branch.
-- Treat stock plugin `thermos` alone as meeting this gate — use `nuclear-branch`
-  (expanded triple including contracts).
+- Fix from a partial triple (one agent back) or from a superseded triple’s late
+  notification.
+- Treat stock plugin `thermos` alone as meeting this gate.
 - Merge the PR (maintainers only — `no-auto-merge.mdc`).

@@ -364,13 +364,10 @@ pytest -m integration tests/<module>/
 When you're ready to push:
 
 ```bash
-# Run exactly what CI runs (per .cursorrules §7)
-black --check src/ tests/
-isort --check-only --profile black src/ tests/
-ruff check src/ tests/
-mypy src/ --strict
-pytest -m "not integration" --cov=src --cov-fail-under=85
-pip-audit --requirement requirements.txt
+# Exact GitHub lint-and-test parity (registry, generate_docs, AST, jscpd,
+# typos, gitleaks, import-linter, floors, …) — requires Node 20+ for jscpd
+# and pre-commit (or typos-cli + gitleaks) on PATH.
+./scripts/ci-local.sh
 ```
 
 Pre-commit hooks run a subset of these on `git commit` automatically; when
@@ -381,6 +378,12 @@ are not installed:
 ```bash
 ./scripts/ci-local.sh
 ```
+
+Default `ci-local` includes the jscpd duplicate-code gate and requires
+**Node.js 20+** (`npx` on `PATH`). Install Node via your package manager or
+[nodejs.org](https://nodejs.org/) before running the full local mirror.
+Install `pre-commit` hooks (or `typos-cli` + `gitleaks`) so default typos and
+gitleaks gates can pass.
 
 ---
 

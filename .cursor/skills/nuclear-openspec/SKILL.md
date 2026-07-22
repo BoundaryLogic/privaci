@@ -78,6 +78,22 @@ silent → finding):
 - Confused deputy / elevated replication
 - Audit identity collisions (bare name vs schema-qualified)
 
+### Threat model section (required)
+
+`design.md` MUST include a **Threat model** section (or link `threats.md` in
+the same change). See [`docs/quality-evidence.md`](../../docs/quality-evidence.md).
+
+Minimum:
+
+1. Trust boundary / invariant
+2. Attack or fail-open surfaces the change introduces
+3. Enforcement per item: gate, negative test, or review-only
+4. Accepted residual risk / non-goals
+
+**Missing or empty Threat model on a behaviour/security/CI-gate change = High
+(Amend then implement).** Trivial doc-only changes may skim and say why a full
+section was not needed.
+
 Silence is a defect: “we’ll figure it out in code” on any High item above.
 
 ## Lens B — Quality / architecture
@@ -111,7 +127,9 @@ Silence is a defect: “we’ll figure it out in code” on any High item above.
 
 1. Summarize the change in 3–5 bullets (what ships, what does not).
 2. Walk lenses A→B→C against proposal/design/specs/tasks.
-3. Cross-check **tasks.md** covers every High/Medium design obligation.
+3. Cross-check **tasks.md** covers every High/Medium design obligation,
+   including a **Verification** block: positive + negative/bypass tests for
+   each machine-checkable threat-model item.
 4. Spot-check one related existing module or ADR when a claim depends on
    current behaviour (“today we already…”) — verify or flag as unverified.
 

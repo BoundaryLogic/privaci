@@ -1,0 +1,27 @@
+# Typos config for PrivaCI (crate-ci/typos).
+# https://github.com/crate-ci/typos/blob/master/docs/reference.md
+
+[files]
+extend-exclude = [
+  "tests/fixtures/",
+  "tests/integration/",
+  "openspec/changes/archive/",
+  "reports/",
+]
+
+[default.extend-identifiers]
+HashiCorp = "HashiCorp"
+INSERTs = "INSERTs"
+SELECTs = "SELECTs"
+UPDATEs = "UPDATEs"
+DELETEs = "DELETEs"
+DEFAULTs = "DEFAULTs"
+EIN = "EIN"
+ein = "ein"
+# SQL aliases in catalog introspection queries.
+inh = "inh"
+pn = "pn"
+
+[default.extend-words]
+unparseable = "unparseable"
+ba = "ba"
