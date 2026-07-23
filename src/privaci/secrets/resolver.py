@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from enum import Enum
+from enum import StrEnum
 from urllib.parse import urlparse, urlunparse
 
 from privaci.errors import SecretError
@@ -24,7 +24,7 @@ MIN_SALT_LENGTH = 32
 _SECRET_URI_KIND_NAMES = ", ".join(member.name for member in SecretUriKind)
 
 
-class SecretKind(str, Enum):
+class SecretKind(StrEnum):
     """Classifies a secret for exit-code and validation behavior."""
 
     DB_URL = "db_url"

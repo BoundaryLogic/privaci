@@ -117,3 +117,5 @@ assert plugins.license_validator.validate() is not None
 Integration tests in the commercial repo should install the package editable
 and run `privaci run` against a throwaway Postgres (see
 [`local-development.md`](local-development.md)).
+
+<!-- registry: storage StrEnum sync -->

@@ -183,3 +183,5 @@ assert bounded RSS on large/wide tables before public beta.
 - [ADR-0010: Constant-memory streaming bounds](../adr/0010-constant-memory-streaming.md)
 - [Spike 2.1: COPY-binary round-trip](../spikes/2.1-copy-binary.md)
 - OpenSpec: `openspec/changes/init-privaci-engine/specs/streaming-pipeline/spec.md`
+
+<!-- registry: stream retry type-params sync -->

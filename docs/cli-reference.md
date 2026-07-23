@@ -394,3 +394,5 @@ privaci catalog import-db-comments --output /config/pii-catalog.yaml
 - [Configuration reference](configuration.md) — the `mask-rules.yaml` format.
 - [Error codes](error-codes.md) — exit codes and message format.
 - [State & audit schema](state-schema.md) — what `run`/`resume` write to `_privaci`.
+
+<!-- registry: typer 0.27 / ruff 0.15 CLI typing sync -->

@@ -20,39 +20,39 @@ classifiers = [
     "Topic :: Security",
 ]
 dependencies = [
-    "asyncpg==0.30.0",
+    "asyncpg==0.31.0",
     # CEL sandbox for optional column ``when:`` guards.
     "cel-python==0.5.0",
     # Pinned alongside typer: Click 8.4 broke Typer 0.15 (make_metavar(ctx)).
     # Keep this range until a Typer release is validated against newer Click.
     "click>=8.1.7,<8.5",
     "cryptography==48.0.1",
-    "pydantic==2.10.6",
-    "pyyaml==6.0.2",
-    "typer==0.16.0",
+    "pydantic==2.13.4",
+    "pyyaml==6.0.3",
+    "typer==0.27.0",
 ]
 
 [project.optional-dependencies]
 nlp = [
-    "spacy==3.8.7",
+    "spacy==3.8.14",
 ]
 dev = [
-    "black==26.3.1",
+    "black==26.5.1",
     "cosmic-ray==8.4.6",
-    "hypothesis==6.127.6",
-    "import-linter==2.1",
+    "hypothesis==6.161.0",
+    "import-linter==2.13",
     "isort==6.0.1",
-    "mkdocs-material==9.6.11",
+    "mkdocs-material==9.7.7",
     "mkdocs==1.6.1",
     "mypy==1.15.0",
-    "pip-audit==2.7.3",
-    "pip-tools==7.4.1",
-    "pre-commit==4.1.0",
+    "pip-audit==2.10.1",
+    "pip-tools==7.6.0",
+    "pre-commit==4.6.1",
     "pytest-asyncio==1.4.0",
     "pytest-cov==6.0.0",
-    "pytest-mock==3.14.0",
-    "pytest==9.0.3",
-    "ruff==0.9.6",
+    "pytest-mock==3.15.1",
+    "pytest==9.1.1",
+    "ruff==0.15.22",
     "types-PyYAML==6.0.12.20241230",
 ]
 

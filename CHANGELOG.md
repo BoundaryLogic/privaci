@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Dependabot pip minor/patch group: ruff 0.15 UP042/UP047 (``StrEnum`` + PEP 695
+  type parameters) and Typer 0.27 CLI doc generation (``TyperGroup`` /
+  ``TyperOption`` no longer subclass ``click.Group`` / ``click.Option`` —
+  duck-type in ``scripts/generate_docs.py``).
 - Dependabot PRs: allow `support@github.com` in the git-email guard (Dependabot
   `Signed-off-by` trailer) and skip the commercial MkDocs clone when
   `COMMERCIAL_REPO_READ_TOKEN` is empty (Dependabot does not receive repo

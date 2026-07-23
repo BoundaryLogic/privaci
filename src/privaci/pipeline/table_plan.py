@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from enum import Enum
+from enum import StrEnum
 
 from privaci.catalog.models import TableInfo
 from privaci.config.models import Config
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 __all__ = ["TableAction", "plan_table", "table_strategy"]
 
 
-class TableAction(str, Enum):
+class TableAction(StrEnum):
     """What the streaming loop should do for one table."""
 
     SKIP_DONE = "skip_done"

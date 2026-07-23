@@ -128,11 +128,21 @@ def _render_schema_markdown(schema: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _is_click_group(command: click.Command) -> bool:
+    """Return True for Click/Typer command groups.
+
+    Typer ≥0.27's ``TyperGroup`` no longer subclasses ``click.Group`` (it uses a
+    vendored Click Command base). Duck-type on the group API instead.
+    """
+    return hasattr(command, "list_commands") and hasattr(command, "get_command")
+
+
 def _option_rows(command: click.Command) -> list[str]:
     """Extract markdown table rows for a command's options."""
     rows: list[str] = []
     for param in command.params:
-        if not isinstance(param, click.Option):
+        # Typer ≥0.27 options are not subclasses of click.Option.
+        if getattr(param, "param_type_name", None) != "option":
             continue
         names = ", ".join(f"`{opt}`" for opt in param.opts)
         env = f"`{param.envvar}`" if param.envvar else "—"
@@ -150,7 +160,7 @@ def _append_command(
     is_root: bool = False,
 ) -> None:
     """Recursively append CLI reference sections for a Click command tree."""
-    if isinstance(command, click.Group):
+    if _is_click_group(command):
         if command.callback:
             doc = (command.help or "").strip()
             label = (
