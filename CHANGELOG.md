@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Scorecard Code Scanning: SHA-pin Actions in ``release.yml``,
+  ``docs-pages.yml``, and ``publish-pypi.yml`` (matching ``ci.yml`` /
+  hygiene workflows); scope ``GITHUB_TOKEN`` permissions to the jobs that
+  need write access (drop unused top-level ``packages: write`` — GHCR uses
+  ``GHCR_TOKEN``; publish job keeps ``actions: write`` for Buildx GHA cache).
+
 ### Fixed
 
 - Dependabot pip minor/patch group: ruff 0.15 UP042/UP047 (``StrEnum`` + PEP 695
@@ -37,8 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   SAST/supply-chain including typos + SHA-pinned Actions on new/touched
   workflows, architecture limits, coverage floors, Article I offline/HTTP bans,
   mutation on mask+config, duplicate-code via jscpd) — see OpenSpec
-  `add-ci-hardening-gates`. (Release/docs/publish workflows may still use
-  tag refs where practical.)
+  `add-ci-hardening-gates`. Release/docs/publish workflows are SHA-pinned with
+  job-scoped ``GITHUB_TOKEN`` (Scorecard Pinned-Dependencies / Token-Permissions).
 
 ### Changed
 
