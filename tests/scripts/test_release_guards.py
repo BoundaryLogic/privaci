@@ -42,6 +42,16 @@ def test_check_git_emails_passes_on_clean_repo() -> None:
     assert exit_code == 0
 
 
+def test_is_allowed_accepts_dependabot_signed_off_by() -> None:
+    # Arrange
+    mod = _load_script_module("check_git_emails.py")
+
+    # Act / Assert
+    assert mod._is_allowed("support@github.com") is True
+    assert mod._is_allowed("49699333+dependabot[bot]@users.noreply.github.com") is True
+    assert mod._is_allowed("person@gmail.com") is False
+
+
 def test_check_contract_version_script_passes_when_installed() -> None:
     # Act
     exit_code = _load_script_module("check_contract_version.py").main()
