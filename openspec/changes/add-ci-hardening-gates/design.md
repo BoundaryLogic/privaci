@@ -263,8 +263,9 @@ Quality evidence: [`docs/quality-evidence.md`](../../../docs/quality-evidence.md
 | Public-repo language | Tier/subscription-product framing in engine docs | `check_public_repo_language.py` on constitution/ci-gates/registry |
 
 **Accepted residual:** mutation warn-only until kill-score calibrated; packaging-repo
-constitution mirror deferred (task 9.3); release/docs/publish workflows may keep
-tag refs; coverage/C901 burn-down via #42.
+constitution mirror deferred (task 9.3); coverage/C901 burn-down via #42.
+(Release/docs/publish Action SHA-pins + job-scoped ``GITHUB_TOKEN`` closed the
+earlier “floating tag refs” residual.)
 
 ## Risks / Trade-offs
 

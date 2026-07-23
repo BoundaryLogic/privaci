@@ -16,7 +16,13 @@ when release / Pages / PyPI workflows fail with auth errors.
 | `GHCR_USERNAME` | Release (optional) | PAT owner's GitHub login. Defaults to the user who pushed the tag (`github.actor`). Set when PAT owner ≠ tag pusher. |
 | `PACK_SIGNING_PRIVATE_KEY` | Future pack-signing in CI | Hex Ed25519 private key from `scripts/generate_pack_signing_key.py`. Not consumed by `release.yml` today; store for when pack publish is wired in. |
 
-`GITHUB_TOKEN` is injected automatically — do not create it.
+`GITHUB_TOKEN` is injected automatically — do not create it. `release.yml`
+defaults to `contents: read` and elevates to `contents: write` +
+`id-token: write` only on the publish job (GitHub Release + cosign OIDC).
+GHCR/Helm push use `GHCR_TOKEN`, not `packages: write` on `GITHUB_TOKEN`.
+The publish job also needs `actions: write` for Docker Buildx `type=gha` cache.
+`docs-pages.yml` similarly keeps workflow `contents: read` and elevates
+`pages: write` + `id-token: write` only on the deploy job.
 
 **Repository secrets, not environment secrets:** `release.yml` does not use a
 GitHub Environment. Put `GHCR_TOKEN` under **Repository secrets**.
@@ -25,7 +31,7 @@ GitHub Environment. Put `GHCR_TOKEN` under **Repository secrets**.
 
 | Environment | Created by | Secrets needed | Notes |
 |-------------|------------|----------------|-------|
-| `github-pages` | First Pages deploy | None | Uses workflow `permissions: pages: write`. Auto-created when Pages is enabled. |
+| `github-pages` | First Pages deploy | None | `docs-pages.yml` keeps workflow `contents: read`; the **deploy** job elevates `pages: write` + `id-token: write`. Auto-created when Pages is enabled. |
 | `testpypi` | First manual PyPI workflow run (or create manually) | None (OIDC) | Configure **Trusted Publishing** on [TestPyPI](https://test.pypi.org/manage/account/publishing/) for workflow `publish-pypi.yml`, environment `testpypi`. |
 | `pypi` | Same | None (OIDC) | Configure **Trusted Publishing** on [PyPI](https://pypi.org/manage/account/publishing/) for workflow `publish-pypi.yml`, environment `pypi`. This repo's `pypi` environment may require a reviewer approval before publish. |
 

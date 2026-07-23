@@ -24,7 +24,7 @@ checkpoints): [`quality-evidence.md`](quality-evidence.md).
 | III PII hygiene | gitleaks (pre-commit + default `ci-local` + `lint-and-test`); Security AST logging bans; audit tests | Novel log shapes |
 | IV Memory | Streaming tests; file/function limits; agent resource scripts | Bench regressions |
 | V No shortcuts | Required status checks; TODO/waiver issue guard | Nuclear judgment |
-| VI Secure defaults | pip-audit; Dependabot; Scorecard; Trivy/hadolint/actionlint via **Hygiene gate** (`container-hygiene`); CodeQL (GitHub default setup); SQL AST + allowlist; Semgrep | CVE triage debates |
+| VI Secure defaults | pip-audit; Dependabot; Scorecard (Pinned-Dependencies + Token-Permissions); Trivy/hadolint/actionlint via **Hygiene gate** (`container-hygiene`); CodeQL (GitHub default setup); SQL AST + allowlist; Semgrep; SHA-pinned Actions on **all** workflows including release/docs/PyPI; least-privilege ``GITHUB_TOKEN`` (workflow ``contents: read``, write scopes only on jobs that need them — see [release-infrastructure](runbooks/release-infrastructure.md); Scorecard SARIF via [scorecard.yml](https://github.com/BoundaryLogic/privaci/blob/main/.github/workflows/scorecard.yml)) | CVE triage debates |
 | VII Honesty | Public language guard; document registry; `generate_docs --check` | Marketing tone |
 | VIII Architecture | import-linter; C901; file limits; critical coverage floors; **jscpd duplicate-code** | Boundary redesigns |
 | IX Amendments | Constitution registry row; waiver process | Waiver approval |

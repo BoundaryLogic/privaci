@@ -48,6 +48,7 @@
 ## 4. Actions, Docker, and PR Trivy
 
 - [x] 4.1 Add actionlint job; SHA-pin Actions where practical
+      (incl. release/docs/publish — Scorecard residual closed)
 - [x] 4.2 Add hadolint on Dockerfile changes
 - [x] 4.3 Add PR Trivy (CRITICAL/HIGH) for Dockerfile/lockfile paths with
       no-op success when paths unchanged
