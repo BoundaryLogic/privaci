@@ -86,7 +86,7 @@ distlib==0.4.3
     # via virtualenv
 exit-codes==1.3.0
     # via cosmic-ray
-faker==37.1.0
+faker==40.35.0
     # via -r requirements-dev.in
 filelock==3.32.0
     # via
@@ -350,7 +350,6 @@ typing-inspection==0.4.2
 tzdata==2026.2
     # via
     #   -c requirements.txt
-    #   faker
     #   pendulum
 urllib3==2.7.0
     # via requests
