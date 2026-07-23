@@ -171,11 +171,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      # Dependabot cannot read repo secrets unless they are also configured as
-      # Dependabot secrets — COMMERCIAL_REPO_READ_TOKEN is empty here, and
-      # checkout fails with "Input required and not supplied: token".
+      # Dependabot (and other actors without Dependabot-mirrored secrets) get an
+      # empty COMMERCIAL_REPO_READ_TOKEN. Key off token presence — not
+      # github.actor — so maintainer "Re-run" on Dependabot PRs still skips.
+      - name: Detect commercial docs token
+        id: commercial
+        env:
+          COMMERCIAL_REPO_READ_TOKEN: ${{ secrets.COMMERCIAL_REPO_READ_TOKEN }}
+        run: |
+          if [ -n "${COMMERCIAL_REPO_READ_TOKEN}" ]; then
+            echo "available=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "available=false" >> "${GITHUB_OUTPUT}"
+          fi
+
       - name: Checkout commercial docs source
-        if: github.actor != 'dependabot[bot]'
+        if: steps.commercial.outputs.available == 'true'
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
           repository: BoundaryLogic/privaci-commercial
@@ -187,14 +198,15 @@ jobs:
         run: python scripts/generate_docs.py --check
 
       - name: Build documentation site
-        if: github.actor != 'dependabot[bot]'
+        if: steps.commercial.outputs.available == 'true'
         env:
           COMMERCIAL_DOCS_SOURCE: commercial-src
         run: ./scripts/docs_build.sh
 
-      - name: Dependabot docs-build note
-        if: github.actor == 'dependabot[bot]'
+      - name: Skip note when commercial token unavailable
+        if: steps.commercial.outputs.available != 'true'
         run: |
-          echo "Skipped full MkDocs build: Dependabot PRs do not receive"
-          echo "COMMERCIAL_REPO_READ_TOKEN unless it is added under"
-          echo "Settings → Secrets → Dependabot. generate_docs --check still ran."
+          echo "Skipped full MkDocs build: COMMERCIAL_REPO_READ_TOKEN is empty"
+          echo "(common on Dependabot PRs — add the secret under"
+          echo "Settings → Secrets and variables → Dependabot to enable)."
+          echo "generate_docs --check still ran."
