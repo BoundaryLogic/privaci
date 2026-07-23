@@ -18,7 +18,8 @@ _ALLOWED_SUFFIXES = (
     "@users.noreply.github.com",
     "@noreply.github.com",
 )
-_ALLOWED_EXACT = frozenset({"noreply@github.com"})
+# Dependabot signs commits with ``Signed-off-by: dependabot[bot] <support@github.com>``.
+_ALLOWED_EXACT = frozenset({"noreply@github.com", "support@github.com"})
 _ALLOWED_DOMAINS = ("@boundarylogic.io",)
 _MESSAGE_EMAIL = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
 

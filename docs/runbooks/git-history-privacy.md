@@ -18,10 +18,13 @@ python scripts/check_git_emails.py
 The script scans every ref reachable from `HEAD` and allows only:
 
 - `*@users.noreply.github.com` and `*@noreply.github.com`
+- `noreply@github.com` and `support@github.com` (GitHub / Dependabot
+  `Signed-off-by` trailers)
 - `*@boundarylogic.io` (org addresses)
 
 CI runs this on every push to `main`. If it fails, a commit (author/committer
-field or a `Co-authored-by:` trailer) contains a disallowed address.
+field or a `Co-authored-by:` / `Signed-off-by:` trailer) contains a disallowed
+address.
 
 ## Prevent it: configure git before committing
 
