@@ -1,4 +1,10 @@
-# Dependabot — keep Actions and Python deps current
+# Dependabot — keep Actions and Python deps current.
+#
+# All pip pins share pyproject.toml / requirements*.txt, so ungrouped majors
+# open many overlapping PRs that conflict on every merge. Keep at most:
+#   - one pip minor/patch PR
+#   - one pip major PR
+#   - one Actions PR
 version: 2
 updates:
   - package-ecosystem: pip
@@ -6,7 +12,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
-    open-pull-requests-limit: 5
+    # Cap open PRs so a backlog of majors cannot pile up.
+    open-pull-requests-limit: 3
     groups:
       pip-minor-patch:
         patterns:
@@ -14,13 +21,19 @@ updates:
         update-types:
           - minor
           - patch
+      # Without this, each major (faker, isort, cryptography, …) is its own PR.
+      pip-major:
+        patterns:
+          - "*"
+        update-types:
+          - major
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
       day: monday
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
     groups:
       actions:
         patterns:

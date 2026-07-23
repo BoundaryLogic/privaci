@@ -161,3 +161,6 @@ are unchanged so the check name stays stable for branch protection).
   unless mirrored under Settings → Secrets and variables → Dependabot). Skip is
   based on token presence so maintainer “Re-run” still works. Full site build
   still runs on human PRs with the secret configured.
+- Dependabot grouping: pip majors go in one weekly `pip-major` PR (minor/patch
+  already grouped); open-PR limits lowered so lockfile PRs do not pile up and
+  conflict after each merge. See `.github/dependabot.yml`.
