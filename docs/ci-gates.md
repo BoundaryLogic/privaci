@@ -156,7 +156,8 @@ are unchanged so the check name stays stable for branch protection).
 - Workflow tool parity: `check_ci_workflow_parity.py` bans `gitleaks-action` and
   advanced `codeql.yml` (org default setup), and pins Semgrep/gitleaks versions
   against pre-commit.
-- Dependabot: `docs-build` skips the private commercial clone (no Dependabot
-  secret for `COMMERCIAL_REPO_READ_TOKEN` unless you add one under
-  Settings → Secrets and variables → Dependabot). Full site build still runs on
-  human PRs.
+- Dependabot: `docs-build` skips the private commercial clone when
+  `COMMERCIAL_REPO_READ_TOKEN` is empty (Dependabot does not see repo secrets
+  unless mirrored under Settings → Secrets and variables → Dependabot). Skip is
+  based on token presence so maintainer “Re-run” still works. Full site build
+  still runs on human PRs with the secret configured.

@@ -10,9 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Dependabot PRs: allow `support@github.com` in the git-email guard (Dependabot
-  `Signed-off-by` trailer) and skip the commercial MkDocs clone on
-  `dependabot[bot]` runs (repo secrets are not visible to Dependabot unless
-  mirrored under Dependabot secrets).
+  `Signed-off-by` trailer) and skip the commercial MkDocs clone when
+  `COMMERCIAL_REPO_READ_TOKEN` is empty (Dependabot does not receive repo
+  secrets unless mirrored under Dependabot secrets; key off the token — not
+  `github.actor` — so maintainer re-runs still skip).
 - CI hardening calibration on PR #43: run gitleaks OSS CLI (org
   `gitleaks-action` needs a license secret); drop advanced CodeQL workflow in
   favour of GitHub default setup; nosemgrep on quote_pg_identifier DDL; MkDocs
