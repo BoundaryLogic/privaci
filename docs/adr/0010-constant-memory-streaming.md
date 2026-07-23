@@ -97,3 +97,5 @@ Customer-facing documentation lives in
 - [ADR-0006](0006-copy-binary-streaming.md) — COPY-binary transport mechanism.
 - [ADR-0009](0009-postgres-native-partitioning.md) — partition children as
   independent streaming units.
+
+<!-- registry: stream retry type-params sync -->

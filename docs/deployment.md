@@ -232,3 +232,5 @@ git push origin v0.1.0-beta.1
 
 See also [pack-signing runbook](runbooks/pack-signing.md) and
 [git-history privacy runbook](runbooks/git-history-privacy.md).
+
+<!-- registry: secrets StrEnum sync -->

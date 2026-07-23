@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Awaitable, Callable
-from typing import TypeVar
 
 import asyncpg
 
@@ -14,15 +13,13 @@ logger = logging.getLogger(__name__)
 _DEFAULT_ATTEMPTS = 3
 _BASE_DELAY_SECONDS = 0.5
 
-_T = TypeVar("_T")
 
-
-async def with_source_retry(
-    operation: Callable[[], Awaitable[_T]],
+async def with_source_retry[T](
+    operation: Callable[[], Awaitable[T]],
     *,
     attempts: int = _DEFAULT_ATTEMPTS,
     base_delay_seconds: float = _BASE_DELAY_SECONDS,
-) -> _T:
+) -> T:
     """Run ``operation`` with exponential backoff on transient source errors.
 
     Args:

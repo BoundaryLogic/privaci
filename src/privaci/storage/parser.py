@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from urllib.parse import ParseResult, parse_qs, unquote, urlparse
 
 from privaci.errors import StorageError
@@ -11,7 +11,7 @@ from privaci.errors import StorageError
 _OBJECT_SCHEMES = frozenset({"file", "s3", "azure-blob"})
 
 
-class ObjectUriKind(str, Enum):
+class ObjectUriKind(StrEnum):
     """Classification of an object destination URI."""
 
     LOCAL = "local"

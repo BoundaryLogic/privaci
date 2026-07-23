@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from urllib.parse import ParseResult, parse_qs, unquote, urlparse
 
 from privaci.errors import SecretError
@@ -17,7 +17,7 @@ _SECRET_SCHEMES = frozenset(
 )
 
 
-class SecretUriKind(str, Enum):
+class SecretUriKind(StrEnum):
     """How a secret reference should be resolved."""
 
     LITERAL = "literal"

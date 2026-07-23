@@ -61,3 +61,5 @@ Implement `privaci.contracts.ObjectWriter`.
 
 - [CLI reference](cli-reference.md)
 - [extending-privaci.md](extending-privaci.md)
+
+<!-- registry: ObjectUriKind StrEnum sync -->

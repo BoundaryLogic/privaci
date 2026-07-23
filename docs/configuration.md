@@ -585,3 +585,5 @@ All violations below exit `3` and name the YAML path:
 - [Error codes](error-codes.md) — exit codes and message format.
 - [Extending PrivaCI](extending-privaci.md) — the `privaci.plugins` entry-point
   model (including reserved `ai_refine` connectors — not implemented yet).
+
+<!-- registry: secrets StrEnum (ruff UP042) sync -->

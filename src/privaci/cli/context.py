@@ -7,7 +7,7 @@ import logging
 import os
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import Any
 
 from privaci.config import load_config
 from privaci.config.models import Config
@@ -20,8 +20,6 @@ from privaci.secrets import SecretKind, resolve_secret
 from privaci.state.fingerprints import salt_fingerprint
 
 logger = logging.getLogger(__name__)
-
-_T = TypeVar("_T")
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,9 +102,9 @@ def resolve_db_url(
     return secret.get_secret_value()
 
 
-def run_with_signal_handlers(
-    coro_factory: Callable[[], Coroutine[Any, Any, _T]],
-) -> _T:
+def run_with_signal_handlers[T](
+    coro_factory: Callable[[], Coroutine[Any, Any, T]],
+) -> T:
     """Run an async coroutine with SIGINT/SIGTERM handlers installed."""
     clear_interrupt()
     install_handlers()

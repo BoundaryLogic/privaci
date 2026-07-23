@@ -3,17 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from typing import TypeVar
 
 import asyncpg
 
 from privaci.catalog import CatalogResult, introspect_catalog
 from privaci.errors import CatalogError
 
-T = TypeVar("T")
 
-
-async def with_source_connection(
+async def with_source_connection[T](
     dsn: str,
     work: Callable[[asyncpg.Connection], Awaitable[T]],
 ) -> T:

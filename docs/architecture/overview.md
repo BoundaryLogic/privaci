@@ -98,3 +98,5 @@ implementations under the `privaci.plugins` entry-point group. See
   introspection only.
 
 Report vulnerabilities per [`SECURITY.md`](https://github.com/BoundaryLogic/privaci/blob/main/SECURITY.md).
+
+<!-- registry: TableAction StrEnum sync -->
