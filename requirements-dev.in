@@ -5,7 +5,7 @@ black==26.5.1
 cosmic-ray==8.4.6
 hypothesis==6.161.0
 isort==8.0.1
-mypy==1.15.0
+mypy==2.3.0
 pip-audit==2.10.1
 pip-tools==7.6.0
 pre-commit==4.6.1
