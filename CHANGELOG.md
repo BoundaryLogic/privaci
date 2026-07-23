@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   need write access (drop unused top-level ``packages: write`` — GHCR uses
   ``GHCR_TOKEN``; publish job keeps ``actions: write`` for Buildx GHA cache).
 
+### Changed
+
+- Dependabot: group all pip **major** bumps into one weekly PR (`pip-major`)
+  alongside the existing `pip-minor-patch` group, and lower open-PR limits, so
+  overlapping lockfile PRs stop conflicting after every merge.
+
 ### Fixed
 
 - Dependabot pip minor/patch group: ruff 0.15 UP042/UP047 (``StrEnum`` + PEP 695
