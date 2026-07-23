@@ -29,9 +29,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -42,7 +42,7 @@ jobs:
           pip install -e ".[dev]"
 
       - name: Checkout commercial docs source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: BoundaryLogic/privaci-commercial
           token: ${{ secrets.COMMERCIAL_REPO_READ_TOKEN }}
@@ -55,7 +55,7 @@ jobs:
         run: ./scripts/docs_build.sh
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
@@ -68,13 +68,13 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages (attempt 1)
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
         continue-on-error: true
 
       - name: Deploy to GitHub Pages (attempt 2)
         id: deployment_retry
         if: steps.deployment.outcome == 'failure'
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       - name: Fail when GitHub Pages deploy is exhausted
         if: >-
