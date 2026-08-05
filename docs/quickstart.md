@@ -75,6 +75,9 @@ not match the source.
 
 ## Run against your databases
 
+Do **not** start from a blank `mask-rules.yaml`. Scaffold from the source,
+review the plan, then validate and run:
+
 ```bash
 pip install -e .
 
@@ -82,9 +85,11 @@ export ANONYMIZATION_SALT="$(privaci gen-salt)"
 export SOURCE_DB_URL=postgresql://user:pass@source-host:5432/app
 export TARGET_DB_URL=postgresql://user:pass@target-host:5432/staging
 
-# Scaffold from source, review the plan, then pre-flight with target
+# 1) Scaffold from source schema + auto-detect
 privaci init   --source "$SOURCE_DB_URL" --output mask-rules.yaml
+# 2) Review what will be masked (source only — no target writes)
 privaci plan   --config mask-rules.yaml --source "$SOURCE_DB_URL"
+# 3) Schema-check the YAML, then pre-flight and run
 privaci validate --config mask-rules.yaml
 privaci dry-run  --config mask-rules.yaml
 privaci run      --config mask-rules.yaml

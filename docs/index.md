@@ -17,8 +17,9 @@ integrity preserved.
 | Goal | Page |
 |------|------|
 | Run your first mask in under five minutes | [Quickstart](quickstart.md) |
+| **Scaffold `mask-rules.yaml` from your DB** (`init` → `plan` → `validate`) | [Quickstart — your databases](quickstart.md#run-against-your-databases) · [`privaci init`](cli-reference.md#privaci-init) |
 | Every CLI flag and subcommand | [CLI reference (generated)](generated/cli-reference.md) |
-| Author `mask-rules.yaml` | [Configuration guide](configuration.md) |
+| Author / edit `mask-rules.yaml` | [Configuration guide](configuration.md) |
 | Schema types (generated) | [Configuration types](generated/configuration/index.md) |
 | Exit code you hit in CI | [Error code pages](generated/errors/index.md) |
 | Deploy with Docker or Helm | [Deployment](deployment.md) |

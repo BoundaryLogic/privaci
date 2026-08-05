@@ -16,7 +16,7 @@ cffi==2.1.0
     # via cryptography
 click==8.4.2
     # via -r requirements.in
-cryptography==48.0.1
+cryptography==50.0.0
     # via -r requirements.in
 google-re2==1.1.20251105
     # via cel-python

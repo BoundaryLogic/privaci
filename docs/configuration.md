@@ -18,20 +18,25 @@ available machine-readable for editor auto-completion:
 privaci schema config > mask-rules.schema.json
 ```
 
-## Quickstart
+## Quickstart — prefer `init`, do not hand-write from scratch
 
-**Generate a starter config** from your source schema (no target required):
+**Always scaffold from your source database** with `privaci init`, then review
+with `plan`. Hand-authoring a full YAML for a real schema is error-prone and
+skips auto-detect.
 
 ```bash
 export SOURCE_DB_URL=postgresql://user:pass@source-host:5432/app
 
 privaci init --source "$SOURCE_DB_URL" --output mask-rules.yaml
 privaci plan --config mask-rules.yaml --source "$SOURCE_DB_URL"
+privaci validate --config mask-rules.yaml
 ```
 
-Then set `ANONYMIZATION_SALT` and review/edit the YAML before production runs.
+Then set `ANONYMIZATION_SALT` and edit only the columns you need to change
+(providers, `seed_alias`, table strategies). Full command docs:
+[`privaci init`](cli-reference.md#privaci-init) · [`privaci plan`](cli-reference.md#privaci-plan).
 
-A minimal hand-authored config that masks two columns on one table:
+A minimal hand-authored config (for docs/examples only) that masks two columns:
 
 ```yaml
 version: "1.0"
