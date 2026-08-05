@@ -217,7 +217,10 @@ as `skipped_object` (`kind`: `rule` or `publication`). Triggers are skipped when
 `replicate_triggers: false` (`reason: flag_disabled`) or when their function is
 not replicated (`reason: dependency_excluded`).
 
-### Materialized views (opt-in, definition-only)
+### Materialized views
+
+Materialized-view replication is opt-in and definition-only (shell + optional
+refresh from masked bases — never a copy of source matview contents).
 
 ```yaml
 version: "1.0"
