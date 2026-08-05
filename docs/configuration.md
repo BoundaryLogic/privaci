@@ -20,18 +20,22 @@ privaci schema config > mask-rules.schema.json
 
 ## Quickstart
 
-**Generate a starter config** from your source schema (no target required):
+**Generate a starter config** from your source schema with `privaci init`. Do
+not hand-write a full schema mapping from scratch — that skips auto-detect.
 
 ```bash
 export SOURCE_DB_URL=postgresql://user:pass@source-host:5432/app
 
 privaci init --source "$SOURCE_DB_URL" --output mask-rules.yaml
 privaci plan --config mask-rules.yaml --source "$SOURCE_DB_URL"
+privaci validate --config mask-rules.yaml
 ```
 
-Then set `ANONYMIZATION_SALT` and review/edit the YAML before production runs.
+Then set `ANONYMIZATION_SALT` and edit only the columns you need to change
+(providers, `seed_alias`, table strategies). Full command docs:
+[`privaci init`](cli-reference.md#privaci-init) · [`privaci plan`](cli-reference.md#privaci-plan).
 
-A minimal hand-authored config that masks two columns on one table:
+A minimal hand-authored config (for docs/examples only) that masks two columns:
 
 ```yaml
 version: "1.0"
@@ -213,7 +217,10 @@ as `skipped_object` (`kind`: `rule` or `publication`). Triggers are skipped when
 `replicate_triggers: false` (`reason: flag_disabled`) or when their function is
 not replicated (`reason: dependency_excluded`).
 
-### Materialized views (opt-in, definition-only)
+### Materialized views
+
+Materialized-view replication is opt-in and definition-only (shell + optional
+refresh from masked bases — never a copy of source matview contents).
 
 ```yaml
 version: "1.0"

@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Bump ``cryptography`` to ``50.0.0`` (requirements lock had drifted to
+  ``48.0.1`` with known CVEs; ``pyproject.toml`` / ``requirements.in`` synced).
+
+### Changed
+
+- Docs: put ``privaci init`` / ``plan`` in front of setup (`docs/index.md`,
+  configuration quickstart, own-DB quickstart) so operators do not hand-write
+  ``mask-rules.yaml`` from scratch.
+- Roadmap: add **P1b** intra-row composition (`copy` + transforms, `concat`) —
+  Free; OpenSpec before implement (customer ask: e.g. ``normalized_email``).
+
+### Security
+
 - Scorecard Code Scanning: SHA-pin Actions in ``release.yml``,
   ``docs-pages.yml``, and ``publish-pypi.yml`` (matching ``ci.yml`` /
   hygiene workflows); scope ``GITHUB_TOKEN`` permissions to the jobs that

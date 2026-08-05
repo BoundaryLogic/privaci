@@ -35,6 +35,7 @@ well-formed schemas; plugin-installed = fidelity + proof).
 | # | Item | Scope | Notes |
 | --- | --- | --- | --- |
 | **P1** | **Public subsetting (Snaplet floor)** | `percent` / `rowLimit` / `where` + declared-FK closure + optional declared virtual edges | Relocate declared-FK closure into the public engine. Define `percent` as **root sampling pre-closure**; document expansion factor. Ships with the private ADR-0013 token redraw. |
+| **P1b** | **Intra-row composition** | `copy` (+ transforms such as `upper`/`lower`/`trim`), `concat` / format over **masked** sibling columns; topological mask order; fail closed on cycles / missing `from` | **Free.** Customer ask (e.g. `normalized_email` from masked `email`; composed locals). Prefer explicit `copy`/`concat` over opaque “persona” first; optional shared persona seed later. OpenSpec + nuclear-openspec before implement. |
 | **P2** | **Value-based PII scanning + coverage report** | Sample N rows; Luhn/SSN/IBAN/phone/email/entropy; masked / passthrough / unreviewed | CI fail flag stays plugin-installed. |
 | **P3** | **Published benchmark** | `make bench` vs `pg_dump` / Greenmask at 10 GB and 100 GB | Pulled forward; honest single-stream numbers OK. Parallelism is separate (P5). |
 | **P4** | **Platform bet = export sinks** | Masked Parquet/CSV (then object storage) | Prefer over MySQL first — reuses masking core; MySQL forks catalog/FK/COPY. Sort community vs plugin via ADR-0013 at build time (lean: community if quickstart-complete). |
@@ -62,7 +63,8 @@ well-formed schemas; plugin-installed = fidelity + proof).
 | [add-mysql-source-target](changes/add-mysql-source-target/) | Parked behind P1–P4; blocked on state abstraction |
 | [add-sqlserver-source-target](changes/add-sqlserver-source-target/) | Parked behind MySQL |
 
-Public subsetting (P1) and value scanning (P2) need new OpenSpecs before implementation (nuclear-openspec gate).
+Public subsetting (P1), intra-row composition (P1b), and value scanning (P2)
+need new OpenSpecs before implementation (nuclear-openspec gate).
 
 ---
 

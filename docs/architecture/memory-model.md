@@ -105,7 +105,9 @@ A table with ~50 KB average row width:
 - Checkpoint records (last PK per table/partition, not full row history).
 - Audit log entries (written incrementally to the target DB, not held in RAM).
 
-## Fixed overhead you should plan for
+## Fixed overhead
+
+Plan for the following process-level costs before streaming rows.
 
 ### Schema catalog
 
@@ -123,7 +125,7 @@ When freeform-text columns use local NER, the `en_core_web_sm` model is loaded
 Disable Level 2 by using Level 1 actions only, or `action: passthrough` on
 text columns, to avoid loading the model.
 
-### Level 3 masking (plugin, opt-in — not implemented)
+### Level 3 masking
 
 `action: ai_refine` is reserved for BYO-LLM refinement via a plugin
 `LLMConnector`. **Not implemented and not wired into the masking path yet** —
