@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Bump ``cryptography`` to ``50.0.0`` (requirements lock had drifted to
+  ``48.0.1`` with known CVEs; ``pyproject.toml`` / ``requirements.in`` synced).
+
 ### Changed
 
 - Docs: put ``privaci init`` / ``plan`` in front of setup (`docs/index.md`,
