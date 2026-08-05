@@ -3,6 +3,8 @@
 Faker==40.35.0
 black==26.5.1
 cosmic-ray==8.4.6
+# Pin above cosmic-ray's transitive floor (Dependabot GHSA / CVE class).
+gitpython==3.1.57
 hypothesis==6.161.6
 isort==8.0.1
 mypy==2.3.0
