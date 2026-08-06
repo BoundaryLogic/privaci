@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bump ``cryptography`` to ``50.0.0`` (requirements lock had drifted to
   ``48.0.1`` with known CVEs; ``pyproject.toml`` / ``requirements.in`` synced).
+- Pin ``gitpython==3.1.57`` in ``requirements-dev.in`` (above cosmic-ray's
+  transitive floor) to clear Dependabot high/medium alerts on IndexFile /
+  TagReference / archive options.
 
 ### Changed
 
