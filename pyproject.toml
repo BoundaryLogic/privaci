@@ -53,7 +53,7 @@ dev = [
     "pytest-mock==3.15.1",
     "pytest==9.1.1",
     "ruff==0.16.0",
-    "types-PyYAML==6.0.12.20260518",
+    "types-PyYAML==6.0.12.20260724",
 ]
 
 [project.scripts]
