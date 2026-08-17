@@ -29,30 +29,30 @@ dependencies = [
     "cryptography==50.0.0",
     "pydantic==2.13.4",
     "pyyaml==6.0.3",
-    "typer==0.27.0",
+    "typer==0.27.1",
 ]
 
 [project.optional-dependencies]
 nlp = [
-    "spacy==3.8.14",
+    "spacy==3.8.15",
 ]
 dev = [
     "black==26.5.1",
-    "cosmic-ray==8.4.6",
-    "hypothesis==6.161.6",
+    "cosmic-ray==8.7.0",
+    "hypothesis==6.165.7",
     "import-linter==2.13",
     "isort==8.0.1",
     "mkdocs-material==9.7.7",
     "mkdocs==1.6.1",
     "mypy==2.3.0",
     "pip-audit==2.10.1",
-    "pip-tools==7.6.0",
-    "pre-commit==4.6.1",
+    "pip-tools==7.6.1",
+    "pre-commit==4.6.2",
     "pytest-asyncio==1.4.0",
     "pytest-cov==7.1.0",
     "pytest-mock==3.15.1",
     "pytest==9.1.1",
-    "ruff==0.16.0",
+    "ruff==0.16.3",
     "types-PyYAML==6.0.12.20260724",
 ]
 
