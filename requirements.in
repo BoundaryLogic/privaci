@@ -3,10 +3,10 @@ asyncpg==0.31.0
 # CEL sandbox for optional column ``when:`` guards (add-conditional-masking-cel).
 cel-python==0.5.0
 # Pinned to avoid the Click 8.4 / Typer break (make_metavar(ctx)).
-click>=8.1.7,<8.5
-cryptography==50.0.0
+click>=8.1.7,<8.6
+cryptography==50.0.1
 pydantic==2.13.4
 pyyaml==6.0.3
-typer==0.27.0
+typer==0.27.1
 
 # NLP (install on Python 3.12 only): pip install spacy==3.8.4 && python -m spacy download en_core_web_sm
