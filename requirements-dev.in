@@ -2,20 +2,20 @@
 -c requirements.txt
 Faker==40.35.0
 black==26.5.1
-cosmic-ray==8.4.6
+cosmic-ray==8.7.0
 # Pin above cosmic-ray's transitive floor (Dependabot GHSA / CVE class).
 gitpython==3.1.57
-hypothesis==6.161.6
+hypothesis==6.165.10
 isort==8.0.1
-mypy==2.3.0
+mypy==2.3.1
 pip-audit==2.10.1
-pip-tools==7.6.0
-pre-commit==4.6.1
+pip-tools==7.6.1
+pre-commit==4.6.2
 pytest-asyncio==1.4.0
 pytest-cov==7.1.0
 pytest-mock==3.15.1
 pytest==9.1.1
-ruff==0.16.0
+ruff==0.16.5
 types-PyYAML==6.0.12.20260724
 mkdocs==1.6.1
 mkdocs-material==9.7.7
